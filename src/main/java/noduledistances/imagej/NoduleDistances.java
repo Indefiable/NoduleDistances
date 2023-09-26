@@ -42,7 +42,7 @@ public class NoduleDistances implements Command {
 	private final int MODEL = 3;
 	private final int OTHERFILETYPE = 4;
 	public static ImagePlus image;
-	
+
     @Parameter
     private LogService logService;
 
@@ -51,12 +51,16 @@ public class NoduleDistances implements Command {
 
     @Parameter
     private OpService opService;
+   
     
     @Parameter(label = "Image to load or file to iterate through.")
 	private File file;
     
+    /*
     @Parameter(label = "cluster model to use for segmentation.")
     private File modelFile;
+    */
+    
     
     /**
      * This method executes the image analysis.
@@ -64,11 +68,12 @@ public class NoduleDistances implements Command {
      * @param image : image to run the data analysis on.
      * @param model : path file to selected .model file
      */
-    private void execute(ImagePlus image, String model) {
+    //ImagePlus image, String model
+    private void execute(ImagePlus image) {
     	
     	ArrayList<Channel> channels = new ArrayList<Channel>(); // channels to use when segmenting.
-    	channels.add(Channel.Red);
-    	channels.add(Channel.Green);
+    	channels.add(Channel.Hue);
+    	channels.add(Channel.Lightness);
     	
 		
 		if(image.getType() != ImagePlus.COLOR_RGB) {
@@ -82,14 +87,15 @@ public class NoduleDistances implements Command {
 		
 		image.setRoi(1200, 750, 3600, 2500); // cropping image to center of image and halving the size.
 		image = image.crop();
-		image.setTitle(image.getTitle().substring(0,5));
+		image.setTitle(image.getTitle().substring(4));
 		NoduleDistances.image= image;
 		
 		ColorClustering cluster = new ColorClustering(image);
-		cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Research\\Nodule_Images\\ClustererModels\\PS233_960000_rg.model");
+		cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Research\\resources_assets\\ClustererModels\\roots.model");
 		cluster.setChannels(channels);
-	
-	
+		
+		RootSegmentation root = new RootSegmentation(cluster);
+		root.Segment();
     }
 
     /**
@@ -123,6 +129,7 @@ public class NoduleDistances implements Command {
     @Override
     public void run() {
    
+    	/*
     	int FILETYPE = 0;
     	
     	
@@ -169,7 +176,12 @@ public class NoduleDistances implements Command {
     		System.exit(0);
     		break;
     	}
-    	
+    	*/
+    	try {
+    	execute(new ImagePlus(file.getPath()));
+    	}catch(Exception e) {
+    		IJ.log("error, select an image file");
+    	}
     	
     	IJ.log("done");
     }//===========================================================================================
