@@ -6,7 +6,7 @@
 
   <groupId>Farris</groupId>
   <artifactId>noduledistances</artifactId>
-  <version>0.0.5-SNAPSHOT</version>
+  <version>0.5.0-SNAPSHOT</version>
 
   <name>noduledistances</name>
   <!-- FIXME change it to the project's website -->
@@ -85,6 +85,7 @@
   <build>
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
       <plugins>
+	  
         <!-- clean lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#clean_Lifecycle -->
         <plugin>
           <artifactId>maven-clean-plugin</artifactId>
@@ -124,6 +125,12 @@
           <artifactId>maven-project-info-reports-plugin</artifactId>
           <version>3.0.0</version>
         </plugin>
+		
+		<configuration>
+                <source>1.8</source> 
+                <target>1.8</target>
+            </configuration>
+			
       </plugins>
     </pluginManagement>
   </build>

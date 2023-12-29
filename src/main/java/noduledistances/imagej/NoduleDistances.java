@@ -91,11 +91,11 @@ public class NoduleDistances implements Command {
 		NoduleDistances.image= image;
 		
 		ColorClustering cluster = new ColorClustering(image);
-		cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Research\\resources_assets\\ClustererModels\\roots.model");
+		cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Research\\resources_assets\\ClustererModels\\001_roots.model");
 		cluster.setChannels(channels);
 		
 		RootSegmentation root = new RootSegmentation(cluster);
-		root.Segment();
+		root.segment();
     }
 
     /**
@@ -177,6 +177,9 @@ public class NoduleDistances implements Command {
     		break;
     	}
     	*/
+    	
+   ;
+    	
     	try {
     	execute(new ImagePlus(file.getPath()));
     	}catch(Exception e) {
