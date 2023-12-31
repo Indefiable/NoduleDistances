@@ -17,9 +17,11 @@ import ij.ImageStack;
 import ij.gui.Roi;
 import ij.gui.ShapeRoi;
 import ij.gui.Line;
+import ij.gui.OvalRoi;
 import ij.gui.Overlay;
 import ij.plugin.filter.ThresholdToSelection;
 import ij.plugin.frame.RoiManager;
+import ij.process.BinaryProcessor;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
@@ -28,6 +30,8 @@ import net.imagej.ops.OpService;
 import trainableSegmentation.FeatureStackArray;
 import trainableSegmentation.unsupervised.ColorClustering;
 import trainableSegmentation.unsupervised.ColorClustering.Channel;
+import ij.plugin.filter.GaussianBlur;
+import ij.gui.EllipseRoi;
 
 
 import traceskeleton.TraceSkeleton;
@@ -40,6 +44,8 @@ public class RootSegmentation {
 	private ColorClustering cluster;
 	private FeatureStackArray fsa;
 	private ImagePlus binarymap;
+	public ImagePlus skeletonMap = null;
+	
 	
 	private final int NOISECUTOFF = 1000;
 	
@@ -49,6 +55,7 @@ public class RootSegmentation {
 	public RootSegmentation(ColorClustering cluster) {
 		this.cluster = cluster;
 		ImagePlus image = cluster.getImage();
+	
 		
 		cluster.setNumSamples(image.getWidth() * image.getHeight());
 		this.fsa = new FeatureStackArray(image.getStackSize());
@@ -57,8 +64,8 @@ public class RootSegmentation {
 		
 		ImagePlus binarymap = cluster.createProbabilityMaps(fsa); // intensive
 		
-		
 		ImageStack mapStack = binarymap.getStack();
+		
 		mapStack.deleteSlice(1);
 		mapStack.deleteSlice(2);
 		binarymap = new ImagePlus("roots", mapStack.getProcessor(1));
@@ -85,11 +92,10 @@ public class RootSegmentation {
 			System.out.println("Error: no map found. Generate a map first.");
 			return;
 		}
+		binarymap.show();
 		
 		binarymap.getProcessor().setAutoThreshold("Default"); //intensive
 		Roi roi = ThresholdToSelection.run(binarymap);        // outline all nodules as one ROI.
-		
-		binarymap.show();
 		
 		manager.add(binarymap,roi,0);  
 		
@@ -128,7 +134,11 @@ public class RootSegmentation {
 		}
 		
 		delete(indices, rois);
+		ByteProcessor bit = binarymap.getProcessor().convertToByteProcessor();
 		
+		binarymap.close();
+		
+		binarymap.setProcessor(bit);
 	}
 	
 	private void delete(ArrayList<Integer> indices, ShapeRoi[] rois) {
@@ -158,8 +168,29 @@ public class RootSegmentation {
 		
 	}
 	
-	public void segment() {
+	/**
+	 * Converts a boolean[] image to a byte image
+	 * @param im
+	 */
+	private byte[] booleanToByte(boolean[] im) {
+		byte[] imp = new byte[im.length];
 		
+		for(int ii = 0; ii < im.length; ii++) {
+			
+			if(im[ii] == true) {
+				imp[ii] = (byte) 255;
+			}
+			else {
+				imp[ii] = (byte) 0;
+			}
+			
+		}
+		
+		return imp;
+	}
+	
+	
+	public ArrayList<ArrayList<int[]>> skeletonize() {
 		
 		ArrayList<ArrayList<int[]>> skeleton; 
 		
@@ -168,35 +199,83 @@ public class RootSegmentation {
 		
 		boolean[] im = convertToBooleanArray(this.binarymap.getProcessor().convertToByteProcessor());
 	
-		TraceSkeleton.thinningZS(im, width,height);
-		
-		skeleton = TraceSkeleton.traceSkeleton(im, width, height, width * height);
-		
-		ColorProcessor cp = this.binarymap.getProcessor().convertToColorProcessor();
-		ImagePlus test = new ImagePlus("polylined", cp);
-		
-		 Overlay overlay = new Overlay();
-		test.setOverlay(overlay);
-		 
-		for(ArrayList<int[]> polyline : skeleton) {
-			
-			int[] x = polyline.get(0);
-			int[] y = polyline.get(1);
-			System.out.println("( " + x[0] + ", " + y[0] + ") "
-				       	  + "-> ( " + x[1]  + ", " + y[1] + ")");
-			
-			Line line = new Line(x[0], y[0], x[1], y[1]);
-			line.setStrokeWidth(2); // Set the line width
-	        line.setStrokeColor(Color.black); // Set the line color (red in RGB format)
-	        overlay.add(line);
+		for(int ii = 0; ii < im.length; ii++) {
+			im[ii] = !im[ii];
 		}
 		
 		
-		test.show();
+		ByteProcessor byt = new ByteProcessor(width, height, booleanToByte(im));
 		
-		IJ.log("breakpoint");
+		
+		ImagePlus testImp = new ImagePlus("pre-thinned", byt);
+		
+		testImp.show();
+		
+		//byt.smooth();
+		
+		//im = convertToBooleanArray(byt);
+		
+		
+		//testImp = new ImagePlus("blurred", byt);
+		
+		//testImp.show();
+		
+		TraceSkeleton.thinningZS(im, width,height);
+		
+		 byt = new ByteProcessor(width, height, booleanToByte(im));
+		
+		testImp = new ImagePlus("thinned", byt);
+		
+		testImp.show();
+		
+		skeleton = TraceSkeleton.traceSkeleton(im, width, height, 100);
+		
+		
+		return skeleton;
 	}
 
+	/**
+	 * creates small dots where nodes are in the image. Overrides skeletonMap.
+	 * @param nodes: list of nodes.
+	 */
+	public void overlayGraph(ArrayList<Point> nodes, ArrayList<ArrayList<int[]>> skeleton) {
+
+		ColorProcessor cp = this.binarymap.getProcessor().convertToColorProcessor();
+		ImagePlus skellyMap = new ImagePlus("skeleton", cp);
+
+		Overlay overlay = new Overlay();
+		skellyMap.setOverlay(overlay);
+
+		for (ArrayList<int[]> chunk : skeleton) {
+			
+			for(int ii = 0; ii < chunk.size(); ii+=2) {
+				
+				 	int[] start = chunk.get(ii);
+				    int[] end = chunk.get(ii+1);
+				    
+				    int startX = start[0];
+				    int startY = start[1];
+				    int endX = end[0];
+				    int endY = end[1];
+
+				    Line line = new Line(startX, startY, endX, endY);
+				    line.setStrokeWidth(2);
+				    line.setStrokeColor(Color.pink);
+				    overlay.add(line);
+			}
+			
+		   
+		}
+		
+		this.skeletonMap = skellyMap;
+		
+		for(Point point : nodes) {
+			double radius = 3;
+			OvalRoi ball = new OvalRoi( point.x - radius,  point.y - radius, 2 * radius, 2 * radius);
+			ball.setFillColor(Color.BLUE);
+			skeletonMap.getOverlay().add(ball);
+		}
+	}
 	
 	private static boolean[] convertToBooleanArray(ByteProcessor byteProcessor) {
         int width = byteProcessor.getWidth();

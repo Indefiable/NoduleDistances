@@ -1,9 +1,5 @@
 /*
- * To the extent possible under law, the ImageJ developers have waived
- * all copyright and related or neighboring rights to this tutorial code.
- *
- * See the CC0 1.0 Universal license for details:
- *     http://creativecommons.org/publicdomain/zero/1.0/
+ * one pixel is (2601/ 4064256) mm^2
  */
 
 package noduledistances.imagej;
@@ -53,6 +49,7 @@ public class NoduleDistances implements Command {
     private OpService opService;
    
     
+    
     @Parameter(label = "Image to load or file to iterate through.")
 	private File file;
     
@@ -80,22 +77,33 @@ public class NoduleDistances implements Command {
 			image = new ImagePlus(image.getTitle(), image.getProcessor().convertToRGB());
 		}
 		
-		/*
-		 * These lines are specific for Niall's dataset. Not necessary for general code.
-		 * 
-		*/
 		
-		image.setRoi(1200, 750, 3600, 2500); // cropping image to center of image and halving the size.
+		 // MAKING IMAGE SMALLER FOR TESTING PURPOSES.
+		//=====================================================
+		double factor = 2;
+		int width = (int) (6000 / factor);
+		int height = (int) (4000 / factor);
+		int x =(int) ((6000 - width)/2);
+		int y =(int) ((4000 - height)/2);
+		image.setRoi(x, y, width, height); // cropping image to center of image and halving the size.
 		image = image.crop();
-		image.setTitle(image.getTitle().substring(4));
-		NoduleDistances.image= image;
+		//=====================================================
 		
+		
+		
+		NoduleDistances.image = image;
 		ColorClustering cluster = new ColorClustering(image);
-		cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Research\\resources_assets\\ClustererModels\\001_roots.model");
+		cluster.loadClusterer("D:\\1EDUCATION\\aRESEARCH\\tempGitHub\\Nodule-Distances\\assets\\001_roots.model");
 		cluster.setChannels(channels);
 		
 		RootSegmentation root = new RootSegmentation(cluster);
-		root.segment();
+		
+		ArrayList<ArrayList<int[]>> skeleton = root.skeletonize();
+		
+		Graph graph = new Graph(skeleton);
+		
+		root.overlayGraph(graph.nodes, graph.skeleton);
+		
     }
 
     /**
@@ -179,10 +187,11 @@ public class NoduleDistances implements Command {
     	*/
     	
    ;
-    	
+    	ImagePlus im = new ImagePlus(file.getPath());
     	try {
-    	execute(new ImagePlus(file.getPath()));
+    	execute(im);
     	}catch(Exception e) {
+    		e.printStackTrace();
     		IJ.log("error, select an image file");
     	}
     	
