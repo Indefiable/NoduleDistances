@@ -16,6 +16,7 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.Roi;
 import ij.gui.ShapeRoi;
+import ij.io.FileSaver;
 import ij.gui.Line;
 import ij.gui.OvalRoi;
 import ij.gui.Overlay;
@@ -24,6 +25,7 @@ import ij.plugin.frame.RoiManager;
 import ij.process.BinaryProcessor;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
+import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
 import net.imagej.ImageJ;
 import net.imagej.ops.OpService;
@@ -31,6 +33,7 @@ import trainableSegmentation.FeatureStackArray;
 import trainableSegmentation.unsupervised.ColorClustering;
 import trainableSegmentation.unsupervised.ColorClustering.Channel;
 import ij.plugin.filter.GaussianBlur;
+import ij.plugin.filter.RankFilters;
 import ij.gui.EllipseRoi;
 
 
@@ -43,9 +46,9 @@ public class RootSegmentation {
 
 	private ColorClustering cluster;
 	private FeatureStackArray fsa;
-	private ImagePlus binarymap;
-	public ImagePlus skeletonMap = null;
+	public ImagePlus binarymap;
 	
+	public ImagePlus skeletonMap = null;
 	
 	private final int NOISECUTOFF = 1000;
 	
@@ -139,6 +142,25 @@ public class RootSegmentation {
 		binarymap.close();
 		
 		binarymap.setProcessor(bit);
+		
+		 ImagePlus scaledImage = scaleImage(binarymap, 2);
+		 
+		 ByteProcessor scaledbit = scaledImage.getProcessor().convertToByteProcessor();
+		 
+	        // Apply median blur multiple times
+	        int iterations = 1;
+	        for (int i = 0; i < iterations; i++) {
+	            applyMedianBlur(scaledbit);
+	        }
+	        
+	    scaledImage.setProcessor(scaledbit);    
+	    
+	    ImagePlus result = scaleImage(scaledImage, 0.5);
+	    
+	    this.binarymap = result;
+	    
+	    System.out.println("breakpoint");
+		
 	}
 	
 	private void delete(ArrayList<Integer> indices, ShapeRoi[] rois) {
@@ -148,9 +170,6 @@ public class RootSegmentation {
 		
 	//	ByteProcessor newp = new ByteProcessor(this.binarymap.getWidth(),
 	//			this.binarymap.getHeight());
-		
-		
-	
 		
 		for(int index : indices) {
 			
@@ -162,10 +181,7 @@ public class RootSegmentation {
 			}
 			
 		}
-		
-		
 		ImagePlus test3 = new ImagePlus("cleaned", newp.convertToByteProcessor());
-		
 	}
 	
 	/**
@@ -203,30 +219,11 @@ public class RootSegmentation {
 			im[ii] = !im[ii];
 		}
 		
-		
-		ByteProcessor byt = new ByteProcessor(width, height, booleanToByte(im));
-		
-		
-		ImagePlus testImp = new ImagePlus("pre-thinned", byt);
-		
-		testImp.show();
-		
-		//byt.smooth();
-		
-		//im = convertToBooleanArray(byt);
-		
-		
-		//testImp = new ImagePlus("blurred", byt);
-		
-		//testImp.show();
-		
 		TraceSkeleton.thinningZS(im, width,height);
 		
-		 byt = new ByteProcessor(width, height, booleanToByte(im));
-		
-		testImp = new ImagePlus("thinned", byt);
-		
-		testImp.show();
+		ByteProcessor byt = new ByteProcessor(width, height, booleanToByte(im));
+		 
+		this.skeletonMap = new ImagePlus("Skeleton", byt);
 		
 		skeleton = TraceSkeleton.traceSkeleton(im, width, height, 100);
 		
@@ -234,48 +231,7 @@ public class RootSegmentation {
 		return skeleton;
 	}
 
-	/**
-	 * creates small dots where nodes are in the image. Overrides skeletonMap.
-	 * @param nodes: list of nodes.
-	 */
-	public void overlayGraph(ArrayList<Point> nodes, ArrayList<ArrayList<int[]>> skeleton) {
 
-		ColorProcessor cp = this.binarymap.getProcessor().convertToColorProcessor();
-		ImagePlus skellyMap = new ImagePlus("skeleton", cp);
-
-		Overlay overlay = new Overlay();
-		skellyMap.setOverlay(overlay);
-
-		for (ArrayList<int[]> chunk : skeleton) {
-			
-			for(int ii = 0; ii < chunk.size(); ii+=2) {
-				
-				 	int[] start = chunk.get(ii);
-				    int[] end = chunk.get(ii+1);
-				    
-				    int startX = start[0];
-				    int startY = start[1];
-				    int endX = end[0];
-				    int endY = end[1];
-
-				    Line line = new Line(startX, startY, endX, endY);
-				    line.setStrokeWidth(2);
-				    line.setStrokeColor(Color.pink);
-				    overlay.add(line);
-			}
-			
-		   
-		}
-		
-		this.skeletonMap = skellyMap;
-		
-		for(Point point : nodes) {
-			double radius = 3;
-			OvalRoi ball = new OvalRoi( point.x - radius,  point.y - radius, 2 * radius, 2 * radius);
-			ball.setFillColor(Color.BLUE);
-			skeletonMap.getOverlay().add(ball);
-		}
-	}
 	
 	private static boolean[] convertToBooleanArray(ByteProcessor byteProcessor) {
         int width = byteProcessor.getWidth();
@@ -290,12 +246,83 @@ public class RootSegmentation {
         return result;
     }
 
+	private static void applyMedianBlur(ByteProcessor processor) {
+        RankFilters rankFilters = new RankFilters();
+        rankFilters.rank(processor, 7, RankFilters.MEDIAN);
+    }
 	
+	/**
+    private static ImagePlus scaleImage(ImagePlus imp, double scaleFactor) {
+        
+    	int width = (int) (imp.getWidth() * scaleFactor);
+        int height = (int) (imp.getHeight() * scaleFactor);
+
+        ImagePlus scaledImage = new ImagePlus("scaled Image", imp.getProcessor().convertToByteProcessor());
+        IJ.run(scaledImage, "Scale...", "x=" + scaleFactor + " y=" + scaleFactor + " interpolation=Bilinear");
+
+        return scaledImage;
+    }*/
 	
+    public static ImagePlus scaleImage(ImagePlus originalImage, double scaleFactor) {
+        // Get the ImageProcessor from the original image
+        ImageProcessor originalProcessor = originalImage.getProcessor();
+
+        // Get the dimensions of the original image
+        int originalWidth = originalProcessor.getWidth();
+        int originalHeight = originalProcessor.getHeight();
+
+        // Calculate the new dimensions after scaling
+        int newWidth = (int) (originalWidth * scaleFactor);
+        int newHeight = (int) (originalHeight * scaleFactor);
+
+        // Create a new ImageProcessor for the scaled image
+        ImageProcessor scaledProcessor = originalProcessor.createProcessor(newWidth, newHeight);
+
+        // Scale the image using bilinear interpolation
+        for (int y = 0; y < newHeight; y++) {
+            for (int x = 0; x < newWidth; x++) {
+                // Calculate the corresponding position in the original image
+                double originalX = x / scaleFactor;
+                double originalY = y / scaleFactor;
+
+                // Use bilinear interpolation to get the pixel value
+                int value = bilinearInterpolation(originalProcessor, originalX, originalY);
+                
+                // Set the pixel value in the scaled image
+                scaledProcessor.putPixel(x, y, value);
+            }
+        }
+
+        // Create a new ImagePlus object for the scaled image
+        ImagePlus scaledImage = new ImagePlus("Scaled Image", scaledProcessor);
+
+        // Optionally, convert the image to 8-bit if needed
+        ImageConverter converter = new ImageConverter(scaledImage);
+        converter.convertToGray8();
+
+        return scaledImage;
+    }
 	
-	
-	
-	
+    private static int bilinearInterpolation(ImageProcessor processor, double x, double y) {
+        int x1 = (int) x;
+        int y1 = (int) y;
+        int x2 = x1 + 1;
+        int y2 = y1 + 1;
+
+        // Get pixel values of the four surrounding pixels
+        int q11 = processor.getPixel(x1, y1);
+        int q21 = processor.getPixel(x2, y1);
+        int q12 = processor.getPixel(x1, y2);
+        int q22 = processor.getPixel(x2, y2);
+
+        // Bilinear interpolation formula
+        double value = (1 - (x - x1)) * (1 - (y - y1)) * q11 +
+                       (x - x1) * (1 - (y - y1)) * q21 +
+                       (1 - (x - x1)) * (y - y1) * q12 +
+                       (x - x1) * (y - y1) * q22;
+
+        return (int) value;
+    }
 	
 	
 	
