@@ -1,10 +1,9 @@
 package noduledistances.imagej;
 
 import java.awt.Point;
+import java.util.HashMap;
 
 public class Node extends Point{
-public int x;
-public int y;
 public int type;
 
 

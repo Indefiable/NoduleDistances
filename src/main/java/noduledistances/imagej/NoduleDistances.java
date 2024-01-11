@@ -44,7 +44,12 @@ public class NoduleDistances implements Command {
 	private final int NODERADIUS=3;
 	private final int OTHERFILETYPE = 4;
 	public static ImagePlus image;
+	
 	public ImagePlus overlayedGraph = null;
+	
+	public static final int SCALEFACTOR = 2;
+	public static int initialWidth;
+	public static int initialHeight;
 	
     @Parameter
     private LogService logService;
@@ -131,20 +136,32 @@ public class NoduleDistances implements Command {
 		
 		
 		for(int[] edge : nodules) {
+			System.out.println("(" + edge[0] + ", " + edge[1] + ")");
+			Node node1 = graph.nodes.get(edge[0]);
+			Node node2 = graph.nodes.get(edge[1]);
+			Node nodule = null;
 			
-			Node nodule = graph.nodes.get(edge[0]);
-			Node node = graph.nodes.get(edge[1]);
+			if(node1.type > 0) {
+				nodule = node1;
+			}
+			else if(node2.type > 0){
+				nodule = node2;
+			}
+			else {
+				System.out.println("I'm confused, you're not supposed to see this.");
+			}
 			
-			Line line = new Line(node.x, node.y, nodule.x, nodule.y);
+			Line line = new Line(node2.x, node2.y, node1.x, node1.y);
 			line.setStrokeWidth(2);
 			
 		    line.setStrokeColor(Color.ORANGE);
 		    
-		    int noduleRadius = NODERADIUS+2;
+		    int noduleRadius = NODERADIUS+5;
+		    
 			OvalRoi ball = new OvalRoi( nodule.x - noduleRadius,  nodule.y - noduleRadius,
 					2 * noduleRadius, 2 * noduleRadius);
 			
-			System.out.println(nodule.type);
+			
 			if(nodule.type == 1) {
 				ball.setFillColor(Color.RED);
 			}
@@ -154,13 +171,13 @@ public class NoduleDistances implements Command {
 			else if(nodule.type == 3) {
 				ball.setFillColor(Color.YELLOW);
 			}
-			else {
-				System.out.println("Non-fatal Error, edge[3] should only be 0,1,2,3");
-			}
 			
-			skellyMap.getOverlay().add(line);
+			
 			skellyMap.getOverlay().add(ball);
+			skellyMap.getOverlay().add(line);
 		}
+		
+		skellyMap.show();
 		
 	}
 	
@@ -187,12 +204,14 @@ public class NoduleDistances implements Command {
 		
 		 // MAKING IMAGE SMALLER FOR TESTING PURPOSES.
 		//=====================================================
-		double factor = 2;
-		int width = (int) (6000 / factor);
-		int height = (int) (4000 / factor);
-		int x =(int) ((6000 - width)/2);
-		int y =(int) ((4000 - height)/2);
-		image.setRoi(x, y, width, height); // cropping image to center of image and halving the size.
+		NoduleDistances.initialHeight = image.getHeight();
+		NoduleDistances.initialWidth = image.getWidth();
+		
+		int newWidth = (int) (image.getWidth() / SCALEFACTOR);
+		int newHeight = (int) (image.getHeight() / SCALEFACTOR);
+		int x =(int) ((image.getWidth() - newWidth)/2);
+		int y =(int) ((image.getHeight() - newHeight)/2);
+		image.setRoi(x, y, newWidth, newHeight); // cropping image to center of image and halving the size.
 		image = image.crop();
 		//=====================================================
 		
@@ -200,7 +219,7 @@ public class NoduleDistances implements Command {
 		
 		NoduleDistances.image = image;
 		ColorClustering cluster = new ColorClustering(image);
-		cluster.loadClusterer("D:\\1EDUCATION\\aRESEARCH\\tempGitHub\\Nodule-Distances\\assets\\001_roots.model");
+		cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Eclipse Workspace\\noduledistances\\assets\\001_roots.model");
 		cluster.setChannels(channels);
 		
 		RootSegmentation root = new RootSegmentation(cluster);

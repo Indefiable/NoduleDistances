@@ -1,43 +1,21 @@
 package noduledistances.imagej;
 
-import java.awt.Color;
 import java.awt.Point;
-import java.io.File;
 import java.util.ArrayList;
 
-import org.scijava.command.Command;
-import org.scijava.log.LogService;
-import org.scijava.plugin.Parameter;
-import org.scijava.plugin.Plugin;
-import org.scijava.ui.UIService;
-
-import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.Roi;
 import ij.gui.ShapeRoi;
-import ij.io.FileSaver;
-import ij.gui.Line;
-import ij.gui.OvalRoi;
-import ij.gui.Overlay;
+import ij.plugin.filter.RankFilters;
 import ij.plugin.filter.ThresholdToSelection;
 import ij.plugin.frame.RoiManager;
-import ij.process.BinaryProcessor;
 import ij.process.ByteProcessor;
-import ij.process.ColorProcessor;
 import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
-import net.imagej.ImageJ;
-import net.imagej.ops.OpService;
+import traceskeleton.TraceSkeleton;
 import trainableSegmentation.FeatureStackArray;
 import trainableSegmentation.unsupervised.ColorClustering;
-import trainableSegmentation.unsupervised.ColorClustering.Channel;
-import ij.plugin.filter.GaussianBlur;
-import ij.plugin.filter.RankFilters;
-import ij.gui.EllipseRoi;
-
-
-import traceskeleton.TraceSkeleton;
 
 
 
@@ -205,7 +183,6 @@ public class RootSegmentation {
 		return imp;
 	}
 	
-	
 	public ArrayList<ArrayList<int[]>> skeletonize() {
 		
 		ArrayList<ArrayList<int[]>> skeleton; 
@@ -231,8 +208,6 @@ public class RootSegmentation {
 		return skeleton;
 	}
 
-
-	
 	private static boolean[] convertToBooleanArray(ByteProcessor byteProcessor) {
         int width = byteProcessor.getWidth();
         int height = byteProcessor.getHeight();
