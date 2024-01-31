@@ -3,6 +3,7 @@ package noduledistances.imagej;
 import java.awt.Point;
 import java.util.ArrayList;
 
+import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.Roi;
@@ -28,7 +29,7 @@ public class RootSegmentation {
 	
 	public ImagePlus skeletonMap = null;
 	
-	private final int NOISECUTOFF = 1000;
+	private final int NOISECUTOFF = 2000;
 	
 /**
  * 
@@ -37,8 +38,7 @@ public class RootSegmentation {
 		this.cluster = cluster;
 		ImagePlus image = cluster.getImage();
 	
-		
-		cluster.setNumSamples(image.getWidth() * image.getHeight());
+		cluster.setNumSamples((int) (image.getWidth() * image.getHeight() * .04));
 		this.fsa = new FeatureStackArray(image.getStackSize());
 		
 		fsa = cluster.createFSArray(image);
@@ -47,12 +47,11 @@ public class RootSegmentation {
 		
 		ImageStack mapStack = binarymap.getStack();
 		
-		mapStack.deleteSlice(1);
 		mapStack.deleteSlice(2);
+		
 		binarymap = new ImagePlus("roots", mapStack.getProcessor(1));
 		ByteProcessor pc = binarymap.getProcessor().convertToByteProcessor();
 		this.binarymap = new ImagePlus(image.getShortTitle(), pc);
-		
 		
 		clean();
 	
@@ -73,6 +72,7 @@ public class RootSegmentation {
 			System.out.println("Error: no map found. Generate a map first.");
 			return;
 		}
+		
 		binarymap.show();
 		
 		binarymap.getProcessor().setAutoThreshold("Default"); //intensive
@@ -137,8 +137,6 @@ public class RootSegmentation {
 	    
 	    this.binarymap = result;
 	    
-	    System.out.println("breakpoint");
-		
 	}
 	
 	private void delete(ArrayList<Integer> indices, ShapeRoi[] rois) {

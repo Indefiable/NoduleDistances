@@ -5,6 +5,7 @@
 package noduledistances.imagej;
 
 import java.awt.Color;
+import java.awt.Font;
 import java.awt.Point;
 import java.io.File;
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import ij.ImagePlus;
 import ij.gui.Line;
 import ij.gui.OvalRoi;
 import ij.gui.Overlay;
+import ij.gui.TextRoi;
 import ij.process.ColorProcessor;
 import net.imagej.ImageJ;
 import net.imagej.ops.OpService;
@@ -41,11 +43,10 @@ public class NoduleDistances implements Command {
 	private final int FOLDER = 1;
 	private final int IMAGE = 2;
 	private final int MODEL = 3;
-	private final int NODERADIUS=3;
 	private final int OTHERFILETYPE = 4;
+	private final int NODERADIUS=3;
 	public static ImagePlus image;
 	
-	public ImagePlus overlayedGraph = null;
 	
 	public static final int SCALEFACTOR = 2;
 	public static int initialWidth;
@@ -72,113 +73,120 @@ public class NoduleDistances implements Command {
     private File modelFile;
     */
     
+
+	
+	
 	/**
-	 * creates small dots where nodes are in the image. Overrides skeletonMap.
-	 * @param nodes: list of nodes.
+	 * Finds the shortest path between the start and end nodules and colors the path between them.
+	 * @param startNode
+	 * @param endNode
+	 * @param graph
+	 * @param overlayedGraph
 	 */
-	public void overlayGraph(Graph graph, ColorProcessor cp) {
-
-		ImagePlus skellyMap = new ImagePlus("skeleton", cp);
-
+	public ImagePlus shortestPath(int startNodeIndex, int endNodeIndex, Graph graph, GraphOverlay graphOverlay) {
+		
+		startNodeIndex--;
+		endNodeIndex--;
+		
+		ColorProcessor cp = new ColorProcessor(graphOverlay.overlayedGraph.getImage());
+		ImagePlus SP = new ImagePlus("Shortest Path", cp);
+		
 		Overlay overlay = new Overlay();
-		skellyMap.setOverlay(overlay);
-
-		for (ArrayList<int[]> chunk : graph.skeleton) {
+		SP.setOverlay(overlay);
+		SP.getOverlay().add(graphOverlay.overlayedGraph.getOverlay());
+		
+		Node[] nodules = graph.getNodules();
+		
+		if(startNodeIndex > nodules.length || startNodeIndex < 0) {
+			System.out.println("Invalid start node. ");
+			return null;
+		}
+		else if(endNodeIndex > nodules.length || endNodeIndex < 0) {
+			System.out.println("Invalid end node. ");
+			return null;
+		}
+		
+		Node startNode = graph.getNodules()[startNodeIndex];
+		Node endNode = graph.getNodules()[endNodeIndex];
+		
+		
+		int distance = startNode.distance[endNode.nodeIndex];
+		System.out.println(distance + " pixels between " + (startNodeIndex +1) +
+				" and " + (endNodeIndex+1));
+		
+		int[] prevNode = startNode.prevNode;
+		
+		int current = endNode.nodeIndex;
+		ArrayList<Integer> path = new ArrayList<>();
+	
+		int counter = 0;
+		//find path
+		while(true) {
+			counter++;
+			path.add(current);
 			
-			for(int ii = 0; ii < chunk.size(); ii+=2) {
-				
-				 	int[] edgeStart = chunk.get(ii);
-				    int[] edgeEnd = chunk.get(ii+1);
-				    
-				    int startX = edgeStart[0];
-				    int startY = edgeStart[1];
-				    int endX = edgeEnd[0];
-				    int endY = edgeEnd[1];
-
-				    Line line = new Line(startX, startY, endX, endY);
-				    line.setStrokeWidth(2);
-				    line.setStrokeColor(Color.pink);
-				    overlay.add(line);
+			if(current == startNode.nodeIndex) {
+				break;
+			}
+			current = prevNode[current];
+			if(counter >= graph.nodes.size()) {
+				System.out.println("looping error.");
+				break;
 			}
 		}
 		
-		
-		for(Point point : graph.nodes) {
-			OvalRoi ball = new OvalRoi( point.x - NODERADIUS,  point.y - NODERADIUS, 2 * NODERADIUS, 2 * NODERADIUS);
-			ball.setFillColor(Color.BLUE);
-			skellyMap.getOverlay().add(ball);
-		}
-		
-		//check if nodules have been added to graph yet.
-		int[] types = graph.fsRep.stream().mapToInt(row -> row[2]).toArray();
-		boolean containsNodules = false;
-		
-		for(int type : types) {
-			if(type >0) {
-				containsNodules=true;
-			}
+		//color edges to show path
+		for(int ii = 0; ii < path.size()-1; ii++) {
+			
+			Node node1 = graph.nodes.get(path.get(ii));
+			Node node2 = graph.nodes.get(path.get(ii+1));
+			
+			Line line = new Line(node1.x, node1.y, node2.x, node2.y);
+			line.setStrokeWidth(4);
+			line.setStrokeColor(Color.ORANGE);
+			SP.getOverlay().add(line);
 		}
 		
 		
-		if(containsNodules) {
-			overlayNodules(graph, skellyMap);
-		}
+		//highlight start and end nodules
+		int noduleRadius = NODERADIUS+10;
+	    
+		OvalRoi ball1 = new OvalRoi( startNode.x - noduleRadius,  startNode.y - noduleRadius,
+				2 * noduleRadius, 2 * noduleRadius);
+		ball1.setFillColor(Color.ORANGE);
 		
 		
+		OvalRoi ball2 = new OvalRoi( endNode.x - noduleRadius,  endNode.y - noduleRadius,
+				2 * noduleRadius, 2 * noduleRadius);
+		ball2.setFillColor(Color.ORANGE);
 		
-		this.overlayedGraph = skellyMap;
+		SP.getOverlay().add(ball1);
+		SP.getOverlay().add(ball2);
+		
+		
+		return SP;
+		
 	}
 	
-	
-	public void overlayNodules(Graph graph, ImagePlus skellyMap){
+	public ImagePlus preprocessing(ImagePlus imp) {
 		
-		ArrayList<int[]> nodules = graph.noduleFSRep();
+		ImagePlus image = new ImagePlus(imp.getShortTitle(), imp.getProcessor());
+		
+		 // MAKING IMAGE SMALLER FOR TESTING PURPOSES.
+		//=====================================================
+		NoduleDistances.initialHeight = image.getHeight();
+		NoduleDistances.initialWidth = image.getWidth();
+		
+		int newWidth = (int) (image.getWidth() / SCALEFACTOR);
+		int newHeight = (int) (image.getHeight() / SCALEFACTOR);
+		int x =(int) ((image.getWidth() - newWidth)/2);
+		int y =(int) ((image.getHeight() - newHeight)/2);
+		image.setRoi(x, y, newWidth, newHeight); // cropping image to center of image and halving the size.
+		image = image.crop();
+		//====================================================
 		
 		
-		for(int[] edge : nodules) {
-			System.out.println("(" + edge[0] + ", " + edge[1] + ")");
-			Node node1 = graph.nodes.get(edge[0]);
-			Node node2 = graph.nodes.get(edge[1]);
-			Node nodule = null;
-			
-			if(node1.type > 0) {
-				nodule = node1;
-			}
-			else if(node2.type > 0){
-				nodule = node2;
-			}
-			else {
-				System.out.println("I'm confused, you're not supposed to see this.");
-			}
-			
-			Line line = new Line(node2.x, node2.y, node1.x, node1.y);
-			line.setStrokeWidth(2);
-			
-		    line.setStrokeColor(Color.ORANGE);
-		    
-		    int noduleRadius = NODERADIUS+5;
-		    
-			OvalRoi ball = new OvalRoi( nodule.x - noduleRadius,  nodule.y - noduleRadius,
-					2 * noduleRadius, 2 * noduleRadius);
-			
-			
-			if(nodule.type == 1) {
-				ball.setFillColor(Color.RED);
-			}
-			else if(nodule.type == 2) {
-				ball.setFillColor(Color.GREEN);
-			}
-			else if(nodule.type == 3) {
-				ball.setFillColor(Color.YELLOW);
-			}
-			
-			
-			skellyMap.getOverlay().add(ball);
-			skellyMap.getOverlay().add(line);
-		}
-		
-		skellyMap.show();
-		
+		return image;
 	}
 	
 	
@@ -193,46 +201,38 @@ public class NoduleDistances implements Command {
     private void execute(ImagePlus image) {
     	
     	ArrayList<Channel> channels = new ArrayList<Channel>(); // channels to use when segmenting.
-    	channels.add(Channel.Hue);
+    	channels.add(Channel.Brightness);
     	channels.add(Channel.Lightness);
-    	 
 		
 		if(image.getType() != ImagePlus.COLOR_RGB) {
 			image = new ImagePlus(image.getTitle(), image.getProcessor().convertToRGB());
 		}
 		
+		NoduleDistances.image = preprocessing(image);
 		
-		 // MAKING IMAGE SMALLER FOR TESTING PURPOSES.
-		//=====================================================
-		NoduleDistances.initialHeight = image.getHeight();
-		NoduleDistances.initialWidth = image.getWidth();
-		
-		int newWidth = (int) (image.getWidth() / SCALEFACTOR);
-		int newHeight = (int) (image.getHeight() / SCALEFACTOR);
-		int x =(int) ((image.getWidth() - newWidth)/2);
-		int y =(int) ((image.getHeight() - newHeight)/2);
-		image.setRoi(x, y, newWidth, newHeight); // cropping image to center of image and halving the size.
-		image = image.crop();
-		//=====================================================
-		
-		
-		
-		NoduleDistances.image = image;
-		ColorClustering cluster = new ColorClustering(image);
-		cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Eclipse Workspace\\noduledistances\\assets\\001_roots.model");
+		ColorClustering cluster = new ColorClustering(NoduleDistances.image);
+	//	cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Eclipse Workspace\\noduledistances\\assets\\001_roots.model");
+		cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS013_Light_Bright.model");
 		cluster.setChannels(channels);
 		
 		RootSegmentation root = new RootSegmentation(cluster);
 		
+		
 		ArrayList<ArrayList<int[]>> skeleton = root.skeletonize();
 		
-		Graph graph = new Graph(skeleton);
+		GraphOverlay graphOverlay = new GraphOverlay();
+		
+		Graph graph = new Graph(skeleton, graphOverlay);
 		
 		graph.addNodules(nodules.getAbsolutePath());
 		
-		overlayGraph(graph, root.binarymap.getProcessor().convertToColorProcessor());
+		graphOverlay.overlayGraph(graph, NoduleDistances.image.getProcessor().convertToColorProcessor());
 		
-		overlayedGraph.show();
+		graph.computeShortestDistances();
+		
+		shortestPath(1,7,graph, graphOverlay).show();
+		
+		System.out.println("breakpoint");
 		
     }
 
