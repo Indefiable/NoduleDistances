@@ -3,7 +3,11 @@ package noduledistances.imagej;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Point;
+import java.io.File;
 import java.util.ArrayList;
+
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import ij.ImagePlus;
 import ij.gui.Line;
@@ -239,6 +243,42 @@ public class GraphOverlay {
 		
 	}
 	
+	public void loadTif() {
+		
+		ImagePlus tifImp = null;
+		
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Image to load or file to iterate through.");
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+
+        // Add a file filter for image files (you can customize this for specific image types)
+        FileNameExtensionFilter imageFilter = new FileNameExtensionFilter("Tif", "tif");
+        fileChooser.setFileFilter(imageFilter);
+        
+        int result = fileChooser.showOpenDialog(null);
+        
+        if( result == JFileChooser.APPROVE_OPTION) {
+        	tifImp = new ImagePlus(fileChooser.getSelectedFile().getAbsolutePath());
+        }
+        
+       if(tifImp == null) {
+    	   System.out.println("failed to load Tif file. Did you choose a Tif file?");
+    	   return;
+       }
+       
+       tifImp.show();
+       Overlay nodules = tifImp.getOverlay();
+       
+       if(nodules == null) {
+    	   System.out.println("no overlay.");
+       }
+       
+       
+       
+       System.out.println("loadTif breakpoint.");
+       
+       
+	}
 
 	public void overlayNodules(Graph graph, ImagePlus skellyMap){
 		

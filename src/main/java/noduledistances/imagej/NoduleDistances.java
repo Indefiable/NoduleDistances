@@ -28,6 +28,11 @@ import net.imagej.ops.OpService;
 import trainableSegmentation.unsupervised.ColorClustering;
 import trainableSegmentation.unsupervised.ColorClustering.Channel;
 
+import java.awt.image.BufferedImage;
+import java.awt.image.RescaleOp;
+
+
+
 import traceskeleton.TraceSkeleton;
 
 
@@ -63,17 +68,30 @@ public class NoduleDistances implements Command {
    
     
     
-    @Parameter(label = "Image to load or file to iterate through.")
-	private File file;
+    @Parameter(label = "Tif file with nodule data.")
+	private File tif;
     
-    @Parameter(label = "Nodules location csv.")
-    private File nodules;
+    @Parameter(label = "Image of root system.")
+	private File rootsImage;
+  
     /*
     @Parameter(label = "cluster model to use for segmentation.")
     private File modelFile;
     */
     
-
+    
+    // MAKING IMAGE SMALLER FOR TESTING PURPOSES.
+ 	//=====================================================
+    private ImagePlus crop(ImagePlus imp) {
+    	
+		int newWidth = (int) (imp.getWidth() / SCALEFACTOR);
+		int newHeight = (int) (imp.getHeight() / SCALEFACTOR);
+		int x =(int) ((imp.getWidth() - newWidth)/2);
+		int y =(int) ((imp.getHeight() - newHeight)/2);
+		imp.setRoi(x, y, newWidth, newHeight); // cropping image to center of image and halving the size.
+		imp = imp.crop();
+		return imp;
+    }
 	
 	
 	/**
@@ -117,6 +135,12 @@ public class NoduleDistances implements Command {
 		int[] prevNode = startNode.prevNode;
 		
 		int current = endNode.nodeIndex;
+		
+		if(current == -1) {
+			System.out.println("Error, there is no " + endNode.nodeIndex + " node.");
+			return null;
+		}
+		
 		ArrayList<Integer> path = new ArrayList<>();
 	
 		int counter = 0;
@@ -169,9 +193,17 @@ public class NoduleDistances implements Command {
 	}
 	
 	public ImagePlus preprocessing(ImagePlus imp) {
-		
 		ImagePlus image = new ImagePlus(imp.getShortTitle(), imp.getProcessor());
 		
+		//first entry is percent contrast change (2f = 200%), second value is brightness increase
+		RescaleOp op = new RescaleOp(2f, 25, null);
+		
+		BufferedImage output = op.filter(image.getBufferedImage(), null);
+
+		image = new ImagePlus(image.getShortTitle(), output);
+		
+		
+		/**
 		 // MAKING IMAGE SMALLER FOR TESTING PURPOSES.
 		//=====================================================
 		NoduleDistances.initialHeight = image.getHeight();
@@ -184,31 +216,57 @@ public class NoduleDistances implements Command {
 		image.setRoi(x, y, newWidth, newHeight); // cropping image to center of image and halving the size.
 		image = image.crop();
 		//====================================================
-		
-		
+		*/
 		return image;
 	}
-	
-	
-	
+		
     /**
      * This method executes the image analysis.
      * 
-     * @param image : image to run the data analysis on.
+     * @param roots : image to run the data analysis on.
      * @param model : path file to selected .model file 
      */
     //ImagePlus image, String model
-    private void execute(ImagePlus image) {
+    private void execute(ImagePlus roots, ImagePlus tifImp) {
+    	
+    	System.out.println("roots: " + roots.getWidth() + " x " + roots.getHeight());
+
+    	System.out.println("tifImp: " + tifImp.getWidth() + " x " + tifImp.getHeight());
+    	
+    	
+    	if(roots.getWidth() != tifImp.getHeight()) {
+    		roots = crop(roots);
+    		System.out.println("roots: " + roots.getWidth() + " x " + roots.getHeight());
+
+        	System.out.println("tifImp: " + tifImp.getWidth() + " x " + tifImp.getHeight());
+    	}
+    	
+    	if(roots.getWidth() != tifImp.getWidth()) {
+    		System.out.println("I dunno at this point bruh.");
+    		return;
+    	}
     	
     	ArrayList<Channel> channels = new ArrayList<Channel>(); // channels to use when segmenting.
     	channels.add(Channel.Brightness);
     	channels.add(Channel.Lightness);
 		
-		if(image.getType() != ImagePlus.COLOR_RGB) {
-			image = new ImagePlus(image.getTitle(), image.getProcessor().convertToRGB());
+		if(roots.getType() != ImagePlus.COLOR_RGB) {
+			roots = new ImagePlus(roots.getTitle(), roots.getProcessor().convertToRGB());
 		}
 		
-		NoduleDistances.image = preprocessing(image);
+		String extension = tif.getName().substring(tif.getName().lastIndexOf(".") + 1);
+		
+		RoiOverlay roiOverlay = null;
+		
+		if(extension.equalsIgnoreCase("tif")) {
+			roiOverlay = new RoiOverlay(tifImp);
+		}
+		else {
+			System.out.println("You must load a tif image file. Please relaunch.");
+			return;
+		}
+		
+		NoduleDistances.image = preprocessing(roots);
 		
 		ColorClustering cluster = new ColorClustering(NoduleDistances.image);
 	//	cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Eclipse Workspace\\noduledistances\\assets\\001_roots.model");
@@ -217,23 +275,24 @@ public class NoduleDistances implements Command {
 		
 		RootSegmentation root = new RootSegmentation(cluster);
 		
-		
-		ArrayList<ArrayList<int[]>> skeleton = root.skeletonize();
+		ArrayList<ArrayList<int[]>> skeleton = Skeletonize.skeletonize(root.binarymap);
 		
 		GraphOverlay graphOverlay = new GraphOverlay();
+		//graphOverlay.loadTif();
 		
 		Graph graph = new Graph(skeleton, graphOverlay);
 		
-		graph.addNodules(nodules.getAbsolutePath());
+		graph.addNodules(roiOverlay.getRoiCentroids());
 		
-		graphOverlay.overlayGraph(graph, NoduleDistances.image.getProcessor().convertToColorProcessor());
+		graphOverlay.overlayGraph(graph, root.binarymap.getProcessor().convertToColorProcessor());
+		graphOverlay.showGraph();
+		//roiOverlay.skeletonTesting();
 		
 		graph.computeShortestDistances();
-		
+		//graphOverlay.showGraph();
 		shortestPath(1,7,graph, graphOverlay).show();
 		
-		System.out.println("breakpoint");
-		
+		System.out.println("Breakpoint");
     }
 
     /**
@@ -316,10 +375,11 @@ public class NoduleDistances implements Command {
     	}
     	*/
     	
-   ;
-    	ImagePlus im = new ImagePlus(file.getPath());
+   
+    	ImagePlus im = new ImagePlus(rootsImage.getPath());
+    	ImagePlus im2 = new ImagePlus(tif.getPath());
     	try {
-    	execute(im);
+    	execute(im, im2);
     	}catch(Exception e) {
     		e.printStackTrace();
     		IJ.log("error, select an image file");

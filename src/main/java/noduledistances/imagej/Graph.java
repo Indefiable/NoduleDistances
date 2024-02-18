@@ -50,6 +50,9 @@ public class Graph {
 	int[] point;
 	GraphOverlay graphOverlay;
 	
+	
+	
+	
 	/**
 	 * initializer. Constructs the graph object from the skeleton.
 	 * @param skeleton
@@ -86,7 +89,6 @@ public class Graph {
 			    
 			    fsRep.add(new int[] {node1, node2, length});
 			    fsRep.add(new int[] {node2, node1, length});
-
 			}
 		}
 		
@@ -195,63 +197,16 @@ public class Graph {
     }
 	
    
-    public void addNodules(String nodules) {
+    public void addNodules(int[][] nodLocations) {
     	
-		String[][] nodLocations = null;
-		
-		try {
-			nodLocations = readCSV(nodules);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
 		if(nodLocations == null) {
 			System.out.println("Error reading nodule locations. Unable to add them.");
 			return;
 			}
-    
-		
-    for(String[] nodule : nodLocations) {
-    	if(nodule[0].equals("null")) {
-    		continue;
-    	}
-    	if(nodule[1].equals("null")) {
-    		continue;
-    	}
-    	if(nodule[2].equals("null")) {
-    		continue;
-    	}
+    		
+    for(int[] nodule : nodLocations) {
     	
-    	
-    	int noduleX = 0;
-    	int noduleY = 0;
-    	
-    	try {
-    	noduleX = Integer.parseInt(nodule[0]);
-    	noduleY = Integer.parseInt(nodule[1]);
-    	}
-    	catch(Exception e) {
-    		System.out.println("error");
-    		e.printStackTrace();
-    	}
-    	
-    	
-    	Node nod = null;
-    	
-    	if(nodule[2].equalsIgnoreCase("red")) {
-    		nod = new Node(noduleX, noduleY, 1);
-    	}
-    	else if(nodule[2].equalsIgnoreCase("green")) {
-    		nod = new Node(noduleX, noduleY, 2);
-    	}
-    	else if(nodule[2].equalsIgnoreCase("mixed")) {
-    		nod = new Node(noduleX, noduleY, 3);
-    	}
-    	else {
-    		System.out.println("ERROR");
-    		continue;
-    	}
+    	Node nod = new Node(nodule[1],nodule[2], nodule[0]);
     	
     	nodes.add(nod);
     	int nodeIndex = nodes.indexOf(nod);
@@ -266,7 +221,6 @@ public class Graph {
     	fsRep.add(new int[] {nodeIndex,closestIndex , length});
     	fsRep.add(new int[] {closestIndex,nodeIndex , length});
     	numNodules++;
-    	
     }
     
     Collections.sort(fsRep, Comparator.comparingInt(arr -> arr[0]));
