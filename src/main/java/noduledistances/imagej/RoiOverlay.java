@@ -5,18 +5,27 @@ import ij.ImagePlus;
 import ij.gui.Line;
 import ij.gui.OvalRoi;
 import ij.gui.Overlay;
+import ij.gui.PolygonRoi;
 import ij.gui.TextRoi;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
+import ij.process.FloatPolygon;
 import traceskeleton.TraceSkeleton;
 import ij.gui.ShapeRoi;
 
 import java.awt.Color;
+import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
 
+import org.apache.commons.math3.ml.clustering.CentroidCluster;
+import org.apache.commons.math3.ml.clustering.KMeansPlusPlusClusterer;
 import org.apache.commons.math3.random.HaltonSequenceGenerator;
-
 
 
 public class RoiOverlay {
@@ -49,36 +58,229 @@ public class RoiOverlay {
 	 * @return
 	 */
 	public int[][] getRoiCentroids(){
-		int[][] centroids = new int[rois.length][3];
-		int ij = 0;
+		
+		ArrayList<ArrayList<Integer>> centroids = new ArrayList<>();
+		
+		ArrayList<Integer> coords;
 		
 		for(ShapeRoi roi : rois) {
+			coords = new ArrayList<>();
+			
 			String name = roi.getName();
 			
+			int numNods = 0;
+			
+			try {
+				numNods = Integer.parseInt(name.substring(2));
+			}catch(Exception e) {
+				System.out.println(name);
+				System.out.println("Could not convert to an integer.");
+				numNods=1;
+			}
+			if(numNods>1){
+				// if is clump, use k-means to separate into individual points, add those
+				// individual points, and go to next roi.
+				ArrayList<ArrayList<Integer>> clump = breakupClumps(roi, numNods);
+				for(ArrayList<Integer> cords : clump) {
+					centroids.add(cords);
+				}
+				continue;
+			}
+			
 			if(name.substring(0, 1).equalsIgnoreCase("r")) {
-				centroids[ij][0] = 1;
+				coords.add(1);
 			}
 			else if(name.substring(0, 1).equalsIgnoreCase("g")) {
-				centroids[ij][0] = 2;
+				coords.add(2);
 			}
 			else if(name.substring(0, 1).equalsIgnoreCase("m")) {
-				centroids[ij][0] = 3;
+				coords.add(3);
 			}
 			
 			double[] centroid = roi.getContourCentroid();
+			coords.add((int) centroid[0]);
+			coords.add((int) centroid[1]);
 			
-			centroids[ij][1] = (int) centroid[0];
-			centroids[ij++][2] = (int) centroid[1];
+			centroids.add(coords);
+		}
+		
+		//convert List<List<>> to int[][] and return
+		return centroids.stream().map(row -> row.stream().mapToInt(Integer::intValue).toArray()).toArray(int[][]::new);
+	}
+	
+	public List<ClumpClusterPoint> getHaltonSequence(ShapeRoi roi, int radius) {
+		
+		Rectangle rect = roi.getBounds();
+		
+		int sequenceSize = (int) ((rect.width * rect.height)*.15);
+		
+		List<ClumpClusterPoint> halton = getHaltonVectors(sequenceSize, rect);
+		
+		ArrayList<ClumpClusterPoint> returnHalton = new ArrayList<>();
+		
+		for(ClumpClusterPoint point : halton) {
+			
+			point = new ClumpClusterPoint(point.x + rect.x, point.y + rect.y);
+			
+			if(roi.getFloatPolygon().contains(point.x, point.y)) {
+				returnHalton.add(point);
+			
+			}
 		}
 		
 		
-		return centroids;
+	
+		return returnHalton;
 	}
 	
 	
+	public static List<CentroidCluster<ClumpClusterPoint>> kMeansClustering(List<ClumpClusterPoint> points, int k) {
+        
+		KMeansPlusPlusClusterer<ClumpClusterPoint> clusterer = new KMeansPlusPlusClusterer<>(k);
+        
+		List<CentroidCluster<ClumpClusterPoint>> clusters = clusterer.cluster(points);
+        
+		return clusters;
+	}
+    
 	
+	public List<ClumpClusterPoint> getHaltonVectors(int numberOfPoints, Rectangle boundingBox) {
+		
+		int width = boundingBox.width;
+		int height = boundingBox.height;
+		HaltonSequenceGenerator haltonGenerator = new HaltonSequenceGenerator(2);
+		List<ClumpClusterPoint> haltonPoints = new ArrayList<ClumpClusterPoint>();
+	    
+	        
+	    for (int i = 0; i < numberOfPoints; i++) {
+	    	double[] vector = haltonGenerator.nextVector();
+	    	double x = (vector[0] * width);
+	    	double y = (vector[1] * height);
+	    	haltonPoints.add(new ClumpClusterPoint(x,y));
+	    }
+	        
+	    return haltonPoints;
+	}
+	
+
+	public ArrayList<ArrayList<Integer>> breakupClumps(ShapeRoi roi, int numNods) {
+		
+		List<ClumpClusterPoint> halton = getHaltonSequence(roi, 3);
+		
+		List<CentroidCluster<ClumpClusterPoint>> clusters = kMeansClustering(halton, numNods);
+		
+		ArrayList<ArrayList<Integer>> nods = new ArrayList<>();
+		ArrayList<Integer> nodn;
+		String name = roi.getName();
+		
+		
+		for(CentroidCluster<ClumpClusterPoint> cluster : clusters) {
+			nodn = new ArrayList<>();
+			
+			if(name.substring(0, 1).equalsIgnoreCase("r")) {
+				nodn.add(1);
+			}
+			else if(name.substring(0, 1).equalsIgnoreCase("g")) {
+				nodn.add(2);
+			}
+			else if(name.substring(0, 1).equalsIgnoreCase("m")) {
+				nodn.add(3);
+			}
+			double[] coords = cluster.getCenter().getPoint();
+			
+			nodn.add((int) coords[0]);
+			nodn.add((int) coords[1]);
+			
+			nods.add(nodn);
+		}
+		
+		return nods;
+		
+	}
 	
 	//ALL METHODS BELOW THIS LINE ARE FOR TESTING PURPOSES.
+	
+	
+	public void showGraphBreakup(List<CentroidCluster<ClumpClusterPoint>> clusters, ShapeRoi roi, int radius, int numNods) {
+
+		Overlay overlay = new Overlay();
+		
+		Rectangle rect = roi.getBounds();
+		ImagePlus testing = testingSpace((int) (rect.width),(int) (rect.height));
+		
+		testing.setOverlay(overlay);
+		
+		Color[] colors = generateUniqueColors(numNods);
+		
+		
+		int counter = 0;
+		for(CentroidCluster<ClumpClusterPoint> cluster : clusters) {
+			Color color = colors[counter++];
+			
+			for(ClumpClusterPoint point : cluster.getPoints()) {
+				OvalRoi ball = new OvalRoi( point.x -rect.x - radius,  point.y - rect.y - radius, 
+						2 * radius, 2 * radius);
+				
+				ball.setFillColor(color);
+				testing.getOverlay().add(ball);
+			}
+		}
+		
+		roi.setPosition(0);
+		roi.setLocation(0, 0);
+	    roi.update(true, false);
+	    	
+	    // Add outlines to the ROI
+	    roi.setStrokeColor(Color.BLACK);
+	    roi.setStrokeWidth(2);
+	   
+	    testing.getOverlay().add(roi);
+		
+		testing.show();
+		System.out.println("breakpoint");
+	}
+	
+	public static Color[] generateUniqueColors(int a) {
+        if (a <= 0) {
+            throw new IllegalArgumentException("Input integer must be greater than 0");
+        }
+
+        Set<Color> colorSet = new HashSet<>();
+        Random random = new Random();
+
+        while (colorSet.size() < a) {
+            // Generate random RGB values
+            int red = random.nextInt(256);
+            int green = random.nextInt(256);
+            int blue = random.nextInt(256);
+            
+            // Create a Color object with the generated RGB values
+            Color color = new Color(red, green, blue);
+            
+            // Add the Color object to the set (ensures uniqueness)
+            colorSet.add(color);
+        }
+
+        // Convert the set to an array
+        return colorSet.toArray(new Color[0]);
+    }
+	
+	
+	public static List<Point2D.Double> generateRandomPoints(List<PolygonRoi> polygons) {
+        List<Point2D.Double> points = new ArrayList<>();
+        Random random = new Random();
+
+        for (PolygonRoi polygon : polygons) {
+            FloatPolygon floatPolygon = polygon.getFloatPolygon();
+            
+            for (int i = 0; i < floatPolygon.npoints; i++) {
+                points.add(new Point2D.Double(floatPolygon.xpoints[i], floatPolygon.ypoints[i]));
+            }
+            
+        }
+
+        return points;
+    }
 	
 	
 	public void skeletonTesting() {
@@ -149,6 +351,7 @@ public class RoiOverlay {
 			
 		}
 	}
+
 	
 	public ImagePlus binaryNoduleOutline(ShapeRoi roi) {
 		
@@ -169,82 +372,6 @@ public class RoiOverlay {
 		bp.fill(roi);
 		
 		return new ImagePlus("skeleton Testing", bp);
-	}
-	
-	
-	/**
-	 * Applies a polygonal subdivision algorithm for
-	 * all ROI's that contain more than one nodule.
-	 */
-	public void haltonSequenceTesting() {
-		int radius = 5;
-		
-		for(ShapeRoi roi : rois) {
-			String name = roi.getName();
-			name = name.substring(2);
-			int numNods = 0;
-			
-			try {
-				numNods = Integer.parseInt(name);
-			}catch(Exception e) {
-				System.out.println(name);
-				System.out.println("Could not convert to an integer.");
-			}
-			
-			if(numNods < 2) {
-				continue;
-			}
-			
-			Overlay overlay = new Overlay();
-			
-			Rectangle rect = roi.getBounds();
-			
-			ImagePlus testing = testingSpace((int) (rect.width),(int) (rect.height));
-			
-			testing.setOverlay(overlay);
-			
-			double[][] halton = getHaltonVectors(3*numNods, rect);
-			
-			for(double[] point : halton) {
-				
-				OvalRoi ball = new OvalRoi( point[0] - radius,  point[1] - radius,
-						2 * radius, 2 * radius);
-				ball.setFillColor(Color.GREEN);
-				
-				testing.getOverlay().add(ball);
-				
-			}
-			
-			roi.setPosition(0);
-			roi.setLocation(0, 0);
-   		    roi.update(true, false);
-   		    	
-   		    // Add outlines to the ROI
-   		    roi.setStrokeColor(Color.BLACK);
-   		    roi.setStrokeWidth(2);
-   		   
-   		    testing.getOverlay().add(roi);
-			
-			testing.show();
-			
-			System.out.println("breakpoint");
-		}
-	}
-
-	
-	public double[][] getHaltonVectors(int numberOfPoints, Rectangle boundingBox) {
-		int width = boundingBox.width;
-		int height = boundingBox.height;
-		HaltonSequenceGenerator haltonGenerator = new HaltonSequenceGenerator(2);
-	    double[][] haltonPoints = new double[numberOfPoints][2];
-	        
-	    for (int i = 0; i < numberOfPoints; i++) {
-	    	haltonPoints[i] = haltonGenerator.nextVector();
-	    	haltonPoints[i][0] *= width;
-	    	haltonPoints[i][1] *= height;
-	    }
-	        
-	    return haltonPoints;
 	}
 	
 	

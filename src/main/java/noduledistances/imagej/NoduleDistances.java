@@ -229,11 +229,6 @@ public class NoduleDistances implements Command {
     //ImagePlus image, String model
     private void execute(ImagePlus roots, ImagePlus tifImp) {
     	
-    	System.out.println("roots: " + roots.getWidth() + " x " + roots.getHeight());
-
-    	System.out.println("tifImp: " + tifImp.getWidth() + " x " + tifImp.getHeight());
-    	
-    	
     	if(roots.getWidth() != tifImp.getHeight()) {
     		roots = crop(roots);
     		System.out.println("roots: " + roots.getWidth() + " x " + roots.getHeight());
@@ -286,11 +281,10 @@ public class NoduleDistances implements Command {
 		
 		graphOverlay.overlayGraph(graph, root.binarymap.getProcessor().convertToColorProcessor());
 		graphOverlay.showGraph();
-		//roiOverlay.skeletonTesting();
-		
+		IJ.save(graphOverlay.overlayedGraph, "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS033\\" + "PS033_overlayed_graph.jpg");
 		graph.computeShortestDistances();
 		//graphOverlay.showGraph();
-		shortestPath(1,7,graph, graphOverlay).show();
+		//shortestPath(1,7,graph, graphOverlay).show();
 		
 		System.out.println("Breakpoint");
     }
