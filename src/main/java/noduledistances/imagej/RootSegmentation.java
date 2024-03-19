@@ -32,7 +32,9 @@ public class RootSegmentation {
 	private final int NOISECUTOFF = 2000;
 	
 /**
+ * performs color clustering segmentation to create a binary map of the root system.
  * 
+ * @param cluster : clustering object that holds the model file used for segmentation.
  */
 	public RootSegmentation(ColorClustering cluster) {
 		
@@ -141,6 +143,11 @@ public class RootSegmentation {
 	    
 	    
 	}
+	
+	
+	
+	
+	
 	
 	private void delete(ArrayList<Integer> indices, ShapeRoi[] rois) {
 		

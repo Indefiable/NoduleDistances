@@ -1,6 +1,7 @@
 package noduledistances.imagej;
 
 
+import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Line;
 import ij.gui.OvalRoi;
@@ -32,10 +33,17 @@ public class RoiOverlay {
 
 	ShapeRoi[] rois;
 	
+	
+	/**
+	 * Extracts the Roi information from the loaded Tif image. 
+	 * Returns early if passed image file does not have an Overlay
+	 * 
+	 * @param imp : image file with attached Overlay. Only TIF files can hold Overlays.
+	 */
 	public RoiOverlay(ImagePlus imp) {
 		
 		if(imp.getOverlay() == null) {
-			System.out.println("Image does not have overlay. Did you load a Tif file?");
+			IJ.log("Image does not have overlay. Did you load a Tif file?");
 			return;
 		}
 		
@@ -55,7 +63,7 @@ public class RoiOverlay {
 	/**
 	 * finds the centroid of all ROI's, and returns them in [color,x,y] format.
 	 * color: red==1, green==2, mixed==3
-	 * @return
+	 * @return [color,x,y] coordinates of the roi centroids. 
 	 */
 	public int[][] getRoiCentroids(){
 		
@@ -108,7 +116,16 @@ public class RoiOverlay {
 		return centroids.stream().map(row -> row.stream().mapToInt(Integer::intValue).toArray()).toArray(int[][]::new);
 	}
 	
-	public List<ClumpClusterPoint> getHaltonSequence(ShapeRoi roi, int radius) {
+	/**
+	 * Computes the halton sequence for a given ROI to create a sample of uniformly 
+	 * distributed points within the Roi polygon by intersecting the halton sequence with the polygon.
+	 * We use the halton sequence to generate the points instead of random sampling becaues 
+	 * the halton sequence produces a very uniform distribution of points.
+	 * 
+	 * @param roi : Rois that we are creating the points for.
+	 * @return List<> of points to cluster.
+	 */
+	public List<ClumpClusterPoint> getHaltonSequence(ShapeRoi roi) {
 		
 		Rectangle rect = roi.getBounds();
 		
@@ -128,12 +145,17 @@ public class RoiOverlay {
 			}
 		}
 		
-		
-	
 		return returnHalton;
 	}
 	
 	
+	/**
+	 * performs k-means clustering on a given set of points to break nodule clumps into k parts. 
+	 * 
+	 * @param points point cloud representation of an ROI polygon
+	 * @param k number of nodules to break the clump into.
+	 * @return List<> of k centroids after performing k-means.
+	 */
 	public static List<CentroidCluster<ClumpClusterPoint>> kMeansClustering(List<ClumpClusterPoint> points, int k) {
         
 		KMeansPlusPlusClusterer<ClumpClusterPoint> clusterer = new KMeansPlusPlusClusterer<>(k);
@@ -143,7 +165,14 @@ public class RoiOverlay {
 		return clusters;
 	}
     
-	
+	/**
+	 * Computes generic halton vectors, and scales them to fill a bounding box. This is what intersects a
+	 * polygon ROI to get the uniform point cloud representation of an ROI polygon.
+	 * 
+	 * @param numberOfPoints : number of halton vectors to generate.
+	 * @param boundingBox : bounds of the halton vectors.
+	 * @return List<> of halton vectors. Uses ClumpClusterPoint to implement Clusterable interface.
+	 */
 	public List<ClumpClusterPoint> getHaltonVectors(int numberOfPoints, Rectangle boundingBox) {
 		
 		int width = boundingBox.width;
@@ -162,10 +191,17 @@ public class RoiOverlay {
 	    return haltonPoints;
 	}
 	
-
+	/**
+	 * Uses k-means clustering to break up the given roi into several pieces. The given roi is assumed to be a
+	 * clump of several nodules. 
+	 * 
+	 * @param roi : roi that we're breaking into parts.
+	 * @param numNods : the number of parts we're breaking the roi into.
+	 * @return x,y coordinates of the contour centroids of the broken up roi.
+	 */
 	public ArrayList<ArrayList<Integer>> breakupClumps(ShapeRoi roi, int numNods) {
 		
-		List<ClumpClusterPoint> halton = getHaltonSequence(roi, 3);
+		List<ClumpClusterPoint> halton = getHaltonSequence(roi);
 		
 		List<CentroidCluster<ClumpClusterPoint>> clusters = kMeansClustering(halton, numNods);
 		
@@ -197,6 +233,8 @@ public class RoiOverlay {
 		return nods;
 		
 	}
+	
+	
 	
 	//ALL METHODS BELOW THIS LINE ARE FOR TESTING PURPOSES.
 	

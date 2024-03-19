@@ -3,11 +3,20 @@ package noduledistances.imagej;
 import java.awt.Point;
 import java.util.HashMap;
 
+import ij.IJ;
+
 public class Node extends Point{
+	
 public int type;
 public int nodeIndex;
 
-public int[] distance;
+/**
+ * 2d array where each element A_ij is the distance to the j'th node on the 
+ * i'th iteration of dijkstra's. Each row is one iteration of Dijkstra's, 
+ * we remove a used edge from the original graph and perform another iteration of 
+ * dijsktra's to create a sample of possible paths.
+ */
+public int[][] distance;
 public int[] prevNode;
 
 
@@ -51,7 +60,24 @@ public double distance(Node node) {
 
 @Override
 public String toString() {
-    return "{x=" + x + ", y=" + y + ", type=" + type + '}';
+	String color = "place holder";
+	if(type == 0) {
+		color = "skeleton node";
+	}
+	if (type == 1) {
+		color = "red";
+	}
+	else if(type == 2) {
+		color = "green";
+	}
+	else if(type == 3) {
+		color = "mixed";
+	}
+	else {
+		IJ.log("You shouldn't see this. Node has unknown type.");
+		color = "unknown";
+	}
+    return "{x=" + x + ", y=" + y + ", type=" + color + '}';
 }
 
 }

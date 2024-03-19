@@ -32,6 +32,7 @@ public class GraphOverlay {
 		// TODO Auto-generated constructor stub
 	}
 
+	
 	public void showGraph() {
 		
 		if(overlayedGraph != null) {
@@ -39,6 +40,7 @@ public class GraphOverlay {
 		}
 		
 	}
+	
 	
 	/**
 	 * created for testing purposes, this method returns a copy of the image
@@ -51,8 +53,8 @@ public class GraphOverlay {
 	 * @return a copy of overlayedGraph with highlighted nodes+edges.
 	 */
 	public ImagePlus highlightGraphSection(Graph graph, ArrayList<Integer> nodeList, 
-			ArrayList<Integer> edgeList, ArrayList<Integer> nodeList1, 
-			ArrayList<Integer> edgeList1) {
+		ArrayList<Integer> edgeList, ArrayList<Integer> nodeList1, 
+		ArrayList<Integer> edgeList1) {
 		
 		ImagePlus highlightedGraph = new ImagePlus("highlighted", overlayedGraph.getProcessor());
 		Overlay overlay = new Overlay();
@@ -133,8 +135,101 @@ public class GraphOverlay {
 		return highlightedGraph;
 	}
 	
+	
+	public void overlayGraph(Graph graph, ColorProcessor cp) {
+		ImagePlus skellyMap = new ImagePlus("skeleton", cp);
+
+		Overlay overlay = new Overlay();
+		skellyMap.setOverlay(overlay);
+		int counter = 0;
+		
+		for (int[] edge : graph.fsRep) {
+			counter++;
+			Node node1 = graph.nodes.get(edge[0]);
+			Node node2 = graph.nodes.get(edge[1]);
+			
+		 	Line line = new Line(node1.x, node1.y, node2.x, node2.y);
+		    line.setStrokeWidth(5);
+		    line.setStrokeColor(Color.DARK_GRAY);
+		    overlay.add(line);
+		}
+		
+		
+		for(Node node : graph.nodes) {
+			
+			if(node.type < 1) {
+			OvalRoi ball = new OvalRoi( node.x - NODERADIUS,  node.y - NODERADIUS, 2 * NODERADIUS, 2 * NODERADIUS);
+			ball.setFillColor(Color.BLUE);
+			skellyMap.getOverlay().add(ball);
+			}
+			else {
+				int radius = NODERADIUS + 8;
+				OvalRoi ball = new OvalRoi( node.x - radius,  node.y - radius, 2 * radius, 2 * radius);
+				
+			if(node.type ==1) {
+				ball.setFillColor(Color.RED);
+			}
+			if(node.type == 2) {
+				ball.setFillColor(Color.GREEN);
+			}
+			if(node.type == 3) {
+				ball.setFillColor(Color.YELLOW);
+			}
+			skellyMap.getOverlay().add(ball);
+			}
+			
+		}
+		
+		skellyMap.setTitle("Graph");
+		
+		this.overlayedGraph = skellyMap;
+		
+	}
+	
+	
+	public void loadTif() {
+		
+		ImagePlus tifImp = null;
+		
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Image to load or file to iterate through.");
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+
+        // Add a file filter for image files (you can customize this for specific image types)
+        FileNameExtensionFilter imageFilter = new FileNameExtensionFilter("Tif", "tif");
+        fileChooser.setFileFilter(imageFilter);
+        
+        int result = fileChooser.showOpenDialog(null);
+        
+        if( result == JFileChooser.APPROVE_OPTION) {
+        	tifImp = new ImagePlus(fileChooser.getSelectedFile().getAbsolutePath());
+        }
+        
+       if(tifImp == null) {
+    	   System.out.println("failed to load Tif file. Did you choose a Tif file?");
+    	   return;
+       }
+       
+       tifImp.show();
+       Overlay nodules = tifImp.getOverlay();
+       
+       if(nodules == null) {
+    	   System.out.println("no overlay.");
+       }
+       
+       
+       
+       System.out.println("loadTif breakpoint.");
+       
+       
+	}
+
+	
+	
+	// methods beyond this line are deprecated or used for testing purposes.
+	//==========================================================================
 	/**
-	 * creates small dots where nodes are in the image. Overrides skeletonMap.
+	 * Overlays the skeleton of the root system onto the image. Also overlays 
 	 * @param nodes: list of nodes.
 	 */
 	public void overlaySkeleton(Graph graph, ColorProcessor cp) {
@@ -192,94 +287,6 @@ public class GraphOverlay {
 		
 	}
 	
-	
-	public void overlayGraph(Graph graph, ColorProcessor cp) {
-		ImagePlus skellyMap = new ImagePlus("skeleton", cp);
-
-		Overlay overlay = new Overlay();
-		skellyMap.setOverlay(overlay);
-		int counter = 0;
-		
-		for (int[] edge : graph.fsRep) {
-			counter++;
-			Node node1 = graph.nodes.get(edge[0]);
-			Node node2 = graph.nodes.get(edge[1]);
-			
-		 	Line line = new Line(node1.x, node1.y, node2.x, node2.y);
-		    line.setStrokeWidth(5);
-		    line.setStrokeColor(Color.DARK_GRAY);
-		    overlay.add(line);
-		}
-		
-		
-		for(Node node : graph.nodes) {
-			
-			if(node.type < 1) {
-			OvalRoi ball = new OvalRoi( node.x - NODERADIUS,  node.y - NODERADIUS, 2 * NODERADIUS, 2 * NODERADIUS);
-			ball.setFillColor(Color.BLUE);
-			skellyMap.getOverlay().add(ball);
-			}
-			else {
-				int radius = NODERADIUS + 8;
-				OvalRoi ball = new OvalRoi( node.x - radius,  node.y - radius, 2 * radius, 2 * radius);
-				
-			if(node.type ==1) {
-				ball.setFillColor(Color.RED);
-			}
-			if(node.type == 2) {
-				ball.setFillColor(Color.GREEN);
-			}
-			if(node.type == 3) {
-				ball.setFillColor(Color.YELLOW);
-			}
-			skellyMap.getOverlay().add(ball);
-			}
-			
-		}
-		
-		skellyMap.setTitle("Graph");
-		
-		this.overlayedGraph = skellyMap;
-		
-	}
-	
-	public void loadTif() {
-		
-		ImagePlus tifImp = null;
-		
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Image to load or file to iterate through.");
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-
-        // Add a file filter for image files (you can customize this for specific image types)
-        FileNameExtensionFilter imageFilter = new FileNameExtensionFilter("Tif", "tif");
-        fileChooser.setFileFilter(imageFilter);
-        
-        int result = fileChooser.showOpenDialog(null);
-        
-        if( result == JFileChooser.APPROVE_OPTION) {
-        	tifImp = new ImagePlus(fileChooser.getSelectedFile().getAbsolutePath());
-        }
-        
-       if(tifImp == null) {
-    	   System.out.println("failed to load Tif file. Did you choose a Tif file?");
-    	   return;
-       }
-       
-       tifImp.show();
-       Overlay nodules = tifImp.getOverlay();
-       
-       if(nodules == null) {
-    	   System.out.println("no overlay.");
-       }
-       
-       
-       
-       System.out.println("loadTif breakpoint.");
-       
-       
-	}
-
 	public void overlayNodules(Graph graph, ImagePlus skellyMap){
 		
 		ArrayList<int[]> nodules = graph.noduleFSRep();

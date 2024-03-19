@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import java.util.HashMap;
 import java.util.HashSet;
 
+import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Line;
 import ij.gui.TextRoi;
@@ -31,8 +32,11 @@ import ij.gui.TextRoi;
  * one pixel is (2601/ 4064256) mm^2
  */
 public class Graph {
+	
 	public ArrayList<ArrayList<int[]>> skeleton;
+	
 	public int numNodules = 0;
+	
 	/**
 	 * Node is an extension of java.awt.point that
 	 * includes an identifier for the node, i.e.
@@ -46,13 +50,19 @@ public class Graph {
 	 * ArrayList<int[]> object. 
 	 */
 	public ArrayList<Node> nodes = new ArrayList<>();
+	/**
+	 * forward star representation of the graph. makes all edges bi-directional by adding
+	 * the reverse arc for each arc added.
+	 */
 	ArrayList<int[]> fsRep = new ArrayList<>();
-	int[] point;
+	/**
+	 * The pointer array tells you at which index of the forward star array a given node
+	 *  starts appearing as the first element of an edge.
+	 */
+	int[] pointer;
 	GraphOverlay graphOverlay;
 	
-	
-	
-	
+
 	/**
 	 * initializer. Constructs the graph object from the skeleton.
 	 * @param skeleton
@@ -102,9 +112,103 @@ public class Graph {
 			}
 		}
 		
+		updatePointer();
 		
-		point = new int[nodes.size()+1];
+		System.out.println("number of nodes: " + nodes.size());
+		System.out.println("number of edges: " + (fsRep.size() / 2));
+		}//enumerate nodes
+	
+	
+	/**
+	 * Adds an edge to the graph.
+	 * @param edge
+	 */
+	public void addEdge(Node[] edge) {
 		
+		if (!nodes.contains(edge[0])) {
+			IJ.log("Edge contains unknown Node. Adding the following node:");
+			IJ.log(edge[0].toString());
+			nodes.add(edge[0]);
+		}
+		
+		if (!nodes.contains(edge[1])) {
+			IJ.log("Edge contains unknown Node. Adding the following node:");
+			IJ.log(edge[1].toString());
+			nodes.add(edge[1]);
+		}
+		
+		int node1 = nodes.indexOf(edge[0]);
+		int node2 = nodes.indexOf(edge[1]);
+		
+		Line line = new Line(edge[0].x, edge[0].y, edge[1].x, edge[1].y);
+		int length = (int) line.getLength();
+		
+		fsRep.add(new int[] {node1, node2, length});
+		fsRep.add(new int[] {node2, node1, length});
+		
+		Collections.sort(fsRep, Comparator.comparingInt(arr -> arr[0]));
+		
+		updatePointer();
+	}
+	
+	public void removeEdge(Node[] nodeEdge) {
+		int node1 = nodes.indexOf(nodeEdge[0]);
+		int node2 = nodes.indexOf(nodeEdge[1]);
+		
+		int[] edge = new int[] {node1, node2};
+		
+		int edgeIndex1 = -1;
+		
+		for (int index = pointer[node1]; index < pointer[node1+1]; index++) {
+			int[] cEdge = fsRep.get(index);
+			if(cEdge[0] == edge[0] && cEdge[1] == edge[1]) {
+				edgeIndex1 = index;
+				break;
+			}
+		}
+		
+		if(edgeIndex1 == -1) {
+			IJ.log("error, the edge you're trying to remove does not exist.");
+			return;
+		}
+		
+		int edgeIndex2 = -1;
+		
+		for (int index = pointer[node2]; index < pointer[node2+1]; index++) {
+			int[] cEdge = fsRep.get(index);
+			if(cEdge[0] == edge[1] && cEdge[1] == edge[0]) {
+				edgeIndex2 = index;
+				break;
+			}
+		}
+		
+		if(edgeIndex2 == -1 && edgeIndex1 != -1) {
+			IJ.log("Error, an edge exists in one direction but not the other.");
+		}
+		else if(edgeIndex2 == -1 && edgeIndex1 == -1) {
+			IJ.log("Technically, you shouldn't be able to see this. But error, the edge"
+					+ "you're trying to remove does not exist.");
+			return;
+		}
+		
+		if (edgeIndex2 < edgeIndex1) {
+			fsRep.remove(edgeIndex1);
+			fsRep.remove(edgeIndex2);
+		}
+		else {
+			fsRep.remove(edgeIndex2);
+			fsRep.remove(edgeIndex1);
+		}
+		
+		updatePointer();
+	}
+	
+	/**
+	 * creates/updates the pointer array. The pointer array tells you at which index
+	 * of the forward star array a given node starts appearing as the first element of an edge.
+	 */
+	private void updatePointer() {
+		pointer = new int[nodes.size()+1];
 		
 		int newNum = -1;
 		
@@ -113,7 +217,7 @@ public class Graph {
 		int current = firstNode;
 		
 		for(int ii = 0; ii < firstNode+1; ii++) {
-			point[ii] = 0;
+			pointer[ii] = 0;
 		}
 			
 		for(int ii = 0; ii < fsRep.size(); ii++) {
@@ -130,18 +234,15 @@ public class Graph {
 			if(newNum > current) {
 				
 				for(int jj = 1; jj < newNum-current+1; jj++) {
-					point[current+jj] = ii;
+					pointer[current+jj] = ii;
 				}
 				
 				current = newNum;
 			}
 		}
 		
-		point[point.length-1] = fsRep.size(); 
-		
-		System.out.println("number of nodes: " + nodes.size());
-		System.out.println("number of edges: " + (fsRep.size() / 2));
-		}//enumerate nodes
+		pointer[pointer.length-1] = fsRep.size(); 
+	}
 	
 	
 	/**
@@ -169,34 +270,13 @@ public class Graph {
 	}
 	
 	
-	/**
-	 * Read's in the nodule data from NoduleData
-	 * @param filePath
-	 * @return
-	 * @throws IOException
-	 */
-    private static String[][] readCSV(String filePath) throws IOException {
-        List<String[]> records = new ArrayList<>();
-
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                // Split the CSV line by comma
-                String[] values = line.split(",");
-                records.add(values);
-            }
-        }
-
-        // Convert List<String[]> to String[][]
-        String[][] data = new String[records.size()][];
-        for (int i = 0; i < records.size(); i++) {
-            data[i] = records.get(i);
-        }
-        
-        return data;
-    }
 	
-   
+   /**
+    * adds the set of nodules as Node objects to the graph by connecting each nodule node 
+    * to the nearest node currently within the graph with an edge.
+    * @param nodLocations a list of x,y coordinates of the contour centroids of the polygon outlines
+    * of the nodules.
+    */
     public void addNodules(int[][] nodLocations) {
     	
 		if(nodLocations == null) {
@@ -226,7 +306,7 @@ public class Graph {
     Collections.sort(fsRep, Comparator.comparingInt(arr -> arr[0]));
 	
     
-	point = new int[nodes.size()+1];
+	pointer = new int[nodes.size()+1];
 	
 	int current = 0;
 	int newNum = -1;
@@ -234,7 +314,7 @@ public class Graph {
 	int firstNum = fsRep.get(0)[0];
 	
 	for(int ii = 0; ii < firstNum-0+1; ii++) {
-		point[ii] = 0;
+		pointer[ii] = 0;
 	}
 		
 	for(int ii = 0; ii < fsRep.size(); ii++) {
@@ -250,22 +330,24 @@ public class Graph {
 		if(newNum > current) {
 			
 			for(int jj = 1; jj < newNum-current+1; jj++) {
-				point[current+jj] = ii;
+				pointer[current+jj] = ii;
 			}
 			
 			current = newNum;
 		}
 	}
-	point[point.length-1] = fsRep.size(); 
+	pointer[pointer.length-1] = fsRep.size(); 
     
 	System.out.println("number of nodes: " + nodes.size());
 	System.out.println("number of edges: " + (fsRep.size() / 2));
     }// addNodes()
     
-  
+  /**
+   * Returns the subgraph that is all edges containing a nodule node as at least one of the nodes.
+   * @return ArrayList<int[]> FSRep
+   */
     public ArrayList<int[]> noduleFSRep(){
     	ArrayList<int[]> nodFSRep = new ArrayList<>();
-    	
     	
     	Node[] nodules = getNodules();
     	
@@ -286,7 +368,12 @@ public class Graph {
     	
     }
     
-   
+   /**
+    * Calculates the Node on the graph closest to the Node given as input. Primarily used for determining
+    * which Node to connect the Nodule Nodes being added to.
+    * @param Node p
+    * @return Node closest to Node p (euclidean distance).
+    */
     private Node calculateClosestNode(Node p) {
     	
     	Node closest = null;
@@ -310,34 +397,68 @@ public class Graph {
     
     
     /**
-     * computes the shortest possible distances between each pair of nodules.
+     * Computes and stores the allpairs distance calculations between all Nodules. 
+     * The input dictates the number of times we compute the distance calculations. In each 
+     * iteration, we remove a different edge 
+     * @param numIterations
      */
-    public void computeShortestDistances() {
+    public void computeShortestDistances(int numIterations) {
     	
     	for(Node nodule : getNodules()) {
-    		Dijkstras(nodule);
+    		
+    		
+    		for (int iteration = 0; iteration <= numIterations; iteration++) {
+	    		Dijkstras(nodule, iteration);
+	    		/**
+	    		 * add code here to remove an edge from the graph, compnute dijkstra's, and repeat 
+	    		 * N times.
+	    		 */
+    		}
     	}
     	
     }
    
     
     /**
-     * This method takes as input an array of size nodes.size() and 
-     * returns a cropped array that removes all skeleton nodes.
-     * @param array
-     * @return
+     * @returns the index with the smallest value.
+     * @param distance list of known distances.
+     * @param unsettled list of node indices to check.
+     * 
      */
-    private int[] cropToNodules(int[] array) {
-    	int[] cropped = new int[numNodules];
-    	int counter = 0;
+    private int shortestDistance(int[] distance, Set<Integer> unsettled) {
     	
-    	for(int ii = 0; ii< array.length; ii++) {
-    		if(nodes.get(ii).type > 0) {
-    			cropped[counter++] = array[ii];
+    	int currentDistance = Integer.MAX_VALUE;
+    	int currentNode = -1;
+    	
+    	for(int node : unsettled) {
+    		
+    		if(distance[node] < currentDistance) {
+    			currentDistance = distance[node];
+    			currentNode = node;
     		}
+    		
     	}
     	
-    	return cropped;
+    	return currentNode;
+    }
+    
+    
+    public Node[] getNodules() {
+    	
+    	ArrayList<Node> nodules = new ArrayList<>();
+    	
+    	
+    	for(int ii = 0; ii < nodes.size(); ii++) {
+    		Node node = nodes.get(ii);
+    		
+    		if(node.type > 0) {
+    			node.nodeIndex = ii;
+    			nodules.add(node);
+    		}
+    		
+    	}
+    	
+    	 return nodules.toArray(new Node[0]);
     }
     
     
@@ -353,7 +474,7 @@ public class Graph {
 			Calculate new distances to direct neighbors by keeping the lowest distance at each evaluation.
 			Add neighbors that are not yet settled to the unsettled nodes set.
      */
-    public void Dijkstras(Node startNode) {
+    public void Dijkstras(Node startNode, int iteration) {
     	
     	
     	ArrayList<Integer> testEdgeList = new ArrayList<>();
@@ -375,6 +496,7 @@ public class Graph {
     		distance[ii] = Integer.MAX_VALUE-1;
     		prevNode[ii] = -1;
     	}
+    	
     	int startNodeIndex = nodes.indexOf(startNode);
     	
     	distance[startNodeIndex] = 0;
@@ -390,8 +512,8 @@ public class Graph {
     		unsettled.remove(currentNode);
     		
     		
-    		int startIndex = point[currentNode];
-    		int endIndex = point[currentNode+1];
+    		int startIndex = pointer[currentNode];
+    		int endIndex = pointer[currentNode+1];
     		
     		for(int ii = startIndex; ii < endIndex; ii++) {
     			
@@ -417,11 +539,9 @@ public class Graph {
     			unsettled.add(edge[1]);
     			
     			testNodeList.add(edge[1]);
-    			
     		}
     		
     	//	graphOverlay.highlightGraphSection(this, testNodeList, testEdgeList,testNodeList1,testEdgeList1).show();
-    		
     		
     		
     		settled.add(currentNode);
@@ -432,9 +552,19 @@ public class Graph {
     		
     	}
     	
-    	startNode.distance = distance;
+    	startNode.distance[iteration] = distance;
     	startNode.prevNode = prevNode;
     }
+    
+    
+    
+    
+    
+    
+    
+    
+    // all methods beyond this line are deprecates or methods for testing purposes.
+    //=============================================================================
     
     
     private void inList(int startNode){
@@ -475,51 +605,52 @@ public class Graph {
     	return edgeList;
     }
     
-    
     /**
-     * @returns the index with the smallest value.
-     * @param distance list of known distances.
-     * @param unsettled list of node indices to check.
-     * 
+     * This method takes as input an array of size nodes.size() and 
+     * returns a cropped array that removes all skeleton nodes.
+     * @param array
+     * @return
      */
-    private int shortestDistance(int[] distance, Set<Integer> unsettled) {
+    private int[] cropToNodules(int[] array) {
+    	int[] cropped = new int[numNodules];
+    	int counter = 0;
     	
-    	int currentDistance = Integer.MAX_VALUE;
-    	int currentNode = -1;
-    	
-    	for(int node : unsettled) {
-    		
-    		if(distance[node] < currentDistance) {
-    			currentDistance = distance[node];
-    			currentNode = node;
+    	for(int ii = 0; ii< array.length; ii++) {
+    		if(nodes.get(ii).type > 0) {
+    			cropped[counter++] = array[ii];
     		}
-    		
     	}
     	
-    	return currentNode;
+    	return cropped;
     }
     
-    
-    
-    public Node[] getNodules() {
-    	
-    	ArrayList<Node> nodules = new ArrayList<>();
-    	
-    	
-    	for(int ii = 0; ii < nodes.size(); ii++) {
-    		Node node = nodes.get(ii);
-    		
-    		if(node.type > 0) {
-    			node.nodeIndex = ii;
-    			nodules.add(node);
-    		}
-    		
-    	}
-    	
-    	 return nodules.toArray(new Node[0]);
+ 
+    /**
+	 * Read's in the nodule data from NoduleData
+	 * @param filePath
+	 * @return
+	 * @throws IOException
+	 */
+    private static String[][] readCSV(String filePath) throws IOException {
+        List<String[]> records = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                // Split the CSV line by comma
+                String[] values = line.split(",");
+                records.add(values);
+            }
+        }
+
+        // Convert List<String[]> to String[][]
+        String[][] data = new String[records.size()][];
+        for (int i = 0; i < records.size(); i++) {
+            data[i] = records.get(i);
+        }
+        
+        return data;
     }
-    
-    
     
     
 }

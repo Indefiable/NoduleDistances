@@ -20,8 +20,9 @@ public class Skeletonize {
 	}
 	
 	/**
-	 * Converts a boolean[] image to a byte image
-	 * @param im
+	 * Converts a boolean[] image to a byte[] image
+	 * 
+	 * @param im : image to convert.
 	 */
 	static byte[] booleanToByte(boolean[] im) {
 		byte[] imp = new byte[im.length];
@@ -40,7 +41,11 @@ public class Skeletonize {
 		return imp;
 	}
 	
-
+	/**
+	 * Uses Ling Dong's skeletonization algorithm to find the skeleton of the root system.
+	 * @param imp : binary image with the root system segmented.
+	 * @return the skeleton of the root system.
+	 */
 	public static ArrayList<ArrayList<int[]>> skeletonize(ImagePlus imp) {
 		
 		imp.show();
@@ -66,7 +71,12 @@ public class Skeletonize {
 		return skeleton;
 	}
 
-	
+	/**
+	 * converts the ByteProcessor image to a boolean[] image using billinear interpolation.
+	 * 
+	 * @param byteProcessor : image data to convert.
+	 * @return boolean[] representation of a binary image.
+	 */
 	static boolean[] convertToBooleanArray(ByteProcessor byteProcessor) {
         int width = byteProcessor.getWidth();
         int height = byteProcessor.getHeight();
@@ -80,7 +90,14 @@ public class Skeletonize {
         return result;
     }
 	
-	
+	/**
+	 * Scales the image according to the scale factor. 
+	 * 
+	 * @param originalImage : image to be scaled.
+	 * @param scaleFactor : factor to scale the image by.
+	 * 
+	 * @return a scaled version of the originla image.
+	 */
     public static ImagePlus scaleImage(ImagePlus originalImage, double scaleFactor) {
         // Get the ImageProcessor from the original image
         ImageProcessor originalProcessor = originalImage.getProcessor();
@@ -143,7 +160,12 @@ public class Skeletonize {
         return (int) value;
     }
     
-
+    /**
+     * blurs the image. Used to make the edges of the image smoother to improve the output of the 
+     * skeletonization algorithm.
+     * 
+     * @param processor : image data to blur. Overrides the image data of the input with the blurred version.
+     */
 	static void applyMedianBlur(ByteProcessor processor) {
         RankFilters rankFilters = new RankFilters();
         rankFilters.rank(processor, 7, RankFilters.MEDIAN);

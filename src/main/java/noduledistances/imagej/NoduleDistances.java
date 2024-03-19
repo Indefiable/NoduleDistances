@@ -93,7 +93,6 @@ public class NoduleDistances implements Command {
 		return imp;
     }
 	
-	
 	/**
 	 * Finds the shortest path between the start and end nodules and colors the path between them.
 	 * @param startNode
@@ -101,7 +100,7 @@ public class NoduleDistances implements Command {
 	 * @param graph
 	 * @param overlayedGraph
 	 */
-	public ImagePlus shortestPath(int startNodeIndex, int endNodeIndex, Graph graph, GraphOverlay graphOverlay) {
+	public ImagePlus shortestPath(int startNodeIndex, int endNodeIndex, Graph graph, GraphOverlay graphOverlay, int iteration) {
 		
 		startNodeIndex--;
 		endNodeIndex--;
@@ -128,7 +127,8 @@ public class NoduleDistances implements Command {
 		Node endNode = graph.getNodules()[endNodeIndex];
 		
 		
-		int distance = startNode.distance[endNode.nodeIndex];
+		int distance = startNode.distance[iteration][endNode.nodeIndex];
+		
 		System.out.println(distance + " pixels between " + (startNodeIndex +1) +
 				" and " + (endNodeIndex+1));
 		
@@ -192,31 +192,24 @@ public class NoduleDistances implements Command {
 		
 	}
 	
+	/**
+	 * increases brightness and contrast in the image to improve segmentation of root system.
+	 * Also crops the image for testing purposes if I'm working on my laptop.
+	 * @param imp
+	 * @return
+	 */
 	public ImagePlus preprocessing(ImagePlus imp) {
+		
 		ImagePlus image = new ImagePlus(imp.getShortTitle(), imp.getProcessor());
 		
 		//first entry is percent contrast change (2f = 200%), second value is brightness increase
 		RescaleOp op = new RescaleOp(2f, 25, null);
 		
-		BufferedImage output = op.filter(image.getBufferedImage(), null);
+		//BufferedImage output = op.filter(image.getBufferedImage(), null);
 
-		image = new ImagePlus(image.getShortTitle(), output);
+		//image = new ImagePlus(image.getShortTitle(), output);
 		
-		
-		/**
-		 // MAKING IMAGE SMALLER FOR TESTING PURPOSES.
-		//=====================================================
-		NoduleDistances.initialHeight = image.getHeight();
-		NoduleDistances.initialWidth = image.getWidth();
-		
-		int newWidth = (int) (image.getWidth() / SCALEFACTOR);
-		int newHeight = (int) (image.getHeight() / SCALEFACTOR);
-		int x =(int) ((image.getWidth() - newWidth)/2);
-		int y =(int) ((image.getHeight() - newHeight)/2);
-		image.setRoi(x, y, newWidth, newHeight); // cropping image to center of image and halving the size.
-		image = image.crop();
-		//====================================================
-		*/
+		IJ.save(image, "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS033\\" + "PS033_preprocessed1.jpg");
 		return image;
 	}
 		
@@ -282,7 +275,7 @@ public class NoduleDistances implements Command {
 		graphOverlay.overlayGraph(graph, root.binarymap.getProcessor().convertToColorProcessor());
 		graphOverlay.showGraph();
 		IJ.save(graphOverlay.overlayedGraph, "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS033\\" + "PS033_overlayed_graph.jpg");
-		graph.computeShortestDistances();
+		graph.computeShortestDistances(5);
 		//graphOverlay.showGraph();
 		//shortestPath(1,7,graph, graphOverlay).show();
 		
