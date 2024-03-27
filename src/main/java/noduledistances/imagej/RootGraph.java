@@ -21,6 +21,17 @@ import ij.ImagePlus;
 import ij.gui.Line;
 import ij.gui.TextRoi;
 
+import com.programmerare.edu.asu.emit.algorithm.graph.EdgeYanQi;
+import com.programmerare.edu.asu.emit.algorithm.graph.GraphWithConstructor;
+
+import edu.asu.emit.algorithm.graph.Path;
+import edu.asu.emit.algorithm.graph.Vertex;
+import edu.asu.emit.algorithm.graph.abstraction.BaseVertex;
+import edu.asu.emit.algorithm.graph.shortestpaths.YenTopKShortestPathsAlg;
+
+
+
+
 /**
  * The purpose of the class Graph is to hold all information related to the graph derived from 
  * the initial image, including the data and methods to translate between the abstract graph and
@@ -31,7 +42,7 @@ import ij.gui.TextRoi;
  * 
  * one pixel is (2601/ 4064256) mm^2
  */
-public class Graph {
+public class RootGraph {
 	
 	public ArrayList<ArrayList<int[]>> skeleton;
 	
@@ -44,11 +55,9 @@ public class Graph {
 	 * type == 1 -> red nodule
 	 * type == 2 -> green nodule
 	 * type == 3 -> mixed nodule
-	 * 
-	 * ChatGPT says that using multiple int[] objects for the forward
-	 * star may be a better approach than using an 
-	 * ArrayList<int[]> object. 
+	 *
 	 */
+	
 	public ArrayList<Node> nodes = new ArrayList<>();
 	/**
 	 * forward star representation of the graph. makes all edges bi-directional by adding
@@ -67,7 +76,7 @@ public class Graph {
 	 * initializer. Constructs the graph object from the skeleton.
 	 * @param skeleton
 	 */
-	public Graph(ArrayList<ArrayList<int[]>> skeleton, GraphOverlay graphOverlay) {
+	public RootGraph(ArrayList<ArrayList<int[]>> skeleton, GraphOverlay graphOverlay) {
 		this.graphOverlay = graphOverlay;
 		this.skeleton = skeleton;
 		
@@ -78,9 +87,12 @@ public class Graph {
 				int[] start = chunk.get(ii);
 			    int[] end = chunk.get(ii+1);
 			    
+			    
 			    Node startPt = new Node(start[0], start[1], 0);
 			    Node endPt = new Node(end[0], end[1], 0);
-			    
+			    if(startPt.equals(endPt)) {
+			    	continue;
+			    }
 			    if(!nodes.contains(startPt)) {
 			    	nodes.add(startPt);
 			    }
@@ -96,7 +108,9 @@ public class Graph {
 			    
 			    startPt.nodeIndex = node1;
 			    endPt.nodeIndex = node2;
-			    
+			    if(node1 == node2) {
+			    	System.out.println("Error. Adding a self-loop.");
+			    }
 			    fsRep.add(new int[] {node1, node2, length});
 			    fsRep.add(new int[] {node2, node1, length});
 			}
@@ -270,7 +284,6 @@ public class Graph {
 	}
 	
 	
-	
    /**
     * adds the set of nodules as Node objects to the graph by connecting each nodule node 
     * to the nearest node currently within the graph with an edge.
@@ -342,6 +355,7 @@ public class Graph {
 	System.out.println("number of edges: " + (fsRep.size() / 2));
     }// addNodes()
     
+    
   /**
    * Returns the subgraph that is all edges containing a nodule node as at least one of the nodes.
    * @return ArrayList<int[]> FSRep
@@ -367,6 +381,7 @@ public class Graph {
     	return nodFSRep;
     	
     }
+    
     
    /**
     * Calculates the Node on the graph closest to the Node given as input. Primarily used for determining
@@ -404,20 +419,127 @@ public class Graph {
      */
     public void computeShortestDistances(int numIterations) {
     	
+    	GraphWithConstructor yanGraph = convertToYanGraph();
+    	
+    	YenTopKShortestPathsAlg yenAlg = new YenTopKShortestPathsAlg(yanGraph);
+    	
     	for(Node nodule : getNodules()) {
+    		int startingNodule = nodes.indexOf(nodule);
     		
-    		
-    		for (int iteration = 0; iteration <= numIterations; iteration++) {
-	    		Dijkstras(nodule, iteration);
-	    		/**
-	    		 * add code here to remove an edge from the graph, compnute dijkstra's, and repeat 
-	    		 * N times.
-	    		 */
+    		for(Node nodule1 : getNodules()) {
+    			int endingNodule = nodes.indexOf(nodule1);
+    			
+    			if(startingNodule == endingNodule) {
+    				continue;
+    			}
+    			
+    			List<Path> shortest_paths_list = yenAlg.getShortestPaths(
+    					yanGraph.getVertex(startingNodule), yanGraph.getVertex(endingNodule), numIterations);
+    			
+    			
+    			
+    			if(shortest_paths_list == null) {
+    				System.out.println("No paths between the two nodules.");
+    				System.out.println("breakpoint.");
+    			}
+    			
+    			System.out.println("len of shortestPaths: " + shortest_paths_list.size());
+    			ArrayList<int[]> paths = shortestPathsToList(shortest_paths_list);
+    			
+    			if(paths.size() == 0) {
+    				continue;
+    			}
+    			
+    			nodule.paths.add(paths);
     		}
+    		
     	}
     	
     }
-   
+    
+    protected ArrayList<int[]> shortestPathsToList(List<Path> shortest_paths_list) {
+    	
+    	ArrayList<int[]> paths = new ArrayList<>();
+		
+		for( Path path1 : shortest_paths_list) {
+			
+			List<BaseVertex> path = path1.getVertexList();
+			
+			int length = computeLengthOfPath(path);
+			
+			ArrayList<Integer> nodePath = path.stream().map(BaseVertex::getId)
+                    .collect(Collectors.toCollection(ArrayList::new));
+			
+			System.out.println("nodePath: " +  nodePath.size());
+			
+			nodePath.add(0, nodePath.get(nodePath.size()-1));
+			nodePath.add(1,length);
+			
+			 int[] intPath = nodePath.stream()
+                     .mapToInt(Integer::intValue)
+                     .toArray();
+			 
+			 System.out.println("intPath: " + intPath.length);
+			 
+			 paths.add(intPath);
+		}
+		
+		if(paths.size() == 0) {
+			System.out.println("null paths. Breakpoint.");
+		}
+		
+		return paths;
+    }
+    
+    
+    protected int computeLengthOfPath(List<BaseVertex> path) {
+    	int length = 0;
+    	
+    	
+    	for(int ii = 0; ii < path.size()-1; ii++) {
+    		int node1 = path.get(ii).getId();
+    		int node2 = path.get(ii+1).getId();
+    		
+    		for(int jj = pointer[node1]; jj < pointer[node1+1]; jj++) {
+    			
+    			int[] edge = fsRep.get(jj);
+    			if(node2 == edge[1]) {
+    				length += edge[2];
+    				break;
+    			}
+    			if(jj == pointer[node1+1]-1) {
+    				System.out.println("Could not find the following edge:" + node1 + "," + node2);
+    			}
+    		}
+    		
+    	}
+    	
+    	return length;
+    }
+    
+    
+    /**
+     * creates a graph structure using Yan Qi's graph package to utilize
+     * their implementation of k shortest paths. 
+     * @return YanQi's graph object.
+     */
+    protected GraphWithConstructor convertToYanGraph() {
+    	
+    	List<EdgeYanQi> edges = new ArrayList<>();
+    	int cc = 0;
+    	for (int[] edge : fsRep) {
+    		if(edge[0] == edge[1]) {
+    			System.out.println("Error. ");
+    		}
+    		EdgeYanQi yanEdge = new EdgeYanQi(edge[0], edge[1], edge[2]);
+    		edges.add(yanEdge);
+    		cc++;
+    	}
+    	
+    	GraphWithConstructor yanQiGraph = new GraphWithConstructor(nodes.size(), edges);
+    	
+    	return yanQiGraph;
+    }
     
     /**
      * @returns the index with the smallest value.
@@ -551,15 +673,10 @@ public class Graph {
     		testEdgeList1 = new ArrayList<>();
     		
     	}
-    	
+    	//Data structure for nodes changed. These lines are deprecated.
     	startNode.distance[iteration] = distance;
     	startNode.prevNode = prevNode;
     }
-    
-    
-    
-    
-    
     
     
     

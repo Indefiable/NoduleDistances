@@ -61,11 +61,14 @@ public class RoiOverlay {
 	
 	
 	/**
-	 * finds the centroid of all ROI's, and returns them in [color,x,y] format.
-	 * color: red==1, green==2, mixed==3
+	 * finds the centroid of all ROI's, and returns them in [color,x,y] format. 
+	 * For nodules that were initially clumps, we return all of their information in one row. 
+	 * color: red==1, green==2, mixed==3 
 	 * @return [color,x,y] coordinates of the roi centroids. 
 	 */
 	public int[][] getRoiCentroids(){
+		
+		//ArrayList<int[]> centroids = new ArrayList<>();
 		
 		ArrayList<ArrayList<Integer>> centroids = new ArrayList<>();
 		

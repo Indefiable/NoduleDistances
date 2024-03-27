@@ -1,6 +1,7 @@
 package noduledistances.imagej;
 
 import java.awt.Point;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import ij.IJ;
@@ -15,10 +16,17 @@ public int nodeIndex;
  * i'th iteration of dijkstra's. Each row is one iteration of Dijkstra's, 
  * we remove a used edge from the original graph and perform another iteration of 
  * dijsktra's to create a sample of possible paths.
+ * DEPRECATED
  */
 public int[][] distance;
 public int[] prevNode;
 
+/**
+ * 2d array where each element Aij is an int[]. The first element is what node 
+ * the path goes to, the second element is the pixel distance, and the remaining elements
+ * are the nodes of the path used to get there.
+ */
+ArrayList<ArrayList<int[]>> paths;
 
 public Node(int x, int y, int type) {
 	super(x,y);
@@ -26,6 +34,8 @@ public Node(int x, int y, int type) {
 	this.distance = null;
 	this.prevNode = null;
 	this.nodeIndex = -1;
+	paths = new ArrayList<>();
+	
 }
 
 
@@ -51,6 +61,8 @@ public boolean equals(Object obj) {
 	return false;
 	
 }
+
+
 
 public double distance(Node node) {
 	return Point.distance(this.x, this.y, node.x, node.y);

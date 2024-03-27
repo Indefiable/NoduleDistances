@@ -52,7 +52,7 @@ public class GraphOverlay {
 	 * @param edgeList : list of edge indices from graph.fsRep
 	 * @return a copy of overlayedGraph with highlighted nodes+edges.
 	 */
-	public ImagePlus highlightGraphSection(Graph graph, ArrayList<Integer> nodeList, 
+	public ImagePlus highlightGraphSection(RootGraph graph, ArrayList<Integer> nodeList, 
 		ArrayList<Integer> edgeList, ArrayList<Integer> nodeList1, 
 		ArrayList<Integer> edgeList1) {
 		
@@ -136,7 +136,7 @@ public class GraphOverlay {
 	}
 	
 	
-	public void overlayGraph(Graph graph, ColorProcessor cp) {
+	public void overlayGraph(RootGraph graph, ColorProcessor cp) {
 		ImagePlus skellyMap = new ImagePlus("skeleton", cp);
 
 		Overlay overlay = new Overlay();
@@ -232,7 +232,7 @@ public class GraphOverlay {
 	 * Overlays the skeleton of the root system onto the image. Also overlays 
 	 * @param nodes: list of nodes.
 	 */
-	public void overlaySkeleton(Graph graph, ColorProcessor cp) {
+	public void overlaySkeleton(RootGraph graph, ColorProcessor cp) {
 
 		ImagePlus skellyMap = new ImagePlus("skeleton", cp);
 
@@ -287,7 +287,7 @@ public class GraphOverlay {
 		
 	}
 	
-	public void overlayNodules(Graph graph, ImagePlus skellyMap){
+	public void overlayNodules(RootGraph graph, ImagePlus skellyMap){
 		
 		ArrayList<int[]> nodules = graph.noduleFSRep();
 		
