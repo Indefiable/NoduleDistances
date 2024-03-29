@@ -8,9 +8,22 @@ import ij.IJ;
 
 public class Node extends Point{
 	
+	/**
+	 * Node.type == 0 -> skeleton node
+	 * type == 1 -> red nodule
+	 * type == 2 -> green nodule
+	 * type == 3 -> mixed nodule
+	 */
 public int type;
+
 public int nodeIndex;
 
+/**
+ * nodeNumber represents the number shown on the nodule csv data to easily associate
+ * a nodule node with it's nodule number. If the node is not a nodule, the value defaults to -1.
+ * The notation is noduleNumber_noduleSubnumber, and the underscore is represented as a decimal.
+ */
+public double nodeNumber;
 /**
  * 2d array where each element A_ij is the distance to the j'th node on the 
  * i'th iteration of dijkstra's. Each row is one iteration of Dijkstra's, 
@@ -28,9 +41,10 @@ public int[] prevNode;
  */
 ArrayList<ArrayList<int[]>> paths;
 
-public Node(int x, int y, int type) {
+public Node(int x, int y, int type, double nodeNumber) {
 	super(x,y);
 	this.type = type;
+	this.nodeNumber = nodeNumber;
 	this.distance = null;
 	this.prevNode = null;
 	this.nodeIndex = -1;

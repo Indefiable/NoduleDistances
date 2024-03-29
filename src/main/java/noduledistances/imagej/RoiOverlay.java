@@ -66,16 +66,14 @@ public class RoiOverlay {
 	 * color: red==1, green==2, mixed==3 
 	 * @return [color,x,y] coordinates of the roi centroids. 
 	 */
-	public int[][] getRoiCentroids(){
+	public ArrayList<int[]> getRoiCentroids(){
 		
-		//ArrayList<int[]> centroids = new ArrayList<>();
+		ArrayList<int[]> centroids = new ArrayList<>();
 		
-		ArrayList<ArrayList<Integer>> centroids = new ArrayList<>();
-		
-		ArrayList<Integer> coords;
+		int[] coords;
 		
 		for(ShapeRoi roi : rois) {
-			coords = new ArrayList<>();
+			coords = new int[3];
 			
 			String name = roi.getName();
 			
@@ -91,32 +89,29 @@ public class RoiOverlay {
 			if(numNods>1){
 				// if is clump, use k-means to separate into individual points, add those
 				// individual points, and go to next roi.
-				ArrayList<ArrayList<Integer>> clump = breakupClumps(roi, numNods);
-				for(ArrayList<Integer> cords : clump) {
-					centroids.add(cords);
-				}
+				int[] clump = breakupClumps(roi, numNods);
+				centroids.add(clump);
 				continue;
 			}
 			
 			if(name.substring(0, 1).equalsIgnoreCase("r")) {
-				coords.add(1);
+				coords[0] =1;
 			}
 			else if(name.substring(0, 1).equalsIgnoreCase("g")) {
-				coords.add(2);
+				coords[0] = 2;
 			}
 			else if(name.substring(0, 1).equalsIgnoreCase("m")) {
-				coords.add(3);
+				coords[0] = 3;
 			}
 			
 			double[] centroid = roi.getContourCentroid();
-			coords.add((int) centroid[0]);
-			coords.add((int) centroid[1]);
+			coords[1] = (int) centroid[0];
+			coords[2] = (int) centroid[1];
 			
 			centroids.add(coords);
 		}
 		
-		//convert List<List<>> to int[][] and return
-		return centroids.stream().map(row -> row.stream().mapToInt(Integer::intValue).toArray()).toArray(int[][]::new);
+		return centroids;
 	}
 	
 	/**
@@ -202,19 +197,16 @@ public class RoiOverlay {
 	 * @param numNods : the number of parts we're breaking the roi into.
 	 * @return x,y coordinates of the contour centroids of the broken up roi.
 	 */
-	public ArrayList<ArrayList<Integer>> breakupClumps(ShapeRoi roi, int numNods) {
+	public int[] breakupClumps(ShapeRoi roi, int numNods) {
 		
 		List<ClumpClusterPoint> halton = getHaltonSequence(roi);
 		
 		List<CentroidCluster<ClumpClusterPoint>> clusters = kMeansClustering(halton, numNods);
 		
-		ArrayList<ArrayList<Integer>> nods = new ArrayList<>();
-		ArrayList<Integer> nodn;
+		ArrayList<Integer> nodn = new ArrayList<>();
 		String name = roi.getName();
 		
-		
 		for(CentroidCluster<ClumpClusterPoint> cluster : clusters) {
-			nodn = new ArrayList<>();
 			
 			if(name.substring(0, 1).equalsIgnoreCase("r")) {
 				nodn.add(1);
@@ -230,10 +222,9 @@ public class RoiOverlay {
 			nodn.add((int) coords[0]);
 			nodn.add((int) coords[1]);
 			
-			nods.add(nodn);
 		}
 		
-		return nods;
+		return nodn.stream().mapToInt(Integer::intValue).toArray();
 		
 	}
 	

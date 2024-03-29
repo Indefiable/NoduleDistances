@@ -57,7 +57,6 @@ public class RootGraph {
 	 * type == 3 -> mixed nodule
 	 *
 	 */
-	
 	public ArrayList<Node> nodes = new ArrayList<>();
 	/**
 	 * forward star representation of the graph. makes all edges bi-directional by adding
@@ -88,8 +87,8 @@ public class RootGraph {
 			    int[] end = chunk.get(ii+1);
 			    
 			    
-			    Node startPt = new Node(start[0], start[1], 0);
-			    Node endPt = new Node(end[0], end[1], 0);
+			    Node startPt = new Node(start[0], start[1], 0, -1);
+			    Node endPt = new Node(end[0], end[1], 0, -1);
 			    if(startPt.equals(endPt)) {
 			    	continue;
 			    }
@@ -132,7 +131,6 @@ public class RootGraph {
 		System.out.println("number of edges: " + (fsRep.size() / 2));
 		}//enumerate nodes
 	
-	
 	/**
 	 * Adds an edge to the graph.
 	 * @param edge
@@ -164,6 +162,7 @@ public class RootGraph {
 		
 		updatePointer();
 	}
+	
 	
 	public void removeEdge(Node[] nodeEdge) {
 		int node1 = nodes.indexOf(nodeEdge[0]);
@@ -290,30 +289,51 @@ public class RootGraph {
     * @param nodLocations a list of x,y coordinates of the contour centroids of the polygon outlines
     * of the nodules.
     */
-    public void addNodules(int[][] nodLocations) {
+    public void addNodules(ArrayList<int[]> nodLocations) {
     	
 		if(nodLocations == null) {
 			System.out.println("Error reading nodule locations. Unable to add them.");
 			return;
 			}
-    		
+		
+	double noduleNumber = 1;
     for(int[] nodule : nodLocations) {
-    	
-    	Node nod = new Node(nodule[1],nodule[2], nodule[0]);
-    	
-    	nodes.add(nod);
-    	int nodeIndex = nodes.indexOf(nod);
-    	nod.nodeIndex = nodeIndex;
-    	
-    	Node closestNode = calculateClosestNode(nod);
-    	
-    	int closestIndex = nodes.indexOf(closestNode);
-    	
-    	int length = (int) Node.distance(nod.x, nod.y, closestNode.x, closestNode.y);
-    	
-    	fsRep.add(new int[] {nodeIndex,closestIndex , length});
-    	fsRep.add(new int[] {closestIndex,nodeIndex , length});
-    	numNodules++;
+    	int ii = 0;
+    	while(ii < nodule.length) {
+    		double subNumber = (ii + 3)/3;
+    		if(subNumber != (int) subNumber) {
+    			System.out.println("Error with sub-numbering.");
+    			System.out.println("ii: " + ii);
+    			System.out.println("subnumber: " + subNumber);
+    		}
+    		
+    		double number;
+    		if(nodule.length == 3) {
+    			number = noduleNumber;
+    		}
+    		else {
+    			number = noduleNumber + subNumber / Math.pow(10, String.valueOf(subNumber).length());
+    		}
+    		
+    		Node nod = new Node(nodule[ii+1],nodule[ii+2], nodule[ii], number);
+    		
+	    	nodes.add(nod);
+	    	int nodeIndex = nodes.indexOf(nod);
+	    	nod.nodeIndex = nodeIndex;
+	    	
+	    	Node closestNode = calculateClosestNode(nod);
+	    	
+	    	int closestIndex = nodes.indexOf(closestNode);
+	    	
+	    	int length = (int) Node.distance(nod.x, nod.y, closestNode.x, closestNode.y);
+	    	
+	    	fsRep.add(new int[] {nodeIndex,closestIndex , length});
+	    	fsRep.add(new int[] {closestIndex,nodeIndex , length});
+	    	numNodules++;
+	    	
+	    	ii +=3;
+    	}
+    	noduleNumber+=1;
     }
     
     Collections.sort(fsRep, Comparator.comparingInt(arr -> arr[0]));
@@ -432,6 +452,8 @@ public class RootGraph {
     			if(startingNodule == endingNodule) {
     				continue;
     			}
+    			System.out.println("=======================");
+    			System.out.println("paths from " + nodule.nodeNumber + " to " + nodule1.nodeNumber);
     			
     			List<Path> shortest_paths_list = yenAlg.getShortestPaths(
     					yanGraph.getVertex(startingNodule), yanGraph.getVertex(endingNodule), numIterations);
@@ -457,6 +479,7 @@ public class RootGraph {
     	
     }
     
+    
     protected ArrayList<int[]> shortestPathsToList(List<Path> shortest_paths_list) {
     	
     	ArrayList<int[]> paths = new ArrayList<>();
@@ -470,16 +493,12 @@ public class RootGraph {
 			ArrayList<Integer> nodePath = path.stream().map(BaseVertex::getId)
                     .collect(Collectors.toCollection(ArrayList::new));
 			
-			System.out.println("nodePath: " +  nodePath.size());
-			
 			nodePath.add(0, nodePath.get(nodePath.size()-1));
 			nodePath.add(1,length);
 			
 			 int[] intPath = nodePath.stream()
                      .mapToInt(Integer::intValue)
                      .toArray();
-			 
-			 System.out.println("intPath: " + intPath.length);
 			 
 			 paths.add(intPath);
 		}
@@ -540,6 +559,7 @@ public class RootGraph {
     	
     	return yanQiGraph;
     }
+    
     
     /**
      * @returns the index with the smallest value.

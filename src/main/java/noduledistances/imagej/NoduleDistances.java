@@ -218,7 +218,18 @@ public class NoduleDistances implements Command {
 		return image;
 	}
 		
-    /**
+    
+	/**
+	 * Saves the computed distance data to a csv file to the provided
+	 * directory. 
+	 * @param graph graph object used to compute and hold the distance data.
+	 */
+	private void saveDistanceData(RootGraph graph) {
+	    	
+	}
+	
+	
+	/**
      * This method executes the image analysis.
      * 
      * @param roots : image to run the data analysis on.
@@ -227,6 +238,7 @@ public class NoduleDistances implements Command {
     //ImagePlus image, String model
     private void execute(ImagePlus roots, ImagePlus tifImp) {
     	
+    
     	
 		
 	//	IJ.save(roots, "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS033\\" + "PS033_preprocessed44.jpg");
