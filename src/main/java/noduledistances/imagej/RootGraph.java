@@ -89,6 +89,7 @@ public class RootGraph {
 			    
 			    Node startPt = new Node(start[0], start[1], 0, -1);
 			    Node endPt = new Node(end[0], end[1], 0, -1);
+			    
 			    if(startPt.equals(endPt)) {
 			    	continue;
 			    }
@@ -102,6 +103,7 @@ public class RootGraph {
 			    
 			    Line line = new Line(startPt.x, startPt.y, endPt.x, endPt.y);
 			    int length = (int) line.getLength();
+			    
 			    int node1 = nodes.indexOf(startPt);
 			    int node2 = nodes.indexOf(endPt);
 			    
@@ -300,7 +302,8 @@ public class RootGraph {
     for(int[] nodule : nodLocations) {
     	int ii = 0;
     	while(ii < nodule.length) {
-    		double subNumber = (ii + 3)/3;
+    		
+    		double subNumber = (ii + 4)/4;
     		if(subNumber != (int) subNumber) {
     			System.out.println("Error with sub-numbering.");
     			System.out.println("ii: " + ii);
@@ -310,13 +313,17 @@ public class RootGraph {
     		double number;
     		if(nodule.length == 3) {
     			number = noduleNumber;
+    			
     		}
     		else {
     			number = noduleNumber + subNumber / Math.pow(10, String.valueOf(subNumber).length());
     		}
     		
-    		Node nod = new Node(nodule[ii+1],nodule[ii+2], nodule[ii], number);
-    		
+    		Node nod = new Node(nodule[ii+1],nodule[ii+2], nodule[ii], number, nodule[ii+3]);
+    		if(nod.type <1 || nod.type > 3) {
+    			System.out.println("nod type is " + nod.type + " and unclear. breakpointing.");
+    			System.out.println("breakpoint.");
+    		}
 	    	nodes.add(nod);
 	    	int nodeIndex = nodes.indexOf(nod);
 	    	nod.nodeIndex = nodeIndex;
@@ -330,8 +337,7 @@ public class RootGraph {
 	    	fsRep.add(new int[] {nodeIndex,closestIndex , length});
 	    	fsRep.add(new int[] {closestIndex,nodeIndex , length});
 	    	numNodules++;
-	    	
-	    	ii +=3;
+	    	ii +=4;
     	}
     	noduleNumber+=1;
     }
@@ -375,32 +381,6 @@ public class RootGraph {
 	System.out.println("number of edges: " + (fsRep.size() / 2));
     }// addNodes()
     
-    
-  /**
-   * Returns the subgraph that is all edges containing a nodule node as at least one of the nodes.
-   * @return ArrayList<int[]> FSRep
-   */
-    public ArrayList<int[]> noduleFSRep(){
-    	ArrayList<int[]> nodFSRep = new ArrayList<>();
-    	
-    	Node[] nodules = getNodules();
-    	
-    	for(int[] edge : this.fsRep) {
-    		
-    		for(Node nod : nodules) {
-    			int enumNode = nodes.indexOf(nod);
-    			
-    			if(enumNode == edge[0] || enumNode == edge[1]) {
-    				nodFSRep.add(edge);
-    			}
-    		}
-    		
-    	}
-    	
-    	
-    	return nodFSRep;
-    	
-    }
     
     
    /**
@@ -561,6 +541,12 @@ public class RootGraph {
     }
     
     
+    
+    
+    
+    // all methods beyond this line are deprecates or methods for testing purposes.
+    //=============================================================================
+
     /**
      * @returns the index with the smallest value.
      * @param distance list of known distances.
@@ -584,25 +570,7 @@ public class RootGraph {
     	return currentNode;
     }
     
-    
-    public Node[] getNodules() {
-    	
-    	ArrayList<Node> nodules = new ArrayList<>();
-    	
-    	
-    	for(int ii = 0; ii < nodes.size(); ii++) {
-    		Node node = nodes.get(ii);
-    		
-    		if(node.type > 0) {
-    			node.nodeIndex = ii;
-    			nodules.add(node);
-    		}
-    		
-    	}
-    	
-    	 return nodules.toArray(new Node[0]);
-    }
-    
+
     
     /**
      * 1.Set distance to startNode to zero.
@@ -697,12 +665,49 @@ public class RootGraph {
     	startNode.distance[iteration] = distance;
     	startNode.prevNode = prevNode;
     }
+    public Node[] getNodules() {
+    	
+    	ArrayList<Node> nodules = new ArrayList<>();
+    	
+    	
+    	for(int ii = 0; ii < nodes.size(); ii++) {
+    		Node node = nodes.get(ii);
+    		
+    		if(node.type > 0) {
+    			node.nodeIndex = ii;
+    			nodules.add(node);
+    		}
+    		
+    	}
+    	
+    	 return nodules.toArray(new Node[0]);
+    }
     
-    
-    
-    // all methods beyond this line are deprecates or methods for testing purposes.
-    //=============================================================================
-    
+    /**
+     * Returns the subgraph that is all edges containing a nodule node as at least one of the nodes.
+     * @return ArrayList<int[]> FSRep
+     */
+      public ArrayList<int[]> noduleFSRep(){
+      	ArrayList<int[]> nodFSRep = new ArrayList<>();
+      	
+      	Node[] nodules = getNodules();
+      	
+      	for(int[] edge : this.fsRep) {
+      		
+      		for(Node nod : nodules) {
+      			int enumNode = nodes.indexOf(nod);
+      			
+      			if(enumNode == edge[0] || enumNode == edge[1]) {
+      				nodFSRep.add(edge);
+      			}
+      		}
+      		
+      	}
+      	
+      	
+      	return nodFSRep;
+      	
+      }
     
     private void inList(int startNode){
     	ArrayList<Integer> edgeIndices = new ArrayList<>();

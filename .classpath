@@ -37,7 +37,8 @@
 			<attribute name="optional" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/Brand/Documents/Research/resources_assets/skeleton-tracing-master/TraceSkeletonRoot/traceskeleton/traceskeleton.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Brand/Documents/Research/DistanceAnalysis/KShortestPathsFork.jar" sourcepath="/k-shortest-paths/target/fork-of-edu.asu.emit.algorithm.graph-1.0.0-sources.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Brand/Documents/Research/resources_assets/ReferencedLibraries/TraceSkeleton.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Brand/Documents/Research/resources_assets/ReferencedLibraries/KShortestPathsFork.jar" sourcepath="/k-shortest-paths/target/fork-of-edu.asu.emit.algorithm.graph-1.0.0-sources.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Brand/Documents/Research/resources_assets/ReferencedLibraries/PowerVoronoiDiagram.jar" sourcepath="C:/Users/Brand/Documents/Research/resources_assets/ReferencedLibraries/PowerVoronoiDiagram_sources.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

@@ -300,10 +300,9 @@ public class NoduleDistances implements Command {
 		
 		//IJ.save(graphOverlay.overlayedGraph, "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS033\\" + "PS033_overlayed_graph.jpg");
 		graph.computeShortestDistances(5);
+		Statistics.generateData(graph, 10);
 		//graphOverlay.showGraph();
 		//shortestPath(1,7,graph, graphOverlay).show();
-		
-		System.out.println("Breakpoint");
     }
 
     /**

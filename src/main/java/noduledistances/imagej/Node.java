@@ -14,8 +14,15 @@ public class Node extends Point{
 	 * type == 2 -> green nodule
 	 * type == 3 -> mixed nodule
 	 */
-public int type;
+public static final int SKELETON = 0;
+public static final int RED = 1;
+public final static int GREEN = 2;
+public final static int MIXED = 3;
 
+public int type;
+public int area;
+
+//?
 public int nodeIndex;
 
 /**
@@ -41,6 +48,18 @@ public int[] prevNode;
  */
 ArrayList<ArrayList<int[]>> paths;
 
+public Node(int x, int y, int type, double nodeNumber, int area) {
+	super(x,y);
+	this.type = type;
+	this.nodeNumber = nodeNumber;
+	this.distance = null;
+	this.prevNode = null;
+	this.nodeIndex = -1;
+	this.area = area;
+	paths = new ArrayList<>();
+	
+}
+
 public Node(int x, int y, int type, double nodeNumber) {
 	super(x,y);
 	this.type = type;
@@ -48,6 +67,7 @@ public Node(int x, int y, int type, double nodeNumber) {
 	this.distance = null;
 	this.prevNode = null;
 	this.nodeIndex = -1;
+	this.area = -1;
 	paths = new ArrayList<>();
 	
 }
@@ -87,16 +107,16 @@ public double distance(Node node) {
 @Override
 public String toString() {
 	String color = "place holder";
-	if(type == 0) {
+	if(type == SKELETON) {
 		color = "skeleton node";
 	}
-	if (type == 1) {
+	if (type == RED) {
 		color = "red";
 	}
-	else if(type == 2) {
+	else if(type == GREEN) {
 		color = "green";
 	}
-	else if(type == 3) {
+	else if(type == MIXED) {
 		color = "mixed";
 	}
 	else {

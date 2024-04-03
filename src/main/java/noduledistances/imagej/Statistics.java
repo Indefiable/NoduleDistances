@@ -1,7 +1,10 @@
 package noduledistances.imagej;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.StringJoiner;
 
 /**
  * A class that generates all of the statistical data for analysis, and saves it as
@@ -29,29 +32,93 @@ import java.util.ArrayList;
 
 public class Statistics {
 	
-	private String[][] data;
+	private static final int NUMNODSINBALL = 0;
+	private static final int CLOSESTDISTANCE = 1;
+	private static final int CLOSESTCOLORTYPE = 2;
+	private static final int MEANDISTANCE = 3;
+	
 	
 	public Statistics() {
 		
 	}
-
+	
 	
 	
 	/**
 	 * Populates the String[][] data with computed statistics relevant to distance data. 
 	 * @param graph
 	 */
-	public static void generateData(RootGraph graph) {
+	public static void generateData(RootGraph graph, int radius) {
+		ArrayList<Integer> options = new ArrayList<>();
+		options.add(NUMNODSINBALL);
+		options.add(CLOSESTDISTANCE);
+		options.add(CLOSESTCOLORTYPE);
+		options.add(MEANDISTANCE);
 		
-		for (Node nodule : graph.nodes) {
+		String[] header = {"Roi", "Area", "Color", 
+				"numNods in r = " + radius, "distance to closest nodule", "closest color type", "mean distance"};
+	    
+		String[][] mat = new String[graph.numNodules+1][7];
+	    mat[0] = header;
+		double[] data = null;
+		int matCounter = 0;
+		for (int ii = 0; ii < graph.nodes.size(); ii++) {
+			
+			Node nodule = graph.nodes.get(ii);
 			//ignore skeleton nodes.
-			if(nodule.type == 0) {
+			if(nodule.type == Node.SKELETON) {
 				continue;
 			}
 			
+			data = computeStatistics(nodule.type, radius, nodule, graph, options);
 			
+			mat[matCounter+1][0] = Double.toString(nodule.nodeNumber);
+			mat[matCounter+1][1] = Integer.toString(nodule.area);
 			
+			if(nodule.type == Node.RED) {
+				mat[matCounter+1][2] = "Red";
+			}
+			else if(nodule.type == Node.GREEN) {
+				mat[matCounter+1][2] = "Green";
+			}
+			else if(nodule.type == Node.MIXED) {
+				mat[matCounter+1][2] = "Mixed";
+			}
+			else {
+				System.out.println("Unknown node type.");
+				System.out.println("breakpoint.");
+			}
+			
+			mat[matCounter+1][3] = Double.toString(data[NUMNODSINBALL]);
+			mat[matCounter+1][4] = Double.toString(data[CLOSESTDISTANCE]);
+			mat[matCounter+1][5] = Double.toString(data[CLOSESTCOLORTYPE]);
+			mat[matCounter+1][6] = Double.toString(data[MEANDISTANCE]);
+			
+			matCounter++;
 		}
+		String save = "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\" + NoduleDistances.image.getShortTitle() + "_data.csv";
+	
+		try(FileWriter writer = new FileWriter(save)){
+	     		StringJoiner comma = new StringJoiner(",");
+	     		for ( String[] row : mat) {
+	     			comma.setEmptyValue("");
+	     			comma.add(String.join(",", row));
+	     			writer.write(comma.toString());
+	     			writer.write(System.lineSeparator());
+	     			comma = new StringJoiner(",");
+	     		}
+	     		
+	     		writer.flush();
+	     		writer.close();
+	     		System.out.println("=================");
+	     		System.out.println("CSV FILE SAVED.");
+	     		System.out.println("=================");
+	     		
+	     	}catch(IOException e) {
+	     		System.out.println("=============================");
+	     		System.err.println("Error writing CSV file: " + e.getMessage());
+	     		System.out.println("============================");
+	     	}
 		
 		
 	}
@@ -68,6 +135,80 @@ public class Statistics {
 	  * @param graph : graph object
 	  * @return : the number of nodules of the given color with distance < radius.
 	  */
+	
+	
+	/**
+	 * 
+	 * @param color : color to restrict statistics to.
+	 * @param radius : radius used for computing number of nodules within a radius
+	 * @param node : node we're computing the statistics of	
+	 * @param graph : graph object
+	 * @param options : list telling us what statistics to compute
+	 * @return
+	 */
+	protected static double[] computeStatistics(int color, int radius, Node node, RootGraph graph, ArrayList<Integer> options) {
+		double[] data = new double[4];
+		
+		int closestDistance = Integer.MAX_VALUE; 
+		int closestColorDistance = Integer.MAX_VALUE;
+		int closestColorType = -1;
+		int numNodsInBall = 0;
+		double meanDistance = 0;
+		int meanDistanceCounter = 0;
+		
+		ArrayList<ArrayList<int[]>> paths = node.paths;
+		
+		for(int ii = 0; ii < paths.size(); ii++) {
+			ArrayList<int[]> SPToNodeii = paths.get(ii);
+			
+			for(int jj = 0; jj < SPToNodeii.size(); jj++) {
+			    int[] path = SPToNodeii.get(jj);
+			    
+			   if(options.contains(NUMNODSINBALL)) {
+				    // if distance is smaller and node is correct color.
+				    if(path[1] < radius && graph.nodes.get(path[0]).type == color) {
+				    	numNodsInBall++;
+				    }
+			   }
+			   if(options.contains(CLOSESTDISTANCE)) {
+				// if distance is smaller and node is correct color.
+				    if(path[1] < closestDistance && graph.nodes.get(path[0]).type == color) {
+				    	closestDistance = path[1];
+				    }
+			   }
+			   if(options.contains(CLOSESTCOLORTYPE)) {
+				   if(path[1] < closestColorDistance) {
+				    	closestColorDistance = path[1];
+				    	closestColorType = graph.nodes.get(path[0]).type;
+				    }
+			   }
+			   
+			   if(options.contains(MEANDISTANCE)) {
+				   if(graph.nodes.get(path[0]).type == color) {
+				    	meanDistance += path[1];
+				    	meanDistanceCounter++;
+				    }
+			   }
+			}	
+		}
+		
+		data[NUMNODSINBALL] = numNodsInBall;
+		data[CLOSESTDISTANCE] = closestDistance;
+		data[CLOSESTCOLORTYPE] = closestColorType;
+		data[MEANDISTANCE] = meanDistanceCounter;
+		
+		if(options.contains(MEANDISTANCE)) {
+			meanDistance = meanDistance / meanDistanceCounter;
+			meanDistance = Math.round(meanDistance * 1000.0) / 1000.0;
+		}
+		
+		
+		
+		return data;
+	}
+	
+	
+	
 	protected int numNodulesinBall(int color, int radius, Node node, RootGraph graph) {
 		int numNods = 0;
 		
@@ -116,6 +257,8 @@ public class Statistics {
 			    	index[0] = ii;
 			    	index[1] = jj;
 			    }
+			    
+			    
 			    
 			}	
 		}

@@ -28,6 +28,9 @@ import org.apache.commons.math3.ml.clustering.CentroidCluster;
 import org.apache.commons.math3.ml.clustering.KMeansPlusPlusClusterer;
 import org.apache.commons.math3.random.HaltonSequenceGenerator;
 
+import kn.uni.voronoitreemap.diagram.PowerDiagram;
+import kn.uni.voronoitreemap.j2d.PolygonSimple;
+
 
 public class RoiOverlay {
 
@@ -61,7 +64,7 @@ public class RoiOverlay {
 	
 	
 	/**
-	 * finds the centroid of all ROI's, and returns them in [color,x,y] format. 
+	 * finds the centroid of all ROI's, and returns them in [color,x,y,area] format. 
 	 * For nodules that were initially clumps, we return all of their information in one row. 
 	 * color: red==1, green==2, mixed==3 
 	 * @return [color,x,y] coordinates of the roi centroids. 
@@ -73,7 +76,7 @@ public class RoiOverlay {
 		int[] coords;
 		
 		for(ShapeRoi roi : rois) {
-			coords = new int[3];
+			coords = new int[4];
 			
 			String name = roi.getName();
 			
@@ -91,6 +94,7 @@ public class RoiOverlay {
 				// individual points, and go to next roi.
 				int[] clump = breakupClumps(roi, numNods);
 				centroids.add(clump);
+				
 				continue;
 			}
 			
@@ -107,7 +111,7 @@ public class RoiOverlay {
 			double[] centroid = roi.getContourCentroid();
 			coords[1] = (int) centroid[0];
 			coords[2] = (int) centroid[1];
-			
+			coords[3] = (int) roi.getContainedPoints().length;
 			centroids.add(coords);
 		}
 		
@@ -221,6 +225,11 @@ public class RoiOverlay {
 			
 			nodn.add((int) coords[0]);
 			nodn.add((int) coords[1]);
+			
+			//TODO this
+			//PLACEHOLDER - will need to alter the code to calculate the area of the broken up
+			// nodule clump.
+			nodn.add(-1);
 			
 		}
 		
