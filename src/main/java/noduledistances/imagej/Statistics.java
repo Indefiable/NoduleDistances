@@ -45,6 +45,12 @@ public class Statistics {
 	private static final int CLOSESTCOLORTYPE = 2;
 	private static final int MEANDISTANCE = 3;
 	
+	private static final int CLOSESTDISTANCETORED = 4;
+	private static final int CLOSESTDISTANCETOGREEN = 5;
+	private static final int MEANDISTANCETORED = 6;
+	private static final int MEANDISTANCETOGREEN = 7;
+	private static final int NUMREDNODSINBALL = 8;
+	private static final int NUMGREENNODSINBALL = 9;
 	
 	public Statistics(String imageName) throws CsvValidationException {
 		System.out.println("Image name: " + imageName);
@@ -85,17 +91,26 @@ public class Statistics {
 		options.add(CLOSESTDISTANCE);
 		options.add(CLOSESTCOLORTYPE);
 		options.add(MEANDISTANCE);
+		options.add(NUMREDNODSINBALL);
+		options.add(NUMGREENNODSINBALL);
+		options.add(CLOSESTDISTANCETORED);
+		options.add(CLOSESTDISTANCETOGREEN);
+		options.add(MEANDISTANCETORED);
+		options.add(MEANDISTANCETOGREEN);
 		
 		String[] distanceHeader = {masterCSV[0][0],"Roi", "Area", "Color", 
-				"numNods in r = " + radius, "distance to closest nodule", "closest color type", "mean distance"};
+				"numNods in r = " + radius,"num Red Nods in r = " + radius, "num Green Nods in r = " + radius ,
+				"distance to closest nodule", "distance to closest red nodule", "distance to closest green nodule",
+				"closest color type", "mean distance", "mean distance to red nodules", "mean distance to green nodules"};
 	    
-		String[] header = new String[26];
+		String[] header = new String[options.size() + 3 + 19];
 		System.arraycopy(distanceHeader, 0, header, 0, distanceHeader.length);
 		System.arraycopy(masterCSV[0], 1, header, distanceHeader.length, masterCSV[0].length-1);
-		String[][] mat = new String[graph.numNodules+1][26];
+		String[][] mat = new String[graph.numNodules+1][options.size() + 3 + 19];
 	    mat[0] = header;
 		double[] data = null;
 		int matCounter = 0;
+		
 		for (int ii = 0; ii < graph.nodes.size(); ii++) {
 			
 			Node nodule = graph.nodes.get(ii);
@@ -104,7 +119,7 @@ public class Statistics {
 				continue;
 			}
 			
-			data = computeStatistics(nodule.type, radius, nodule, graph, options);
+			data = computeStatistics(radius, nodule, graph, options);
 			
 			mat[matCounter+1][1] = Double.toString(nodule.nodeNumber);
 			mat[matCounter+1][2] = Integer.toString(nodule.area);
@@ -124,25 +139,49 @@ public class Statistics {
 			}
 			
 			mat[matCounter+1][4] = Double.toString(data[NUMNODSINBALL]);
-			mat[matCounter+1][5] = Double.toString(data[CLOSESTDISTANCE]);
+			mat[matCounter+1][5] = Double.toString(data[NUMREDNODSINBALL]);
+			mat[matCounter+1][6] = Double.toString(data[NUMGREENNODSINBALL]);
+			
+			if(data[CLOSESTDISTANCE] == Integer.MAX_VALUE) {
+				mat[matCounter+1][7] = "N/A";
+			}
+			else {
+				mat[matCounter+1][7] = Double.toString(data[CLOSESTDISTANCE]);
+			}
+			
+			if(data[CLOSESTDISTANCETORED] == Integer.MAX_VALUE) {
+				mat[matCounter+1][8] = "N/A";
+			}
+			else {
+				mat[matCounter+1][8] = Double.toString(data[CLOSESTDISTANCETORED]);
+			}
+			if(data[CLOSESTDISTANCETOGREEN] == Integer.MAX_VALUE) {
+				mat[matCounter+1][9] = "N/A";
+			}
+			else {
+				mat[matCounter+1][9] = Double.toString(data[CLOSESTDISTANCETOGREEN]);
+			}
 			
 			int closestColor = (int) data[CLOSESTCOLORTYPE];
 			
 			if(closestColor== Node.RED) {
-				mat[matCounter+1][6] = "Red";
+				mat[matCounter+1][10] = "Red";
 			}
 			else if(closestColor == Node.GREEN) {
-				mat[matCounter+1][6] = "Green";
+				mat[matCounter+1][10] = "Green";
 			}
 			else if(closestColor == Node.MIXED) {
-				mat[matCounter+1][6] = "Mixed";
+				mat[matCounter+1][10] = "Mixed";
 			}
 			else {
 				System.out.println("Unknown node type.");
 				System.out.println("breakpoint.");
 			}
 			
-			mat[matCounter+1][7] = Double.toString(data[MEANDISTANCE]);
+			mat[matCounter+1][11] = Double.toString(data[MEANDISTANCE]);
+			
+			mat[matCounter+1][12] = Double.toString(data[MEANDISTANCETORED]);
+			mat[matCounter+1][13] = Double.toString(data[MEANDISTANCETOGREEN]);
 			
 			matCounter++;
 		}
@@ -190,8 +229,8 @@ public class Statistics {
 		for(int ii = 1; ii < data.length; ii++) {
 			data[ii][0] = masterCSV[1][0];
 			
-			for(int jj = 8; jj  < data[0].length; jj++) {
-				data[ii][jj] = masterCSV[1][jj-7];
+			for(int jj = 14; jj  < data[0].length; jj++) {
+				data[ii][jj] = masterCSV[1][jj-13];
 			}
 			
 		}
@@ -222,15 +261,26 @@ public class Statistics {
 	 * @param options : list telling us what statistics to compute
 	 * @return
 	 */
-	protected static double[] computeStatistics(int color, int radius, Node node, RootGraph graph, ArrayList<Integer> options) {
-		double[] data = new double[4];
+	protected static double[] computeStatistics(int radius, Node node, RootGraph graph, ArrayList<Integer> options) {
+		double[] data = new double[10];
 		
 		int closestDistance = Integer.MAX_VALUE; 
 		int closestColorDistance = Integer.MAX_VALUE;
+		int closestDistanceToRed = Integer.MAX_VALUE;
+		int closestDistanceToGreen = Integer.MAX_VALUE;
+		
+		
 		int closestColorType = -1;
 		int numNodsInBall = 0;
+		int numRedNodsInBall = 0;
+		int numGreenNodsInBall = 0;
+		
 		double meanDistance = 0;
 		int meanDistanceCounter = 0;
+		double meanDistanceToRed = 0;
+		int redMeanDistanceCounter = 0;
+		double meanDistanceToGreen = 0;
+		int greenMeanDistanceCounter = 0;
 		
 		ArrayList<ArrayList<int[]>> paths = node.paths;
 		
@@ -242,14 +292,34 @@ public class Statistics {
 			    
 			   if(options.contains(NUMNODSINBALL)) {
 				    // if distance is smaller and node is correct color.
-				    if(path[1] < radius && graph.nodes.get(path[0]).type == color) {
+				    if(path[1] < radius) {
 				    	numNodsInBall++;
+				    }
+			   }
+			   if(options.contains(NUMREDNODSINBALL)) {
+				   if(path[1] < radius && graph.nodes.get(path[0]).type == Node.RED) {
+				    	numRedNodsInBall++;
+				    }
+			   }
+			   if(options.contains(NUMGREENNODSINBALL)) {
+				   if(path[1] < radius && graph.nodes.get(path[0]).type == Node.GREEN) {
+				    	numGreenNodsInBall++;
 				    }
 			   }
 			   if(options.contains(CLOSESTDISTANCE)) {
 				// if distance is smaller and node is correct color.
-				    if(path[1] < closestDistance && graph.nodes.get(path[0]).type == color) {
+				    if(path[1] < closestDistance) {
 				    	closestDistance = path[1];
+				    }
+			   }
+			   if(options.contains(CLOSESTDISTANCETORED)) {
+				   if(path[1] < closestDistanceToRed && graph.nodes.get(path[0]).type == Node.RED) {
+				    	closestDistanceToRed = path[1];
+				    }
+			   }
+			   if(options.contains(CLOSESTDISTANCETOGREEN)) {
+				   if(path[1] < closestDistanceToGreen && graph.nodes.get(path[0]).type == Node.GREEN) {
+				    	closestDistanceToGreen = path[1];
 				    }
 			   }
 			   if(options.contains(CLOSESTCOLORTYPE)) {
@@ -260,9 +330,19 @@ public class Statistics {
 			   }
 			   
 			   if(options.contains(MEANDISTANCE)) {
-				   if(graph.nodes.get(path[0]).type == color) {
-				    	meanDistance += path[1];
-				    	meanDistanceCounter++;
+			    	meanDistance += path[1];
+			    	meanDistanceCounter++;
+			   }
+			   if(options.contains(MEANDISTANCETORED)) {
+				   if(graph.nodes.get(path[0]).type == Node.RED) {
+				    	meanDistanceToRed += path[1];
+				    	redMeanDistanceCounter++;
+				    }
+			   }
+			   if(options.contains(MEANDISTANCETOGREEN)) {
+				   if(graph.nodes.get(path[0]).type == Node.GREEN) {
+				    	meanDistanceToGreen += path[1];
+				    	greenMeanDistanceCounter++;
 				    }
 			   }
 			}	
@@ -271,11 +351,35 @@ public class Statistics {
 		data[NUMNODSINBALL] = numNodsInBall;
 		data[CLOSESTDISTANCE] = closestDistance;
 		data[CLOSESTCOLORTYPE] = closestColorType;
-		data[MEANDISTANCE] = meanDistanceCounter;
+		
+		data[NUMREDNODSINBALL] = numRedNodsInBall;
+		data[NUMGREENNODSINBALL] = numGreenNodsInBall;
+		data[CLOSESTDISTANCETORED] = closestDistanceToRed;
+		data[CLOSESTDISTANCETOGREEN] = closestDistanceToGreen;
 		
 		if(options.contains(MEANDISTANCE)) {
 			meanDistance = meanDistance / meanDistanceCounter;
 			meanDistance = Math.round(meanDistance * 1000.0) / 1000.0;
+			data[MEANDISTANCE] = meanDistance;
+		}
+		else {
+			data[MEANDISTANCE] = -1;
+		}
+		if(options.contains(MEANDISTANCETORED)) {
+			meanDistanceToRed = meanDistanceToRed / redMeanDistanceCounter;
+			meanDistanceToRed = Math.round(meanDistanceToRed * 1000.0) / 1000.0;
+			data[MEANDISTANCETORED] = meanDistanceToRed;
+		}
+		else {
+			data[MEANDISTANCETORED] = -1;
+		}
+		if(options.contains(MEANDISTANCE)) {
+			meanDistanceToGreen = meanDistanceToGreen / greenMeanDistanceCounter;
+			meanDistanceToGreen = Math.round(meanDistanceToGreen * 1000.0) / 1000.0;
+			data[MEANDISTANCETORED] = meanDistanceToRed;
+		}
+		else {
+			data[MEANDISTANCETOGREEN] = -1;
 		}
 		
 		
