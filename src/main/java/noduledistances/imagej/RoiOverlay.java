@@ -4,38 +4,46 @@ package noduledistances.imagej;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Line;
-import ij.gui.OvalRoi;
 import ij.gui.Overlay;
+
+import ij.gui.OvalRoi;
+import ij.gui.PointRoi;
 import ij.gui.PolygonRoi;
+import ij.gui.Roi;
 import ij.gui.TextRoi;
+
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.FloatPolygon;
 import traceskeleton.TraceSkeleton;
 import ij.gui.ShapeRoi;
+import ij.gui.NewImage;
 
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
+
 import org.apache.commons.math3.ml.clustering.CentroidCluster;
 import org.apache.commons.math3.ml.clustering.KMeansPlusPlusClusterer;
 import org.apache.commons.math3.random.HaltonSequenceGenerator;
 
+import kn.uni.voronoitreemap.datastructure.OpenList;
 import kn.uni.voronoitreemap.diagram.PowerDiagram;
 import kn.uni.voronoitreemap.j2d.PolygonSimple;
+import kn.uni.voronoitreemap.j2d.Site;
 
 
 public class RoiOverlay {
 
 	ShapeRoi[] rois;
-	
 	
 	/**
 	 * Extracts the Roi information from the loaded Tif image. 
@@ -63,6 +71,13 @@ public class RoiOverlay {
 	}
 	
 	
+	public RoiOverlay() {
+		// TODO Auto-generated constructor stub
+	}
+	
+	
+
+
 	/**
 	 * finds the centroid of all ROI's, and returns them in [color,x,y,area] format. 
 	 * For nodules that were initially clumps, we return all of their information in one row. 
@@ -92,7 +107,7 @@ public class RoiOverlay {
 			if(numNods>1){
 				// if is clump, use k-means to separate into individual points, add those
 				// individual points, and go to next roi.
-				int[] clump = breakupClumps(roi, numNods);
+				int[] clump = getClumpData(roi, numNods);
 				centroids.add(clump);
 				
 				continue;
@@ -199,9 +214,9 @@ public class RoiOverlay {
 	 * 
 	 * @param roi : roi that we're breaking into parts.
 	 * @param numNods : the number of parts we're breaking the roi into.
-	 * @return x,y coordinates of the contour centroids of the broken up roi.
+	 * @return centroid and area of each ROI in color,x,y,area format.
 	 */
-	public int[] breakupClumps(ShapeRoi roi, int numNods) {
+	public int[] getClumpData(ShapeRoi roi, int numNods) {
 		
 		List<ClumpClusterPoint> halton = getHaltonSequence(roi);
 		
@@ -210,7 +225,10 @@ public class RoiOverlay {
 		ArrayList<Integer> nodn = new ArrayList<>();
 		String name = roi.getName();
 		
-		for(CentroidCluster<ClumpClusterPoint> cluster : clusters) {
+		ArrayList<ShapeRoi> brokenRois = breakupClump(roi, numNods,clusters);
+		double[] centroid;
+		
+		for(ShapeRoi brokeRoi : brokenRois) {
 			
 			if(name.substring(0, 1).equalsIgnoreCase("r")) {
 				nodn.add(1);
@@ -221,26 +239,615 @@ public class RoiOverlay {
 			else if(name.substring(0, 1).equalsIgnoreCase("m")) {
 				nodn.add(3);
 			}
-			double[] coords = cluster.getCenter().getPoint();
+			centroid = brokeRoi.getContourCentroid();
 			
-			nodn.add((int) coords[0]);
-			nodn.add((int) coords[1]);
-			
-			//TODO this
-			//PLACEHOLDER - will need to alter the code to calculate the area of the broken up
-			// nodule clump.
-			nodn.add(-1);
-			
+			nodn.add((int) centroid[0]);
+			nodn.add((int) centroid[1]);
+			nodn.add(brokeRoi.getContainedPoints().length);
 		}
 		
 		return nodn.stream().mapToInt(Integer::intValue).toArray();
+	}
+	
+	
+	protected ArrayList<ShapeRoi> breakupClump(ShapeRoi roi, int numNods, List<CentroidCluster<ClumpClusterPoint>> clusters) {
+		if(clusters.size() != numNods) {
+			System.out.println("num clusters not equal to num nods");
+			System.out.println("breakpoint.");
+		}
+		ArrayList<double[]> centers = new ArrayList<>();
+		
+		ArrayList<ShapeRoi> rois = new ArrayList<>();
+		rois.add(roi);
+		PolygonRoi converter;
+		int[] intx;
+		int[] inty;
+		// power diagram object
+		PowerDiagram diagram = new PowerDiagram();
+		
+		// custom list object holding the points used to compute power diagrams
+		OpenList sites = new OpenList();
+
+		/**
+		// convert ShapeRoi into PolygonSimple\/\/
+		Point[] points = roi.getContainedPoints();
+		double[] x = new double[points.length];
+		double[] y = new double[points.length];
+		
+		
+		for( int ii = 0; ii < points.length; ii++) {
+			x[ii] = (double) points[ii].x;
+			y[ii] = (double) points[ii].y;
+		}
+		PolygonSimple roiPolygon = new PolygonSimple(x,y,x.length);
+		// convert ShapeRoi into PolygonSimple/\/\
+		**/
+
+		PolygonSimple roiBoundingBox = new PolygonSimple();
+		Rectangle box = roi.getBounds();
+		System.out.println("======");
+		System.out.println(box.toString());
+		System.out.println("======");
+		int width = box.width;
+		int height = box.height;
+		roiBoundingBox.add(0, 0);
+		roiBoundingBox.add(width, 0);
+		roiBoundingBox.add(width, height);
+		roiBoundingBox.add(0, height);
+		
+		//restrict voronoi diagrams to roiBoundingBox. package wanted the box to have a corner
+		//at 0,0, so everything has been shifted.
+		diagram.setClipPoly(roiBoundingBox);
+		
+		//add centroids as ball centers for power diagram
+		for(CentroidCluster<ClumpClusterPoint> cluster : clusters) {
+			double[] centroid = cluster.getCenter().getPoint();
+			centers.add(centroid);
+			Site site = new Site(centroid[0]-box.x, centroid[1]-box.y);
+			//site.setWeight(30);
+			sites.add(site);
+		}
+		
+		
+		diagram.setSites(sites);
+		
+		diagram.computeDiagram();
+		
+		if(sites.size != numNods) {
+			System.out.println("number of sites not equal to number of nodules. Error.");
+			System.out.println("Breakpoint.");
+		}
+		int numNullSites = 0;
+		for(int ii = 0; ii < sites.size; ii++) {
+			Site site = sites.array[ii];
+			PolygonSimple polygon=site.getPolygon();
+			if(polygon == null) {
+				numNullSites++;
+				System.out.println("Null site found");
+				continue;
+			}
+			double[] x = polygon.getXPoints();
+			double[] y = polygon.getYPoints();
+			intx = doubleToInt(x);
+			inty = doubleToInt(y);
+			
+			intx = trimArray(intx, polygon.length);
+			inty = trimArray(inty, polygon.length);
+			
+			if(x.length != y.length) {
+				System.out.println("The number of xpoints is different than the "
+						+ "number of y points in this voronoi cell.");
+				System.out.println("breakpoint.");
+			}
+			
+			converter = new PolygonRoi(intx, inty, inty.length, Roi.POLYGON);
+			
+			ShapeRoi newRoi = new ShapeRoi(converter);
+			newRoi.setName(roi.getName());
+			rois.add(newRoi);
+		}
+		System.out.println("Number of null sites for this ROI: " + numNullSites);
+		intersectClumps(rois);
+		//showRois(rois, width, height, centers);
+		
+		rois.remove(0);
+		return rois;
+	}
+	
+	
+	private void intersectClumps(ArrayList<ShapeRoi> rois) {
+		
+		ShapeRoi original = rois.get(0);
+		int dx = original.getBounds().x;
+		int dy = original.getBounds().y;
+		
+		for(int ii =1 ; ii < rois.size(); ii ++){
+			int cx = rois.get(ii).getBounds().x;
+			int cy = rois.get(ii).getBounds().y;
+			rois.get(ii).setLocation(cx+dx, cy+dy);
+		}
+		
+		for(int ii =1 ; ii < rois.size(); ii ++){
+			rois.get(ii).and(original);
+			if(rois.get(ii).getContainedPoints().length == 0) {
+				System.out.println("Error: Empty intersection.");
+			}
+		}
 		
 	}
+	 
+	
+	private int[] doubleToInt(double[] x) {
+		int[] y = new int[x.length];
+		
+		for (int ii = 0; ii < x.length; ii++) {
+		y[ii] = (int) Math.round(x[ii]);
+		}
+	
+		return y;
+	}
+		
 	
 	
 	
 	//ALL METHODS BELOW THIS LINE ARE FOR TESTING PURPOSES.
 	
+	private ArrayList<double[]> normalize(ArrayList<double[]> centers, int dx, int dy){
+		ArrayList<double[]> nm = new ArrayList<>();
+		
+		for(double[] center : centers) {
+			System.out.println("(" + center[0] + ", " + center[1] + ") - (" + dx + ", " + dy + ")");
+			center[0] -= dx;
+			center[1] -= dy;
+			nm.add(center);
+		}
+		
+		return nm;
+	}
+	
+	public void testPolygonRoi() {
+		int[][] vertices = new int[2][4];
+		
+		
+		vertices[0] = new int[] {0,0,100,100};
+		vertices[1] = new int[] {0,100,100,0};
+		
+		PolygonRoi roi = new PolygonRoi(vertices[0], vertices[1], 4, Roi.POLYGON);
+		
+		ShapeRoi[] rois = new ShapeRoi[1];
+		rois[0] = new ShapeRoi(roi);
+		showRois(rois, 300,300);
+		
+		
+	}
+	/**
+	 * This is an edited version of the sample code provided on the github page of the Power Diagram 
+	 * package begin utilized. Author : ArlindNocaj
+	 */
+	public void powerDiagramTestCode(ArrayList<double[]> pointCloud) {
+		
+		/**
+		double[][] pointCloud = new double[3][2];
+		pointCloud[0] = new double[] {100,100};
+		pointCloud[1] = new double[] {300,100};
+		pointCloud[2] = new double[] {200,200};
+		*/
+		
+		ImagePlus imp = NewImage.createImage("Points Image", 500, 500, 1, 8, NewImage.FILL_WHITE);
+		Overlay overlay = new Overlay();
+		imp.setOverlay(overlay);
+		PowerDiagram diagram = new PowerDiagram();
+
+		// normal list based on an array
+		OpenList sites = new OpenList();
+
+		Random rand = new Random(100);
+		// create a root polygon which limits the voronoi diagram.
+		// here it is just a rectangle.
+
+		PolygonSimple rootPolygon = new PolygonSimple();
+		int width = 1000;
+		int height = 1000;
+		rootPolygon.add(0, 0);
+		rootPolygon.add(width, 0);
+		rootPolygon.add(width, height);
+		rootPolygon.add(0, height);
+		
+		
+		// create 100 points (sites) and set random positions in the rectangle defined above.
+	/**
+		for (int i = 0; i < 100; i++) {
+			Site site = new Site(rand.nextInt(width), rand.nextInt(width));
+			
+			// we could also set a different weighting to some sites
+			site.setWeight(30);
+			sites.add(site);
+		}*/
+		
+		for(double[] pt : pointCloud) {
+			System.out.println("pt to be added.");
+			System.out.println(pt[0] + ", " + pt[1]);
+			Site site = new Site(pt[0], pt[1]);
+			
+			site.setWeight(30);
+			sites.add(site);
+			
+			PointRoi pointRoi = new PointRoi(pt[0], pt[1]);
+            pointRoi.setFillColor(Color.GREEN);
+            pointRoi.setStrokeColor(Color.GREEN);
+            imp.getOverlay().add(pointRoi);
+            
+		}
+		
+		// set the list of points (sites), necessary for the power diagram
+		diagram.setSites(sites);
+		// set the clipping polygon, sets boundaries the power voronoi diagram
+		diagram.setClipPoly(rootPolygon);
+
+		// do the computation
+		diagram.computeDiagram();
+
+		// for each site we can no get the resulting polygon of its cell. 
+		// note that the cell can also be empty, in this case there is no polygon for the corresponding site.
+		PointRoi.setColor(Color.RED);
+		Line.setColor(Color.BLACK);
+		int[] intx;
+		int[] inty;
+		for (int i=0;i<sites.size;i++){
+			Site site=sites.array[i];
+			PolygonSimple polygon=site.getPolygon();
+			System.out.println("polygon length: " + polygon.length);
+			
+			double[] x = polygon.getXPoints();
+			//System.out.println("len of this polygon: "+  x.length);
+			double[] y = polygon.getYPoints();
+			
+			intx = doubleToInt(x);
+			inty = doubleToInt(y);
+			System.out.println("length of intx:" + intx.length);
+			intx = trimArray(intx, polygon.length);
+			inty = trimArray(inty,polygon.length);
+			System.out.println("length of trimmed intx: " + intx.length);
+			System.out.println("Showing the raw x and y values of the vertices of the polygon:");
+			System.out.println(Arrays.toString(x));
+			System.out.println(Arrays.toString(y));
+			
+			  for (int ii = 0; ii < intx.length-1; ii++) {
+		            PointRoi pointRoi = new PointRoi(intx[ii], inty[ii]);
+		            pointRoi.setFillColor(Color.RED);
+		            pointRoi.setStrokeColor(Color.RED);
+		           
+		            System.out.println("creating line: " + intx[ii] + ", " + inty[ii] + " -> " + x[ii+1] + ", " + y[ii+1]);
+		            Line line = new Line(intx[ii], inty[ii], intx[ii+1], inty[ii+1]);
+		            line.setStrokeColor(Color.BLACK);
+		            
+		            imp.getOverlay().add(line);
+		            imp.getOverlay().add(pointRoi);
+		            
+		        }
+			  
+	            Line line = new Line(intx[0], inty[0], intx[intx.length-1], inty[inty.length-1]);
+	            line.setStrokeColor(Color.BLACK);
+	            imp.getOverlay().add(line);
+	            
+			 
+			 //System.out.println("GOING TO NEW POLYGON.");
+		}
+		
+		
+		
+		imp.show();
+		System.out.println("breakpoint.");
+		
+		
+	}
+	
+	public void testPowerDiagram() {
+		
+		double[][] pointCloud = new double[3][2];
+		pointCloud[0] = new double[] {100,100};
+		pointCloud[1] = new double[] {300,100};
+		pointCloud[2] = new double[] {200,200};
+		
+		ArrayList<ShapeRoi> rois = new ArrayList<>();
+		
+		PolygonRoi converter;
+		
+		int[] intx;
+		int[] inty;
+		
+		
+		PowerDiagram diagram = new PowerDiagram();
+		
+		// custom list object holding the points used to compute power diagrams
+		OpenList sites = new OpenList();
+		
+		PolygonSimple roiPolygon = new PolygonSimple();
+		int width = 1000;
+		int height =1000;
+		
+		roiPolygon.add(0, 0);
+		roiPolygon.add(width,0);
+		roiPolygon.add(width, height);
+		roiPolygon.add(0, height);
+		
+		for(double[] pt : pointCloud) {
+			System.out.println("pt to be added.");
+			System.out.println(pt[0] + ", " + pt[1]);
+			Site site = new Site(pt[0], pt[1]);
+			site.setWeight(30);
+			sites.add(site);
+		}
+		
+		diagram.setSites(sites);
+		diagram.setClipPoly(roiPolygon);
+		
+		diagram.computeDiagram();
+		
+		
+		int numNullSites = 0;
+		
+		for(int ii = 0; ii < sites.size; ii++) {
+			Site site = sites.array[ii];
+			PolygonSimple polygon=site.getPolygon();
+			
+			if(polygon == null) {
+				numNullSites++;
+				continue;
+			}
+			
+			double[] x = polygon.getXPoints();
+			double[] y = polygon.getYPoints();
+			System.out.println("Showing the raw x and y values of the vertices of the polygon:");
+			System.out.println(Arrays.toString(x));
+			System.out.println(Arrays.toString(y));
+			
+			intx = doubleToInt(x);
+			inty = doubleToInt(y);
+			
+			intx = trimArray(intx, polygon.length);
+			inty = trimArray(inty, polygon.length);
+			
+			if(intx.length != inty.length) {
+				System.out.println("Error, not the same number of zeros. ");
+				System.out.println("breakpoint.");
+			}
+			
+			if(intx.length == 0) {
+				System.out.println("Empty polygon. Skipping.");
+				continue;
+			}
+			System.out.println("showing the x and y values of the vertices of the polygon.");
+			System.out.println(Arrays.toString(intx));
+			System.out.println(Arrays.toString(inty));
+			System.out.println("==============================");
+			converter = new PolygonRoi(intx, inty, inty.length, Roi.POLYGON);
+			converter.getXCoordinates();
+			System.out.println("showing the PolygonRoi x and y coordinates.");
+			System.out.println(Arrays.toString(converter.getPolygon().xpoints));
+			System.out.println(Arrays.toString(converter.getPolygon().ypoints));
+			System.out.println("==============================");
+			rois.add(new ShapeRoi(converter));
+			
+		}
+		
+		System.out.println("num null sites in testing:" + numNullSites);
+		
+		showRois(rois, width+100,height+100, null);
+		
+		
+	}
+	
+	/**
+	 * removes trailing zeros that result from the Power Diagram output.
+	 * @param array
+	 * @return
+	 */
+	protected int[] trimArray(int[] array, int length) {
+		ArrayList<Integer> newArray = new ArrayList<>();
+		
+		for(int ii = 0; ii < length; ii++) {
+			newArray.add(array[ii]);
+		}
+		
+		return newArray.stream().mapToInt(Integer::intValue).toArray();
+		
+		
+	}
+	
+	public void showRois(ShapeRoi[] rois, int width, int height) {
+		Overlay overlay = new Overlay();
+		ShapeRoi original = rois[0];
+		int offsetX = original.getBounds().x;
+		int offsetY = original.getBounds().y;
+		ImagePlus testing = testingSpace(width, height);
+		
+		testing.setOverlay(overlay);
+		
+		for(ShapeRoi roi : rois) {
+			if(roi == null) {
+				continue;
+			}
+			int cx = roi.getBounds().x;
+			int cy = roi.getBounds().y;
+			
+		    roi.update(true, false);
+		    roi.setLocation(cx-offsetX, cy-offsetY);
+		    
+		    // Add outlines to the ROI
+		    roi.setStrokeColor(Color.BLACK);
+		    roi.setStrokeWidth(2);
+		   
+		    testing.getOverlay().add(roi);
+		}
+		
+		testing.show();
+		System.out.println("breakpoint.");
+		
+	}
+	
+	public void showRois(ArrayList<ShapeRoi> rois, int width, int height, ArrayList<double[]> centers) {
+		
+		Overlay overlay = new Overlay();
+		ShapeRoi original = rois.get(0);
+		System.out.println("num ROIS: " + rois.size());
+		//int offsetX = original.getBounds().x - (int) (.2 * original.getBounds().width);
+		//int offsetY = original.getBounds().y - (int) (.2 * original.getBounds().height);
+		
+		ImagePlus testing = testingSpace(width, height);
+		
+		testing.setOverlay(overlay);
+		Color[] colors = generateUniqueColors(rois.size());
+		
+		for(int ii = 0; ii < rois.size(); ii++) {
+			ShapeRoi roi = rois.get(ii);
+			if(roi == null) {
+				System.out.println("Found null ROI.");
+				continue;
+			}
+			int cx = roi.getBounds().x;
+			int cy = roi.getBounds().y;
+			
+		  //  roi.update(true, false);
+		  //  roi.setLocation(cx-offsetX, cy-offsetY);
+			
+			if(roi.equals(original)) {
+				roi.setLocation(0, 0);
+			}
+		    
+		    // Add outlines to the ROI
+			
+		    roi.setStrokeColor(colors[ii]);
+		    roi.setStrokeWidth(ii+2);
+		   
+		    testing.getOverlay().add(roi);
+		}
+		if(centers  == null) {
+			testing.show();
+			System.out.println("breakpoint.");
+			return;
+		}
+		
+		for(double[] center : centers) {
+			//OvalRoi ball = new OvalRoi( (int) center[0] - 2 - offsetX,  (int) center[1] - 2 - offsetY, 
+			//		4, 4);
+			OvalRoi ball = new OvalRoi(center[0]-2, center[1]-2, 4,4);
+			ball.setFillColor(Color.cyan);
+			testing.getOverlay().add(ball);
+		}
+		
+		testing.show();
+		System.out.println("breakpoint.");
+		
+	}
+	
+	
+	public int maximum(int[] x) {
+		int min = Integer.MIN_VALUE;
+		
+		for (int y : x) {
+			if (y > min) {
+				min = y;
+			}
+		}
+		
+		return min;
+	}
+	
+	public void showRois(ShapeRoi[] rois) {
+		Overlay overlay = new Overlay();
+		int[] widths = new int[rois.length];
+		int[] heights = new int[rois.length];
+		
+		
+		for(int ii = 0; ii < rois.length; ii++) {
+			ShapeRoi roi = rois[ii];
+			if(roi == null) {
+				continue;
+			}
+			Rectangle rect = roi.getBounds();
+			widths[ii] = rect.width;
+			heights[ii] = rect.height;
+		}
+		ImagePlus testing = testingSpace(maximum(widths), maximum(heights));
+		
+		testing.setOverlay(overlay);
+		
+		for(ShapeRoi roi : rois) {
+			if(roi == null) {
+				continue;
+			}
+			
+		    roi.update(true, false);
+		    	
+		    // Add outlines to the ROI
+		    roi.setStrokeColor(Color.BLACK);
+		    roi.setStrokeWidth(2);
+		   
+		    testing.getOverlay().add(roi);
+		}
+		
+		testing.show();
+		System.out.println("breakpoint.");
+		
+	}
+
+	public void showGraphBreakup(List<CentroidCluster<ClumpClusterPoint>> clusters, ShapeRoi roi, int radius, int numNods, ShapeRoi[] rois) {
+
+		Overlay overlay = new Overlay();
+		
+		Rectangle rect = roi.getBounds();
+		ImagePlus testing = testingSpace((int) (rect.width),(int) (rect.height));
+		
+		testing.setOverlay(overlay);
+		
+		Color[] colors = generateUniqueColors(numNods);
+		
+		
+		int counter = 0;
+		for(CentroidCluster<ClumpClusterPoint> cluster : clusters) {
+			Color color = colors[counter++];
+			
+			for(ClumpClusterPoint point : cluster.getPoints()) {
+				OvalRoi ball = new OvalRoi( point.x -rect.x - radius,  point.y - rect.y - radius, 
+						2 * radius, 2 * radius);
+				
+				ball.setFillColor(color);
+				testing.getOverlay().add(ball);
+			}
+		}
+		
+		int colorCounter = 0;
+		for(ShapeRoi brokeRoi : rois) {
+			if(brokeRoi == null) {
+				colorCounter++;
+				continue;
+			}
+			brokeRoi.setPosition(0);
+			brokeRoi.setLocation(0, 0);
+		    brokeRoi.update(true, false);
+		    	
+		    // Add outlines to the ROI
+		    brokeRoi.setStrokeColor(colors[colorCounter++]);
+		    brokeRoi.setStrokeWidth(2);
+		   
+		    testing.getOverlay().add(roi);
+		}
+		
+		
+		roi.setPosition(0);
+		roi.setLocation(0, 0);
+	    roi.update(true, false);
+	    	
+	    // Add outlines to the ROI
+	    roi.setStrokeColor(Color.BLACK);
+	    roi.setStrokeWidth(2);
+	   
+	    testing.getOverlay().add(roi);
+		
+		testing.show();
+		System.out.println("breakpoint");
+	}
 	
 	public void showGraphBreakup(List<CentroidCluster<ClumpClusterPoint>> clusters, ShapeRoi roi, int radius, int numNods) {
 
@@ -307,6 +914,7 @@ public class RoiOverlay {
     }
 	
 	
+	
 	public static List<Point2D.Double> generateRandomPoints(List<PolygonRoi> polygons) {
         List<Point2D.Double> points = new ArrayList<>();
         Random random = new Random();
@@ -322,6 +930,7 @@ public class RoiOverlay {
 
         return points;
     }
+	
 	
 	
 	public void skeletonTesting() {

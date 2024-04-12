@@ -302,7 +302,9 @@ public class RootGraph {
     for(int[] nodule : nodLocations) {
     	int ii = 0;
     	while(ii < nodule.length) {
-    		
+    		if(nodule.length > 4) {
+    			System.out.println("Breakpoint.");
+    		}
     		double subNumber = (ii + 4)/4;
     		if(subNumber != (int) subNumber) {
     			System.out.println("Error with sub-numbering.");
@@ -311,9 +313,8 @@ public class RootGraph {
     		}
     		
     		double number;
-    		if(nodule.length == 3) {
-    			number = noduleNumber;
-    			
+    		if(nodule.length == 4) {
+    			number = (int) noduleNumber;
     		}
     		else {
     			number = noduleNumber + subNumber / Math.pow(10, String.valueOf(subNumber).length());
@@ -432,8 +433,8 @@ public class RootGraph {
     			if(startingNodule == endingNodule) {
     				continue;
     			}
-    			System.out.println("=======================");
-    			System.out.println("paths from " + nodule.nodeNumber + " to " + nodule1.nodeNumber);
+    			//System.out.println("=======================");
+    			//System.out.println("paths from " + nodule.nodeNumber + " to " + nodule1.nodeNumber);
     			
     			List<Path> shortest_paths_list = yenAlg.getShortestPaths(
     					yanGraph.getVertex(startingNodule), yanGraph.getVertex(endingNodule), numIterations);
@@ -445,7 +446,10 @@ public class RootGraph {
     				System.out.println("breakpoint.");
     			}
     			
-    			System.out.println("len of shortestPaths: " + shortest_paths_list.size());
+    			//System.out.println("len of shortestPaths: " + shortest_paths_list.size());
+    			if(shortest_paths_list.size() == 0) {
+    				System.out.println("no paths between." + startingNodule + " and " + endingNodule );
+    			}
     			ArrayList<int[]> paths = shortestPathsToList(shortest_paths_list);
     			
     			if(paths.size() == 0) {
@@ -484,7 +488,7 @@ public class RootGraph {
 		}
 		
 		if(paths.size() == 0) {
-			System.out.println("null paths. Breakpoint.");
+			//System.out.println("null paths.");
 		}
 		
 		return paths;

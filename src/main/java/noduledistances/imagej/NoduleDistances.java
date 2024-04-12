@@ -16,6 +16,8 @@ import org.scijava.plugin.Parameter;
 import org.scijava.plugin.Plugin;
 import org.scijava.ui.UIService;
 
+import com.opencsv.exceptions.CsvValidationException;
+
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Line;
@@ -93,7 +95,7 @@ public class NoduleDistances implements Command {
 		
 		imp.setRoi(x, y, newWidth, newHeight); // cropping image to center of image and halving the size.
 		imp = imp.crop();
-		
+		imp.setTitle(imp.getTitle().substring(4));
 		
 		return imp;
     }
@@ -205,14 +207,14 @@ public class NoduleDistances implements Command {
 	 */
 	public ImagePlus preprocessing(ImagePlus imp) {
 		
-		ImagePlus image = new ImagePlus(imp.getShortTitle(), imp.getProcessor());
+		ImagePlus image = new ImagePlus(imp.getTitle(), imp.getProcessor());
 		
 		//first entry is percent contrast change (2f = 200%), second value is brightness increase
 		RescaleOp op = new RescaleOp(2f, 25, null);
 		
 		BufferedImage output = op.filter(image.getBufferedImage(), null);
 
-		image = new ImagePlus(image.getShortTitle(), output);
+		image = new ImagePlus(image.getTitle(), output);
 		
 		//IJ.save(image, "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS033\\" + "PS033_preprocessed1.jpg");
 		return image;
@@ -238,8 +240,15 @@ public class NoduleDistances implements Command {
     //ImagePlus image, String model
     private void execute(ImagePlus roots, ImagePlus tifImp) {
     	
-    
     	
+		tifImp.setTitle(tifImp.getTitle().substring(4,9));
+		roots.setTitle(roots.getTitle().substring(0,5));
+		
+		if(!tifImp.getTitle().equalsIgnoreCase(roots.getTitle())) {
+			System.out.println("Names are not the same");
+			System.out.println(tifImp.getTitle());
+			System.out.println(roots.getTitle());
+		}
 		
 	//	IJ.save(roots, "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS033\\" + "PS033_preprocessed44.jpg");
 		
@@ -265,7 +274,7 @@ public class NoduleDistances implements Command {
 		
 		String extension = tif.getName().substring(tif.getName().lastIndexOf(".") + 1);
 		
-		RoiOverlay roiOverlay = null;
+		RoiOverlay roiOverlay;
 		
 		if(extension.equalsIgnoreCase("tif")) {
 			roiOverlay = new RoiOverlay(tifImp);
@@ -283,7 +292,7 @@ public class NoduleDistances implements Command {
 		cluster.setChannels(channels);
 		
 		RootSegmentation root = new RootSegmentation(cluster);
-		root.binarymap.show();
+		
 		
 		ArrayList<ArrayList<int[]>> skeleton = Skeletonize.skeletonize(root.binarymap);
 		
@@ -292,15 +301,23 @@ public class NoduleDistances implements Command {
 		
 		RootGraph graph = new RootGraph(skeleton, graphOverlay);
 		
+		
 		graph.addNodules(roiOverlay.getRoiCentroids());
 		
 		graphOverlay.overlayGraph(graph, root.binarymap.getProcessor().convertToColorProcessor());
-		graphOverlay.showGraph();
 		
+		IJ.save(graphOverlay.overlayedGraph, "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS033\\" + roots.getTitle() + "_graph.jpg");
 		
 		//IJ.save(graphOverlay.overlayedGraph, "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS033\\" + "PS033_overlayed_graph.jpg");
 		graph.computeShortestDistances(5);
-		Statistics.generateData(graph, 10);
+		try {
+			Statistics stats = new Statistics(roots.getTitle());
+			stats.generateData(graph,  100);
+			
+		} catch (CsvValidationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		//graphOverlay.showGraph();
 		//shortestPath(1,7,graph, graphOverlay).show();
     }

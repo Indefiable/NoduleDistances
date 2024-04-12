@@ -4,7 +4,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.StringJoiner;
+import com.opencsv.CSVReader;
+import com.opencsv.exceptions.CsvValidationException;
+
+import java.io.FileReader;
+import java.io.IOException;
 
 /**
  * A class that generates all of the statistical data for analysis, and saves it as
@@ -32,33 +38,61 @@ import java.util.StringJoiner;
 
 public class Statistics {
 	
+	String[][] masterCSV = new String[2][19];
+	
 	private static final int NUMNODSINBALL = 0;
 	private static final int CLOSESTDISTANCE = 1;
 	private static final int CLOSESTCOLORTYPE = 2;
 	private static final int MEANDISTANCE = 3;
 	
 	
-	public Statistics() {
-		
+	public Statistics(String imageName) throws CsvValidationException {
+		System.out.println("Image name: " + imageName);
+		try  {
+			CSVReader reader = new CSVReader(new FileReader("assets\\master.csv"));
+            String[] nextLine = reader.readNext();
+            
+            while(nextLine == null) {
+            	nextLine = reader.readNext();
+            }
+            masterCSV[0] = nextLine;
+            
+            while ((nextLine = reader.readNext()) != null) {
+                // Process each row (nextLine) as needed	
+            	if (nextLine.length > 0 && nextLine[0].equalsIgnoreCase(imageName)) {
+			        masterCSV[1] = nextLine;
+			        break;
+			    }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+		if(masterCSV[1] == null) {
+			System.out.println("No data has been found for that the following image: " + imageName);
+		}
+		System.out.println(Arrays.toString(masterCSV[0]));
+		System.out.println(Arrays.toString(masterCSV[1]));
 	}
 	
-	
-	
+
 	/**
 	 * Populates the String[][] data with computed statistics relevant to distance data. 
 	 * @param graph
 	 */
-	public static void generateData(RootGraph graph, int radius) {
+	public void generateData(RootGraph graph, int radius) {
 		ArrayList<Integer> options = new ArrayList<>();
 		options.add(NUMNODSINBALL);
 		options.add(CLOSESTDISTANCE);
 		options.add(CLOSESTCOLORTYPE);
 		options.add(MEANDISTANCE);
 		
-		String[] header = {"Roi", "Area", "Color", 
+		String[] distanceHeader = {masterCSV[0][0],"Roi", "Area", "Color", 
 				"numNods in r = " + radius, "distance to closest nodule", "closest color type", "mean distance"};
 	    
-		String[][] mat = new String[graph.numNodules+1][7];
+		String[] header = new String[26];
+		System.arraycopy(distanceHeader, 0, header, 0, distanceHeader.length);
+		System.arraycopy(masterCSV[0], 1, header, distanceHeader.length, masterCSV[0].length-1);
+		String[][] mat = new String[graph.numNodules+1][26];
 	    mat[0] = header;
 		double[] data = null;
 		int matCounter = 0;
@@ -72,30 +106,49 @@ public class Statistics {
 			
 			data = computeStatistics(nodule.type, radius, nodule, graph, options);
 			
-			mat[matCounter+1][0] = Double.toString(nodule.nodeNumber);
-			mat[matCounter+1][1] = Integer.toString(nodule.area);
+			mat[matCounter+1][1] = Double.toString(nodule.nodeNumber);
+			mat[matCounter+1][2] = Integer.toString(nodule.area);
 			
 			if(nodule.type == Node.RED) {
-				mat[matCounter+1][2] = "Red";
+				mat[matCounter+1][3] = "Red";
 			}
 			else if(nodule.type == Node.GREEN) {
-				mat[matCounter+1][2] = "Green";
+				mat[matCounter+1][3] = "Green";
 			}
 			else if(nodule.type == Node.MIXED) {
-				mat[matCounter+1][2] = "Mixed";
+				mat[matCounter+1][3] = "Mixed";
 			}
 			else {
 				System.out.println("Unknown node type.");
 				System.out.println("breakpoint.");
 			}
 			
-			mat[matCounter+1][3] = Double.toString(data[NUMNODSINBALL]);
-			mat[matCounter+1][4] = Double.toString(data[CLOSESTDISTANCE]);
-			mat[matCounter+1][5] = Double.toString(data[CLOSESTCOLORTYPE]);
-			mat[matCounter+1][6] = Double.toString(data[MEANDISTANCE]);
+			mat[matCounter+1][4] = Double.toString(data[NUMNODSINBALL]);
+			mat[matCounter+1][5] = Double.toString(data[CLOSESTDISTANCE]);
+			
+			int closestColor = (int) data[CLOSESTCOLORTYPE];
+			
+			if(closestColor== Node.RED) {
+				mat[matCounter+1][6] = "Red";
+			}
+			else if(closestColor == Node.GREEN) {
+				mat[matCounter+1][6] = "Green";
+			}
+			else if(closestColor == Node.MIXED) {
+				mat[matCounter+1][6] = "Mixed";
+			}
+			else {
+				System.out.println("Unknown node type.");
+				System.out.println("breakpoint.");
+			}
+			
+			mat[matCounter+1][7] = Double.toString(data[MEANDISTANCE]);
 			
 			matCounter++;
 		}
+		
+		mergeMasterData(mat);
+		
 		String save = "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\" + NoduleDistances.image.getShortTitle() + "_data.csv";
 	
 		try(FileWriter writer = new FileWriter(save)){
@@ -122,6 +175,29 @@ public class Statistics {
 		
 		
 	}
+	
+	/**
+	 * Merges data from master csv file to the image specific distance data.
+	 * @param data
+	 */
+	private void mergeMasterData(String[][] data) {
+		
+		System.out.println("=====================");
+		System.out.println("inputCSVData");
+		System.out.println("data[0].length: " + data[0].length);
+		System.out.println("data.length: " + data.length);
+		
+		for(int ii = 1; ii < data.length; ii++) {
+			data[ii][0] = masterCSV[1][0];
+			
+			for(int jj = 8; jj  < data[0].length; jj++) {
+				data[ii][jj] = masterCSV[1][jj-7];
+			}
+			
+		}
+		System.out.println("=====================");
+	}
+	
 	
 	
 	 /**
