@@ -8,6 +8,7 @@
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8">
 		<attributes>
+			<attribute name="module" value="true"/>
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
@@ -36,8 +37,8 @@
 			<attribute name="optional" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/Brand/Documents/Research/resources_assets/ReferencedLibraries/TraceSkeleton.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Brand/Documents/Research/resources_assets/ReferencedLibraries/KShortestPathsFork.jar" sourcepath="/k-shortest-paths/target/fork-of-edu.asu.emit.algorithm.graph-1.0.0-sources.jar"/>
-	<classpathentry kind="lib" path="C:/Users/Brand/Documents/Research/resources_assets/ReferencedLibraries/PowerVoronoiDiagram.jar" sourcepath="C:/Users/Brand/Documents/Research/resources_assets/ReferencedLibraries/PowerVoronoiDiagram_sources.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Brand/Documents/Eclipse Workspace/noduledistances/assets/ReferencedLibraries/TraceSkeleton.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Brand/Documents/Eclipse Workspace/noduledistances/assets/ReferencedLibraries/KShortestPathsFork.jar" sourcepath="/k-shortest-paths/target/fork-of-edu.asu.emit.algorithm.graph-1.0.0-sources.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Brand/Documents/Eclipse Workspace/noduledistances/assets/ReferencedLibraries/PowerVoronoiDiagram.jar" sourcepath="C:/Users/Brand/Documents/Research/resources_assets/ReferencedLibraries/PowerVoronoiDiagram_sources.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
