@@ -285,9 +285,6 @@ public class RoiOverlay {
 
 		PolygonSimple roiBoundingBox = new PolygonSimple();
 		Rectangle box = roi.getBounds();
-		System.out.println("======");
-		System.out.println(box.toString());
-		System.out.println("======");
 		int width = box.width;
 		int height = box.height;
 		roiBoundingBox.add(0, 0);
@@ -346,7 +343,9 @@ public class RoiOverlay {
 			newRoi.setName(roi.getName());
 			rois.add(newRoi);
 		}
-		System.out.println("Number of null sites for this ROI: " + numNullSites);
+		if(numNullSites !=0) {
+			System.out.println("Number of null sites for this ROI: " + numNullSites);
+		}
 		intersectClumps(rois);
 		//showRois(rois, width, height, centers);
 		
@@ -533,11 +532,6 @@ public class RoiOverlay {
 			 
 			 //System.out.println("GOING TO NEW POLYGON.");
 		}
-		
-		
-		
-		imp.show();
-		System.out.println("breakpoint.");
 		
 		
 	}

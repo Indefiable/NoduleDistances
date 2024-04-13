@@ -61,6 +61,7 @@ public class RootGraph {
 	/**
 	 * forward star representation of the graph. makes all edges bi-directional by adding
 	 * the reverse arc for each arc added.
+	 * in the form [n1, n2, length]
 	 */
 	ArrayList<int[]> fsRep = new ArrayList<>();
 	/**
@@ -86,13 +87,18 @@ public class RootGraph {
 				int[] start = chunk.get(ii);
 			    int[] end = chunk.get(ii+1);
 			    
-			    
 			    Node startPt = new Node(start[0], start[1], 0, -1);
 			    Node endPt = new Node(end[0], end[1], 0, -1);
-			    
+			    /**
+			    if(nodes.size() > 106) {
+			    	System.out.println("104.");
+			    	
+			    	System.out.println("104-106 distance: " + nodes.get(104).distance(nodes.get(106)));
+			    }*/
 			    if(startPt.equals(endPt)) {
 			    	continue;
 			    }
+			    
 			    if(!nodes.contains(startPt)) {
 			    	nodes.add(startPt);
 			    }
@@ -117,7 +123,19 @@ public class RootGraph {
 			}
 		}
 		
-		Collections.sort(fsRep, Comparator.comparingInt(arr -> arr[0]));
+		
+		Collections.sort(fsRep, (arr1, arr2) -> {
+		    // Compare the first values
+		    int compareFirst = Integer.compare(arr1[0], arr2[0]);
+		    
+		    // If the first values are equal, compare the second values
+		    if (compareFirst == 0) {
+		        return Integer.compare(arr1[1], arr2[1]);
+		    } else {
+		        return compareFirst;
+		    }
+		});
+		
 		
 		for(int ii =0 ;ii < fsRep.size()-1; ii++) {
 			if(fsRep.get(ii)[0] > fsRep.get(ii+1)[0]) {
@@ -302,9 +320,6 @@ public class RootGraph {
     for(int[] nodule : nodLocations) {
     	int ii = 0;
     	while(ii < nodule.length) {
-    		if(nodule.length > 4) {
-    			System.out.println("Breakpoint.");
-    		}
     		double subNumber = (ii + 4)/4;
     		if(subNumber != (int) subNumber) {
     			System.out.println("Error with sub-numbering.");
@@ -380,9 +395,25 @@ public class RootGraph {
     
 	System.out.println("number of nodes: " + nodes.size());
 	System.out.println("number of edges: " + (fsRep.size() / 2));
+	/**
+	System.out.println("=====================");
+	System.out.println("104-116 : " +containsEdge(104,116));
+	System.out.println("Distance 104-106: " + nodes.get(104).distance(nodes.get(106)));
+	System.out.println("=====================");
+	*/
     }// addNodes()
     
     
+    public boolean containsEdge(int a, int b) {
+    	
+    	for (int[] edge : fsRep) {
+    	    if (edge[0] == a && edge[1] == b) {
+    	        // Edge found
+    	       return true;
+    	    }
+    	}
+    	return false;
+    }
     
    /**
     * Calculates the Node on the graph closest to the Node given as input. Primarily used for determining
@@ -433,6 +464,10 @@ public class RootGraph {
     			if(startingNodule == endingNodule) {
     				continue;
     			}
+    			
+    			if(startingNodule == 215 && endingNodule == 225) {
+    				System.out.println("Breakpoint.");
+    			}
     			//System.out.println("=======================");
     			//System.out.println("paths from " + nodule.nodeNumber + " to " + nodule1.nodeNumber);
     			
@@ -448,7 +483,8 @@ public class RootGraph {
     			
     			//System.out.println("len of shortestPaths: " + shortest_paths_list.size());
     			if(shortest_paths_list.size() == 0) {
-    				System.out.println("no paths between." + startingNodule + " and " + endingNodule );
+    				System.out.println("no paths between." + nodule.nodeNumber + "/" 
+    			+ startingNodule+ " and " + nodule1.nodeNumber + "/" + endingNodule );
     			}
     			ArrayList<int[]> paths = shortestPathsToList(shortest_paths_list);
     			
@@ -534,12 +570,15 @@ public class RootGraph {
     		if(edge[0] == edge[1]) {
     			System.out.println("Error. ");
     		}
+    		
     		EdgeYanQi yanEdge = new EdgeYanQi(edge[0], edge[1], edge[2]);
     		edges.add(yanEdge);
     		cc++;
     	}
     	
     	GraphWithConstructor yanQiGraph = new GraphWithConstructor(nodes.size(), edges);
+    	
+    	
     	
     	return yanQiGraph;
     }
@@ -669,6 +708,8 @@ public class RootGraph {
     	startNode.distance[iteration] = distance;
     	startNode.prevNode = prevNode;
     }
+   
+    
     public Node[] getNodules() {
     	
     	ArrayList<Node> nodules = new ArrayList<>();

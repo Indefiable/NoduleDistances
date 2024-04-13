@@ -38,8 +38,14 @@ import java.io.IOException;
 
 public class Statistics {
 	
-	String[][] masterCSV = new String[2][19];
+	String[][] masterCSV = new String[2][18];
 	
+	/**
+	 * Strings stating whether an image's red nodules are Fix+ or Fix-, and same with green.
+	 * i.e. red = Fix+ , green = Fix- or vice versa. 
+	 */
+	String red;
+	String green;
 	private static final int NUMNODSINBALL = 0;
 	private static final int CLOSESTDISTANCE = 1;
 	private static final int CLOSESTCOLORTYPE = 2;
@@ -53,6 +59,7 @@ public class Statistics {
 	private static final int NUMGREENNODSINBALL = 9;
 	
 	public Statistics(String imageName) throws CsvValidationException {
+		String[][] dummy = new String[2][20];
 		System.out.println("Image name: " + imageName);
 		try  {
 			CSVReader reader = new CSVReader(new FileReader("assets\\master.csv"));
@@ -61,12 +68,13 @@ public class Statistics {
             while(nextLine == null) {
             	nextLine = reader.readNext();
             }
-            masterCSV[0] = nextLine;
+            dummy[0] = nextLine;
             
             while ((nextLine = reader.readNext()) != null) {
                 // Process each row (nextLine) as needed	
             	if (nextLine.length > 0 && nextLine[0].equalsIgnoreCase(imageName)) {
-			        masterCSV[1] = nextLine;
+            		int size = nextLine.length;
+			        dummy[1] = nextLine;
 			        break;
 			    }
             }
@@ -76,6 +84,47 @@ public class Statistics {
 		if(masterCSV[1] == null) {
 			System.out.println("No data has been found for that the following image: " + imageName);
 		}
+		String color = dummy[1][1];
+		String strain = dummy[1][19];
+		
+		if(color.equalsIgnoreCase("Red") && strain.equalsIgnoreCase("Fix-")) {
+			this.red = "Fix+";
+			this.green = "Fix-";
+		}
+		else if(color.equalsIgnoreCase("Red") && strain.equalsIgnoreCase("Fix+")) {
+			this.red = "Fix-";
+			this.green = "Fix+";
+		}
+		else if(color.equalsIgnoreCase("Green") && strain.equalsIgnoreCase("Fix+")) {
+			this.green = "Fix+";
+			this.red = "Fix-";
+		}
+		else if(color.equalsIgnoreCase("Green") && strain.equalsIgnoreCase("Fix-")) {
+			this.green = "Fix-";
+			this.red = "Fix+";
+		}
+		else {
+			System.out.println("ERROR WITH DETERMINING THE STRAIN FOR THE IMAGE.");
+		}
+		
+		for(int ii =0; ii < dummy[0].length; ii++) {
+			
+			if(ii < 1) {
+				masterCSV[0][ii] = dummy[0][ii];
+				masterCSV[1][ii] = dummy[1][ii];
+			}
+			if (ii > 1 && ii < 19) {
+				masterCSV[0][ii-1] = dummy[0][ii];
+				masterCSV[1][ii-1] = dummy[1][ii];
+			}
+			if(ii > 19) {
+				masterCSV[0][ii-2] = dummy[0][ii];
+				masterCSV[1][ii-2] = dummy[1][ii];
+			}
+		}
+		
+		System.out.println("COLOR: " + color);
+		System.out.println("STRAIN: " + strain);
 		System.out.println(Arrays.toString(masterCSV[0]));
 		System.out.println(Arrays.toString(masterCSV[1]));
 	}
@@ -97,16 +146,18 @@ public class Statistics {
 		options.add(CLOSESTDISTANCETOGREEN);
 		options.add(MEANDISTANCETORED);
 		options.add(MEANDISTANCETOGREEN);
+		String red = "Fix+";
+		String green ="Fix-";
 		
-		String[] distanceHeader = {masterCSV[0][0],"Roi", "Area", "Color", 
-				"numNods in r = " + radius,"num Red Nods in r = " + radius, "num Green Nods in r = " + radius ,
-				"distance to closest nodule", "distance to closest red nodule", "distance to closest green nodule",
-				"closest color type", "mean distance", "mean distance to red nodules", "mean distance to green nodules"};
+		String[] distanceHeader = {masterCSV[0][0],"Roi","Area", "Color", "Nod.Strain", 
+				"numNods in r = " + radius,"num " +red + " Nods in r = " + radius, "num "+ green+" Nods in r = " + radius ,
+				"distance to closest nodule", "distance to closest "+red+" nodule", "distance to closest "+green+" nodule",
+				"closest color type", "mean distance", "mean distance to "+red+" nodules", "mean distance to "+green+" nodules"};
 	    
-		String[] header = new String[options.size() + 3 + 19];
+		String[] header = new String[options.size() + 4 + 18];
 		System.arraycopy(distanceHeader, 0, header, 0, distanceHeader.length);
 		System.arraycopy(masterCSV[0], 1, header, distanceHeader.length, masterCSV[0].length-1);
-		String[][] mat = new String[graph.numNodules+1][options.size() + 3 + 19];
+		String[][] mat = new String[graph.numNodules+1][options.size() + 4 +18];
 	    mat[0] = header;
 		double[] data = null;
 		int matCounter = 0;
@@ -138,55 +189,68 @@ public class Statistics {
 				System.out.println("breakpoint.");
 			}
 			
-			mat[matCounter+1][4] = Double.toString(data[NUMNODSINBALL]);
-			mat[matCounter+1][5] = Double.toString(data[NUMREDNODSINBALL]);
-			mat[matCounter+1][6] = Double.toString(data[NUMGREENNODSINBALL]);
-			
-			if(data[CLOSESTDISTANCE] == Integer.MAX_VALUE) {
-				mat[matCounter+1][7] = "N/A";
+			if(nodule.type == Node.RED) {
+				mat[matCounter+1][4] = this.red;
+			}
+			else if(nodule.type == Node.GREEN) {
+				mat[matCounter+1][4] = this.green;
+			}
+			else if(nodule.type == Node.MIXED) {
+				mat[matCounter+1][4] = "Mixed";
 			}
 			else {
-				mat[matCounter+1][7] = Double.toString(data[CLOSESTDISTANCE]);
+				mat[matCounter+1][4] = "Unknown";
 			}
 			
-			if(data[CLOSESTDISTANCETORED] == Integer.MAX_VALUE) {
+			mat[matCounter+1][5] = Double.toString(data[NUMNODSINBALL]);
+			mat[matCounter+1][6] = Double.toString(data[NUMREDNODSINBALL]);
+			mat[matCounter+1][7] = Double.toString(data[NUMGREENNODSINBALL]);
+			
+			if(data[CLOSESTDISTANCE] == Integer.MAX_VALUE) {
 				mat[matCounter+1][8] = "N/A";
 			}
 			else {
-				mat[matCounter+1][8] = Double.toString(data[CLOSESTDISTANCETORED]);
+				mat[matCounter+1][8] = Double.toString(data[CLOSESTDISTANCE]);
 			}
-			if(data[CLOSESTDISTANCETOGREEN] == Integer.MAX_VALUE) {
+			
+			if(data[CLOSESTDISTANCETORED] == Integer.MAX_VALUE) {
 				mat[matCounter+1][9] = "N/A";
 			}
 			else {
-				mat[matCounter+1][9] = Double.toString(data[CLOSESTDISTANCETOGREEN]);
+				mat[matCounter+1][9] = Double.toString(data[CLOSESTDISTANCETORED]);
+			}
+			if(data[CLOSESTDISTANCETOGREEN] == Integer.MAX_VALUE) {
+				mat[matCounter+1][10] = "N/A";
+			}
+			else {
+				mat[matCounter+1][10] = Double.toString(data[CLOSESTDISTANCETOGREEN]);
 			}
 			
 			int closestColor = (int) data[CLOSESTCOLORTYPE];
 			
 			if(closestColor== Node.RED) {
-				mat[matCounter+1][10] = "Red";
+				mat[matCounter+1][11] = "Red";
 			}
 			else if(closestColor == Node.GREEN) {
-				mat[matCounter+1][10] = "Green";
+				mat[matCounter+1][11] = "Green";
 			}
 			else if(closestColor == Node.MIXED) {
-				mat[matCounter+1][10] = "Mixed";
+				mat[matCounter+1][11] = "Mixed";
 			}
 			else {
 				System.out.println("Unknown node type.");
 				System.out.println("breakpoint.");
 			}
 			
-			mat[matCounter+1][11] = Double.toString(data[MEANDISTANCE]);
+			mat[matCounter+1][12] = Double.toString(data[MEANDISTANCE]);
 			
-			mat[matCounter+1][12] = Double.toString(data[MEANDISTANCETORED]);
-			mat[matCounter+1][13] = Double.toString(data[MEANDISTANCETOGREEN]);
+			mat[matCounter+1][13] = Double.toString(data[MEANDISTANCETORED]);
+			mat[matCounter+1][14] = Double.toString(data[MEANDISTANCETOGREEN]);
 			
 			matCounter++;
 		}
 		
-		mergeMasterData(mat);
+		mergeMasterData(mat, distanceHeader.length);
 		
 		String save = "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\" + NoduleDistances.image.getShortTitle() + "_data.csv";
 	
@@ -219,7 +283,7 @@ public class Statistics {
 	 * Merges data from master csv file to the image specific distance data.
 	 * @param data
 	 */
-	private void mergeMasterData(String[][] data) {
+	private void mergeMasterData(String[][] data, int size) {
 		
 		System.out.println("=====================");
 		System.out.println("inputCSVData");
@@ -229,8 +293,8 @@ public class Statistics {
 		for(int ii = 1; ii < data.length; ii++) {
 			data[ii][0] = masterCSV[1][0];
 			
-			for(int jj = 14; jj  < data[0].length; jj++) {
-				data[ii][jj] = masterCSV[1][jj-13];
+			for(int jj = size; jj  < data[0].length; jj++) {
+				data[ii][jj] = masterCSV[1][jj-14];
 			}
 			
 		}

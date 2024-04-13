@@ -20,12 +20,20 @@ import com.opencsv.exceptions.CsvValidationException;
 
 import ij.IJ;
 import ij.ImagePlus;
+import ij.gui.FreehandRoi;
+import ij.gui.GenericDialog;
+import ij.gui.ImageWindow;
 import ij.gui.Line;
 import ij.gui.OvalRoi;
 import ij.gui.Overlay;
+import ij.gui.Roi;
+import ij.gui.ShapeRoi;
 import ij.gui.TextRoi;
+import ij.gui.Toolbar;
+import ij.gui.WaitForUserDialog;
 import ij.process.ColorProcessor;
 import net.imagej.ImageJ;
+import ij.gui.ImageCanvas;
 import net.imagej.ops.OpService;
 import trainableSegmentation.unsupervised.ColorClustering;
 import trainableSegmentation.unsupervised.ColorClustering.Channel;
@@ -219,7 +227,59 @@ public class NoduleDistances implements Command {
 		//IJ.save(image, "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS033\\" + "PS033_preprocessed1.jpg");
 		return image;
 	}
+
+
+	
+	public static ImagePlus blackenOutsideRectangle(ImagePlus image) {
 		
+		image.show();
+        image.getWindow().toFront();
+        
+        @SuppressWarnings("unused")
+		Toolbar toolbar = new Toolbar();
+        
+        Toolbar.getInstance().setTool(Toolbar.RECTANGLE);
+        /**
+        FreehandRoi freehandRoi = new FreehandRoi(0, 0, image);
+        
+        freehandRoi.setStrokeColor(Color.YELLOW);
+
+        image.setRoi(freehandRoi);
+        */
+        // Wait for the user to finish drawing the ROI
+        new WaitForUserDialog("Please outline the root system.").show();
+        
+        // Get the ROI drawn by the user
+        Roi roi = image.getRoi();
+        
+        if(image.getRoi() == null || image.getRoi().getContainedPoints().length == 0) {
+        	image.close();
+			IJ.log("No outline made. Cancelling.");
+			return null;
+		}
+        
+     // Create a shape ROI from the rectangle ROI
+        ShapeRoi shapeRoi = new ShapeRoi(roi);
+        
+        // Create a mask ROI to represent the area outside the rectangle
+        ShapeRoi outsideRoi = new ShapeRoi(new Roi(0, 0, image.getWidth(), image.getHeight()));
+        
+       // outsideRoi = outsideRoi.subtract(shapeRoi);
+        outsideRoi = outsideRoi.not(shapeRoi);
+        
+        // Set the outside area to black
+        image.getProcessor().setColor(Color.BLACK);
+        image.getProcessor().fill(outsideRoi);
+      
+        ImagePlus impp = image.duplicate();
+        image.getWindow().close();
+        impp.setTitle(image.getTitle());
+        return impp;
+		
+		
+    }
+	
+	
     
 	/**
 	 * Saves the computed distance data to a csv file to the provided
@@ -263,6 +323,9 @@ public class NoduleDistances implements Command {
     		System.out.println("I dunno at this point bruh.");
     		return;
     	}
+    	
+    	roots = blackenOutsideRectangle(roots);
+    	
     	
     	ArrayList<Channel> channels = new ArrayList<Channel>(); // channels to use when segmenting.
     	channels.add(Channel.Brightness);
