@@ -40,19 +40,20 @@ public class RootSegmentation {
 		
 		this.cluster = cluster;
 		ImagePlus image = cluster.getImage();
-	
-		cluster.setNumSamples((int) (image.getWidth() * image.getHeight() * .04));
+		
+		cluster.setNumSamples((int) (image.getWidth() * image.getHeight() * .02));
 		this.fsa = new FeatureStackArray(image.getStackSize());
 		
 		fsa = cluster.createFSArray(image);
 		
 		ImagePlus binarymap = cluster.createProbabilityMaps(fsa); // intensive
 		
+		
 		ImageStack mapStack = binarymap.getStack();
 		
-		mapStack.deleteSlice(2);
+		binarymap = new ImagePlus("roots", mapStack.getProcessor(3));
 		
-		binarymap = new ImagePlus("roots", mapStack.getProcessor(1));
+		
 		ByteProcessor pc = binarymap.getProcessor().convertToByteProcessor();
 		this.binarymap = new ImagePlus(image.getShortTitle(), pc);
 		
@@ -141,7 +142,8 @@ public class RootSegmentation {
 	   
 	    this.binarymap = result;
 	    
-	    
+	    manager.reset();
+	    manager.close();
 	}
 	
 	

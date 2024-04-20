@@ -164,13 +164,13 @@ public class GraphOverlay {
 			ball.setFillColor(Color.BLUE);
 			skellyMap.getOverlay().add(ball);
 			
-			
+			/**
 			String label =Integer.toString( graph.nodes.indexOf(node));
 			TextRoi textLabel = new TextRoi(node.x,
 	    			node.y, label,font);
 			textLabel.setStrokeWidth(2); 
 			textLabel.setStrokeColor(Color.CYAN); 
-			skellyMap.getOverlay().add(textLabel);
+			skellyMap.getOverlay().add(textLabel);*/
 			}
 			
 			else {

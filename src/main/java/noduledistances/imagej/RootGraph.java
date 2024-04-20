@@ -630,10 +630,10 @@ public class RootGraph {
     public void Dijkstras(Node startNode, int iteration) {
     	
     	
-    	ArrayList<Integer> testEdgeList = new ArrayList<>();
-    	ArrayList<Integer> testNodeList = new ArrayList<>();
-    	ArrayList<Integer> testEdgeList1 = new ArrayList<>();
-    	ArrayList<Integer> testNodeList1 = new ArrayList<>();
+    	//ArrayList<Integer> testEdgeList = new ArrayList<>();
+    	//ArrayList<Integer> testNodeList = new ArrayList<>();
+    	//ArrayList<Integer> testEdgeList1 = new ArrayList<>();
+    	//ArrayList<Integer> testNodeList1 = new ArrayList<>();
     	
     	
     	
@@ -657,10 +657,11 @@ public class RootGraph {
     	
     	
     	while(unsettled.size() > 0) {
+    		System.out.println(unsettled);
     		
     		int currentNode = shortestDistance(distance, unsettled);
     		
-    		testNodeList1.add(currentNode);
+    		//testNodeList1.add(currentNode);
     		
     		unsettled.remove(currentNode);
     		
@@ -683,25 +684,25 @@ public class RootGraph {
     			if(distance[currentNode] + edge[2] < distance[edge[1]]) {
     				prevNode[edge[1]] = currentNode;
     				distance[edge[1]] = distance[currentNode] + edge[2];
-    				testEdgeList.add(ii);
+    				//testEdgeList.add(ii);
     			}
     			else {
-    				testEdgeList1.add(ii);
+    				//testEdgeList1.add(ii);
     			}
     			
     			unsettled.add(edge[1]);
     			
-    			testNodeList.add(edge[1]);
+    			//testNodeList.add(edge[1]);
     		}
     		
     	//	graphOverlay.highlightGraphSection(this, testNodeList, testEdgeList,testNodeList1,testEdgeList1).show();
     		
     		
     		settled.add(currentNode);
-    		testNodeList = new ArrayList<>();
-    		testEdgeList = new ArrayList<>();
-    		testNodeList1 = new ArrayList<>();
-    		testEdgeList1 = new ArrayList<>();
+    	//	testNodeList = new ArrayList<>();
+    	//	testEdgeList = new ArrayList<>();
+    	//	testNodeList1 = new ArrayList<>();
+    	//	testEdgeList1 = new ArrayList<>();
     		
     	}
     	//Data structure for nodes changed. These lines are deprecated.

@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.StringJoiner;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
@@ -59,6 +60,7 @@ public class Statistics {
 	private static final int NUMGREENNODSINBALL = 9;
 	
 	public Statistics(String imageName) throws CsvValidationException {
+		
 		String[][] dummy = new String[2][20];
 		System.out.println("Image name: " + imageName);
 		try  {
@@ -134,7 +136,7 @@ public class Statistics {
 	 * Populates the String[][] data with computed statistics relevant to distance data. 
 	 * @param graph
 	 */
-	public void generateData(RootGraph graph, int radius) {
+	public void generateData(RootGraph graph, int[] radii, String saveFile) {
 		ArrayList<Integer> options = new ArrayList<>();
 		options.add(NUMNODSINBALL);
 		options.add(CLOSESTDISTANCE);
@@ -146,20 +148,36 @@ public class Statistics {
 		options.add(CLOSESTDISTANCETOGREEN);
 		options.add(MEANDISTANCETORED);
 		options.add(MEANDISTANCETOGREEN);
-		String red = "Fix+";
-		String green ="Fix-";
+	
+		ArrayList<String> distanceHeader = new ArrayList<>();
 		
-		String[] distanceHeader = {masterCSV[0][0],"Roi","Area", "Color", "Nod.Strain", 
-				"numNods in r = " + radius,"num " +red + " Nods in r = " + radius, "num "+ green+" Nods in r = " + radius ,
-				"distance to closest nodule", "distance to closest "+red+" nodule", "distance to closest "+green+" nodule",
-				"closest color type", "mean distance", "mean distance to "+red+" nodules", "mean distance to "+green+" nodules"};
+		distanceHeader.add(masterCSV[0][0]);
+        distanceHeader.add("Roi");
+        distanceHeader.add("Area");
+        distanceHeader.add("Color");
+        distanceHeader.add("Nod.Strain");
+        for(int radius : radii) {
+        	distanceHeader.add("numNods in r = " + radius);
+            distanceHeader.add("num " + red + " Nods in r = " + radius);
+            distanceHeader.add("num " + green + " Nods in r = " + radius);
+        }
+        distanceHeader.add("distance to closest nodule");
+        distanceHeader.add("distance to closest " + red + " nodule");
+        distanceHeader.add("distance to closest " + green + " nodule");
+        distanceHeader.add("closest color type");
+        distanceHeader.add("mean distance");
+        distanceHeader.add("mean distance to " + red + " nodules");
+        distanceHeader.add("mean distance to " + green + " nodules");
 	    
-		String[] header = new String[options.size() + 4 + 18];
-		System.arraycopy(distanceHeader, 0, header, 0, distanceHeader.length);
-		System.arraycopy(masterCSV[0], 1, header, distanceHeader.length, masterCSV[0].length-1);
-		String[][] mat = new String[graph.numNodules+1][options.size() + 4 +18];
+		String[] header = new String[distanceHeader.size() + masterCSV[0].length-1];
+		
+		System.arraycopy(distanceHeader.toArray(), 0, header, 0, distanceHeader.size());
+		System.arraycopy(masterCSV[0], 1, header, distanceHeader.size(), masterCSV[0].length-1);
+		
+		String[][] mat = new String[graph.numNodules+1][header.length];
+		
 	    mat[0] = header;
-		double[] data = null;
+		HashMap<Integer,double[]> data = null;
 		int matCounter = 0;
 		
 		for (int ii = 0; ii < graph.nodes.size(); ii++) {
@@ -170,7 +188,7 @@ public class Statistics {
 				continue;
 			}
 			
-			data = computeStatistics(radius, nodule, graph, options);
+			data = computeStatistics(radii, nodule, graph, options);
 			
 			mat[matCounter+1][1] = Double.toString(nodule.nodeNumber);
 			mat[matCounter+1][2] = Integer.toString(nodule.area);
@@ -201,58 +219,67 @@ public class Statistics {
 			else {
 				mat[matCounter+1][4] = "Unknown";
 			}
+			int kk = -1;
+			int counter  =0;
+			for(int jj = 5; jj < 3 *radii.length + 5; jj+=0 ) {
+				mat[matCounter+1][jj++] = Double.toString(data.get(NUMNODSINBALL)[counter]);
+				mat[matCounter+1][jj++] = Double.toString(data.get(NUMREDNODSINBALL)[counter]);
+				mat[matCounter+1][jj++] = Double.toString(data.get(NUMGREENNODSINBALL)[counter++]);
+				if(jj >= ((3 * radii.length) + 5)) {
+					kk = jj;
+				}
+			}
 			
-			mat[matCounter+1][5] = Double.toString(data[NUMNODSINBALL]);
-			mat[matCounter+1][6] = Double.toString(data[NUMREDNODSINBALL]);
-			mat[matCounter+1][7] = Double.toString(data[NUMGREENNODSINBALL]);
+			if(kk == -1) {
+				System.out.println("Breakpoint.");
+			}
 			
-			if(data[CLOSESTDISTANCE] == Integer.MAX_VALUE) {
-				mat[matCounter+1][8] = "N/A";
+			if(data.get(CLOSESTDISTANCE)[0] == Integer.MAX_VALUE) {
+				mat[matCounter+1][kk++] = "N/A";
 			}
 			else {
-				mat[matCounter+1][8] = Double.toString(data[CLOSESTDISTANCE]);
+				mat[matCounter+1][kk++] = Double.toString(data.get(CLOSESTDISTANCE)[0]);
 			}
 			
-			if(data[CLOSESTDISTANCETORED] == Integer.MAX_VALUE) {
-				mat[matCounter+1][9] = "N/A";
+			if(data.get(CLOSESTDISTANCETORED)[0] == Integer.MAX_VALUE) {
+				mat[matCounter+1][kk++] = "N/A";
 			}
 			else {
-				mat[matCounter+1][9] = Double.toString(data[CLOSESTDISTANCETORED]);
+				mat[matCounter+1][kk++] = Double.toString(data.get(CLOSESTDISTANCETORED)[0]);
 			}
-			if(data[CLOSESTDISTANCETOGREEN] == Integer.MAX_VALUE) {
-				mat[matCounter+1][10] = "N/A";
+			if(data.get(CLOSESTDISTANCETOGREEN)[0] == Integer.MAX_VALUE) {
+				mat[matCounter+1][kk++] = "N/A";
 			}
 			else {
-				mat[matCounter+1][10] = Double.toString(data[CLOSESTDISTANCETOGREEN]);
+				mat[matCounter+1][kk++] = Double.toString(data.get(CLOSESTDISTANCETOGREEN)[0]);
 			}
 			
-			int closestColor = (int) data[CLOSESTCOLORTYPE];
-			
+			int closestColor = (int) data.get(CLOSESTCOLORTYPE)[0];
+					
 			if(closestColor== Node.RED) {
-				mat[matCounter+1][11] = "Red";
+				mat[matCounter+1][kk++] = "Red";
 			}
 			else if(closestColor == Node.GREEN) {
-				mat[matCounter+1][11] = "Green";
+				mat[matCounter+1][kk++] = "Green";
 			}
 			else if(closestColor == Node.MIXED) {
-				mat[matCounter+1][11] = "Mixed";
+				mat[matCounter+1][kk++] = "Mixed";
 			}
 			else {
 				System.out.println("Unknown node type.");
 				System.out.println("breakpoint.");
 			}
 			
-			mat[matCounter+1][12] = Double.toString(data[MEANDISTANCE]);
-			
-			mat[matCounter+1][13] = Double.toString(data[MEANDISTANCETORED]);
-			mat[matCounter+1][14] = Double.toString(data[MEANDISTANCETOGREEN]);
+			mat[matCounter+1][kk++] = Double.toString(data.get(MEANDISTANCE)[0]);
+			mat[matCounter+1][kk++] = Double.toString(data.get(MEANDISTANCETORED)[0]);
+			mat[matCounter+1][kk++] = Double.toString(data.get(MEANDISTANCETOGREEN)[0]);
 			
 			matCounter++;
 		}
 		
-		mergeMasterData(mat, distanceHeader.length);
+		mergeMasterData(mat, distanceHeader.size());
 		
-		String save = "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\" + NoduleDistances.image.getShortTitle() + "_data.csv";
+		String save = saveFile + "\\" + NoduleDistances.image.getShortTitle() + "_data.csv";
 	
 		try(FileWriter writer = new FileWriter(save)){
 	     		StringJoiner comma = new StringJoiner(",");
@@ -294,7 +321,7 @@ public class Statistics {
 			data[ii][0] = masterCSV[1][0];
 			
 			for(int jj = size; jj  < data[0].length; jj++) {
-				data[ii][jj] = masterCSV[1][jj-14];
+				data[ii][jj] = masterCSV[1][jj-size+1];
 			}
 			
 		}
@@ -325,8 +352,10 @@ public class Statistics {
 	 * @param options : list telling us what statistics to compute
 	 * @return
 	 */
-	protected static double[] computeStatistics(int radius, Node node, RootGraph graph, ArrayList<Integer> options) {
-		double[] data = new double[10];
+	protected static HashMap<Integer,double[]> computeStatistics(int[] radii, Node node, RootGraph graph, ArrayList<Integer> options) {
+		
+		//ArrayList<double[]> data = new ArrayList<>();
+		HashMap<Integer, double[]> map = new HashMap<>();
 		
 		int closestDistance = Integer.MAX_VALUE; 
 		int closestColorDistance = Integer.MAX_VALUE;
@@ -335,9 +364,12 @@ public class Statistics {
 		
 		
 		int closestColorType = -1;
-		int numNodsInBall = 0;
-		int numRedNodsInBall = 0;
-		int numGreenNodsInBall = 0;
+		double[] numNodsInBall = new double[radii.length];
+		double[] numRedNodsInBall = new double[radii.length];
+		double[] numGreenNodsInBall = new double[radii.length];
+		Arrays.fill(numNodsInBall, 0);
+	    Arrays.fill(numRedNodsInBall, 0);
+	    Arrays.fill(numGreenNodsInBall, 0);
 		
 		double meanDistance = 0;
 		int meanDistanceCounter = 0;
@@ -356,19 +388,29 @@ public class Statistics {
 			    
 			   if(options.contains(NUMNODSINBALL)) {
 				    // if distance is smaller and node is correct color.
-				    if(path[1] < radius) {
-				    	numNodsInBall++;
-				    }
+				   for(int kk = 0; kk < radii.length; kk++) {
+					   if(path[1] < radii[kk]) {
+						   numNodsInBall[kk]++;
+					   }
+				   }
+				   
 			   }
 			   if(options.contains(NUMREDNODSINBALL)) {
-				   if(path[1] < radius && graph.nodes.get(path[0]).type == Node.RED) {
-				    	numRedNodsInBall++;
-				    }
+				   
+				   for(int kk = 0; kk < radii.length; kk++) {
+					   if(path[1] < radii[kk] && graph.nodes.get(path[0]).type == Node.RED) {
+						   numRedNodsInBall[kk]++;
+					   }
+				   }
 			   }
 			   if(options.contains(NUMGREENNODSINBALL)) {
-				   if(path[1] < radius && graph.nodes.get(path[0]).type == Node.GREEN) {
-				    	numGreenNodsInBall++;
-				    }
+				   
+				   for(int kk = 0; kk < radii.length; kk++) {
+					   if(path[1] < radii[kk]&& graph.nodes.get(path[0]).type == Node.GREEN) {
+						   numGreenNodsInBall[kk]++;
+					   }
+				   }
+				  
 			   }
 			   if(options.contains(CLOSESTDISTANCE)) {
 				// if distance is smaller and node is correct color.
@@ -412,43 +454,61 @@ public class Statistics {
 			}	
 		}
 		
-		data[NUMNODSINBALL] = numNodsInBall;
-		data[CLOSESTDISTANCE] = closestDistance;
-		data[CLOSESTCOLORTYPE] = closestColorType;
+		//data.add(NUMNODSINBALL,numNodsInBall);
+		map.put(NUMNODSINBALL, numNodsInBall);
 		
-		data[NUMREDNODSINBALL] = numRedNodsInBall;
-		data[NUMGREENNODSINBALL] = numGreenNodsInBall;
-		data[CLOSESTDISTANCETORED] = closestDistanceToRed;
-		data[CLOSESTDISTANCETOGREEN] = closestDistanceToGreen;
+		//data.add(NUMREDNODSINBALL, numRedNodsInBall);
+		map.put(NUMREDNODSINBALL, numRedNodsInBall);
+		
+		//data.add(NUMGREENNODSINBALL, numGreenNodsInBall);
+		map.put(NUMGREENNODSINBALL, numGreenNodsInBall);
+		
+		//data.add(CLOSESTDISTANCE, new double[] { closestDistance});
+		map.put(CLOSESTDISTANCE, new double[] { closestDistance});
+		
+		//data.add(CLOSESTCOLORTYPE, new double[] { closestColorType});
+		map.put(CLOSESTCOLORTYPE, new double[] { closestColorType});
+		
+		//data.add(CLOSESTDISTANCETORED, new double[] { closestDistanceToRed});
+		map.put(CLOSESTDISTANCETORED, new double[] { closestDistanceToRed});
+		
+		//data.add(CLOSESTDISTANCETOGREEN, new double[] {closestDistanceToGreen});
+		map.put(CLOSESTDISTANCETOGREEN, new double[] {closestDistanceToGreen});
 		
 		if(options.contains(MEANDISTANCE)) {
 			meanDistance = meanDistance / meanDistanceCounter;
 			meanDistance = Math.round(meanDistance * 1000.0) / 1000.0;
-			data[MEANDISTANCE] = meanDistance;
+			//data.add(MEANDISTANCE, new double[] { meanDistance});
+			map.put(MEANDISTANCE, new double[] { meanDistance});
 		}
 		else {
-			data[MEANDISTANCE] = -1;
+			//data.add(MEANDISTANCE, new double[] { -1});
+			map.put(MEANDISTANCE, new double[] { -1});
 		}
 		if(options.contains(MEANDISTANCETORED)) {
 			meanDistanceToRed = meanDistanceToRed / redMeanDistanceCounter;
 			meanDistanceToRed = Math.round(meanDistanceToRed * 1000.0) / 1000.0;
-			data[MEANDISTANCETORED] = meanDistanceToRed;
+			//data.add(MEANDISTANCETORED,new double[] { meanDistanceToRed});
+			map.put(MEANDISTANCETORED,new double[] { meanDistanceToRed});
 		}
 		else {
-			data[MEANDISTANCETORED] = -1;
+			//data.add(MEANDISTANCETORED,  new double[] {-1});
+			map.put(MEANDISTANCETORED,  new double[] {-1});
 		}
-		if(options.contains(MEANDISTANCE)) {
+		if(options.contains(MEANDISTANCETOGREEN)) {
 			meanDistanceToGreen = meanDistanceToGreen / greenMeanDistanceCounter;
 			meanDistanceToGreen = Math.round(meanDistanceToGreen * 1000.0) / 1000.0;
-			data[MEANDISTANCETORED] = meanDistanceToRed;
+			//data.add(MEANDISTANCETORED, new double[] { meanDistanceToRed});
+			map.put(MEANDISTANCETOGREEN, new double[] { meanDistanceToGreen});
 		}
 		else {
-			data[MEANDISTANCETOGREEN] = -1;
+		//	data.add(MEANDISTANCETOGREEN, new double[] {-1});
+			map.put(MEANDISTANCETOGREEN, new double[] {-1});
 		}
 		
 		
 		
-		return data;
+		return map;
 	}
 	
 	

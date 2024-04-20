@@ -10,6 +10,9 @@ import java.awt.Point;
 import java.io.File;
 import java.util.ArrayList;
 
+import javax.swing.JFileChooser;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
 import org.scijava.plugin.Parameter;
@@ -77,13 +80,13 @@ public class NoduleDistances implements Command {
     private OpService opService;
    
     
-    
+    /**
     @Parameter(label = "Tif file with nodule data.")
 	private File tif;
     
     @Parameter(label = "Image of root system.")
 	private File rootsImage;
-  
+  */
     /*
     @Parameter(label = "cluster model to use for segmentation.")
     private File modelFile;
@@ -273,6 +276,8 @@ public class NoduleDistances implements Command {
       
         ImagePlus impp = image.duplicate();
         image.getWindow().close();
+        
+       
         impp.setTitle(image.getTitle());
         return impp;
 		
@@ -298,10 +303,10 @@ public class NoduleDistances implements Command {
      * @param model : path file to selected .model file 
      */
     //ImagePlus image, String model
-    private void execute(ImagePlus roots, ImagePlus tifImp) {
+    private void execute(ImagePlus roots, ImagePlus tifImp, String saveFile) {
     	
     	
-		tifImp.setTitle(tifImp.getTitle().substring(4,9));
+		tifImp.setTitle(tifImp.getTitle().substring(0,5));
 		roots.setTitle(roots.getTitle().substring(0,5));
 		
 		if(!tifImp.getTitle().equalsIgnoreCase(roots.getTitle())) {
@@ -312,7 +317,7 @@ public class NoduleDistances implements Command {
 		
 	//	IJ.save(roots, "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS033\\" + "PS033_preprocessed44.jpg");
 		
-    	if(roots.getWidth() != tifImp.getHeight()) {
+    	if(roots.getHeight() != tifImp.getHeight()) {
     		roots = crop(roots);
     		System.out.println("roots: " + roots.getWidth() + " x " + roots.getHeight());
 
@@ -326,7 +331,6 @@ public class NoduleDistances implements Command {
     	
     	roots = blackenOutsideRectangle(roots);
     	
-    	
     	ArrayList<Channel> channels = new ArrayList<Channel>(); // channels to use when segmenting.
     	channels.add(Channel.Brightness);
     	channels.add(Channel.Lightness);
@@ -334,28 +338,24 @@ public class NoduleDistances implements Command {
 		if(roots.getType() != ImagePlus.COLOR_RGB) {
 			roots = new ImagePlus(roots.getTitle(), roots.getProcessor().convertToRGB());
 		}
-		
-		String extension = tif.getName().substring(tif.getName().lastIndexOf(".") + 1);
-		
 		RoiOverlay roiOverlay;
 		
-		if(extension.equalsIgnoreCase("tif")) {
+		try {
 			roiOverlay = new RoiOverlay(tifImp);
-		}
-		else {
-			System.out.println("You must load a tif image file. Please relaunch.");
+		}catch(Exception e) {
+			e.printStackTrace();
 			return;
 		}
 		
 		NoduleDistances.image = preprocessing(roots);
 		
+		
 		ColorClustering cluster = new ColorClustering(NoduleDistances.image);
 	//	cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Eclipse Workspace\\noduledistances\\assets\\001_roots.model");
-		cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS013_Light_Bright.model");
+		cluster.loadClusterer("D:\\1EDUCATION\\aRESEARCH\\ClusterModels\\001_roots.model");
 		cluster.setChannels(channels);
 		
 		RootSegmentation root = new RootSegmentation(cluster);
-		
 		
 		ArrayList<ArrayList<int[]>> skeleton = Skeletonize.skeletonize(root.binarymap);
 		
@@ -369,13 +369,13 @@ public class NoduleDistances implements Command {
 		
 		graphOverlay.overlayGraph(graph, root.binarymap.getProcessor().convertToColorProcessor());
 		
-		IJ.save(graphOverlay.overlayedGraph, "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS033\\" + roots.getTitle() + "_graph.jpg");
+		IJ.save(graphOverlay.overlayedGraph, saveFile + "\\" + roots.getTitle() + "_graph.jpg");
 		
 		//IJ.save(graphOverlay.overlayedGraph, "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS033\\" + "PS033_overlayed_graph.jpg");
 		graph.computeShortestDistances(5);
 		try {
 			Statistics stats = new Statistics(roots.getTitle());
-			stats.generateData(graph,  100);
+			stats.generateData(graph, new int[] {100,150,250,500}, saveFile);
 			
 		} catch (CsvValidationException e) {
 			// TODO Auto-generated catch block
@@ -397,7 +397,8 @@ public class NoduleDistances implements Command {
     	// all currently accepted image file types.
     	else if(extension.equalsIgnoreCase("jpg") || extension.equalsIgnoreCase("png")
     			|| extension.equalsIgnoreCase("jpeg") || extension.equalsIgnoreCase("gif")
-    			|| extension.equalsIgnoreCase("tiff") || extension.equalsIgnoreCase("dcm")){
+    			|| extension.equalsIgnoreCase("tiff") || extension.equalsIgnoreCase("dcm")
+    			|| extension.equalsIgnoreCase("tif")){
     		FILETYPE = IMAGE;
     	}
     	else if(extension.equalsIgnoreCase("model")) {
@@ -415,7 +416,8 @@ public class NoduleDistances implements Command {
     
     @Override
     public void run() {
-   
+    	
+    	
     	/*
     	int FILETYPE = 0;
     	
@@ -464,20 +466,101 @@ public class NoduleDistances implements Command {
     		break;
     	}
     	*/
+    	File rootsFile = null;
+    	File tifFile = null;
+    	File saveFile = null;
     	
+    	File initialDirectory = new File("D:\\1EDUCATION\\aRESEARCH\\DistanceAnalysis_V0.1");
+        
+        
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("folder containing root images.");
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+        fileChooser.setCurrentDirectory(initialDirectory);
+        
+        int result = fileChooser.showOpenDialog(null);
+        
+        if( result == JFileChooser.APPROVE_OPTION) {
+        	rootsFile = fileChooser.getSelectedFile();
+        }
+        else {
+        	System.out.println("error, you did not choose an acceptable file type.");
+        	System.exit(0);
+        }
+        fileChooser.setCurrentDirectory(initialDirectory);
+        fileChooser.setDialogTitle("folder containing tif images.");
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+
+        result = fileChooser.showOpenDialog(null);
+        
+        if( result == JFileChooser.APPROVE_OPTION) {
+        	tifFile = fileChooser.getSelectedFile();
+        }
+        else {
+        	System.out.println("error, you did not choose an acceptable file type.");
+        	System.exit(0);
+        }
+        
+        
+        fileChooser.setCurrentDirectory(initialDirectory);
+        fileChooser.setDialogTitle("Choose a save location for the output data.");
+        fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+        result = fileChooser.showOpenDialog(null);
+        
+        if(result == JFileChooser.APPROVE_OPTION) {
+        	saveFile = fileChooser.getSelectedFile();
+        }
+        
+       if(rootsFile == null) {
+    	   System.out.println("Sorry, but the file you selected is not valid.");
+    	   return;
+       }
+    	
+       for(File rootFile : rootsFile.listFiles()) {
+			int subtype = getFileType(rootFile);
+			File currentTif = getTifFile(rootFile, tifFile);
+			if(currentTif == null) {
+				continue;
+			}
+			else if(getFileType(currentTif) != IMAGE);
+			if(subtype != IMAGE) {
+   			continue;
+   		}
+			try {
+				ImagePlus rootImp = new ImagePlus(rootFile.getPath());
+				ImagePlus tifImp = new ImagePlus(currentTif.getPath());
+				execute(rootImp, tifImp, saveFile.getAbsolutePath());
+			}catch(Exception e) {
+				e.printStackTrace();
+				System.out.println("Could not generate data for " + rootFile.getName());
+				continue;
+			}
+			
+		}
    
-    	ImagePlus im = new ImagePlus(rootsImage.getPath());
-    	ImagePlus im2 = new ImagePlus(tif.getPath());
-    	try {
-    	execute(im, im2);
-    	}catch(Exception e) {
-    		e.printStackTrace();
-    		IJ.log("error, select an image file");
-    	}
     	
     	IJ.log("done");
     }//===========================================================================================
 
+    private File getTifFile(File rootFile, File tifFile) {
+    	
+    	String name = rootFile.getName();
+    	name = name.substring(0,5);
+    	 for(File tif : tifFile.listFiles()) {
+    		 
+    		 if (tif.getName().startsWith(name)) {
+    			 return tif;
+    		 }
+ 			
+ 		}
+    	
+    	return null;
+    }
+    
+    
+    
+    
     /**
      * This main function serves for development purposes.
      * It allows you to run the plugin immediately out of

@@ -31,6 +31,7 @@ public int nodeIndex;
  * The notation is noduleNumber_noduleSubnumber, and the underscore is represented as a decimal.
  */
 public double nodeNumber;
+
 /**
  * 2d array where each element A_ij is the distance to the j'th node on the 
  * i'th iteration of dijkstra's. Each row is one iteration of Dijkstra's, 
@@ -88,7 +89,7 @@ public boolean equals(Object obj) {
 		return true;
 	}
 	
-	if(this.distance(node) <= 5) {
+	if(this.distance(node) <= 6) {
 		return true;
 	}
 	
