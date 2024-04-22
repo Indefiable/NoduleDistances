@@ -86,14 +86,16 @@ public class RootGraph {
 			for(int ii = 0; ii < chunk.size(); ii+=2) {
 				int[] start = chunk.get(ii);
 			    int[] end = chunk.get(ii+1);
-			    
+			    if(nodes.size() == 116) {
+			    	System.out.println("Breakpoint.");
+			    }
 			    Node startPt = new Node(start[0], start[1], 0, -1);
 			    Node endPt = new Node(end[0], end[1], 0, -1);
 			    /**
-			    if(nodes.size() > 106) {
+			    if(nodes.size() > 116) {
 			    	System.out.println("104.");
 			    	
-			    	System.out.println("104-106 distance: " + nodes.get(104).distance(nodes.get(106)));
+			    	System.out.println("104-116 distance: " + nodes.get(104).distance(nodes.get(116)));
 			    }*/
 			    if(startPt.equals(endPt)) {
 			    	continue;
@@ -102,10 +104,20 @@ public class RootGraph {
 			    if(!nodes.contains(startPt)) {
 			    	nodes.add(startPt);
 			    }
+			    /**
+			    else {
+			    	int index = nodes.indexOf(startPt);
+			    	startPt = nodes.get(index);
+			    }*/
 			    
 			    if(!nodes.contains(endPt)) {
 			    	nodes.add(endPt);
 			    }
+			    /**
+			    else {
+			    	int index = nodes.indexOf(endPt);
+			    	endPt = nodes.get(index);
+			    }*/
 			    
 			    Line line = new Line(startPt.x, startPt.y, endPt.x, endPt.y);
 			    int length = (int) line.getLength();
@@ -297,6 +309,8 @@ public class RootGraph {
 			    	instances.add(new Point[] {node, new Point(end[0], end[1])});
 			    	}
 			    }
+			
+			
 			}
 		
 		return instances;

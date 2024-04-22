@@ -324,7 +324,7 @@ public class NoduleDistances implements Command {
     		return;
     	}
     	
-    	roots = blackenOutsideRectangle(roots);
+    	//roots = blackenOutsideRectangle(roots);
     	
     	
     	ArrayList<Channel> channels = new ArrayList<Channel>(); // channels to use when segmenting.
@@ -351,7 +351,7 @@ public class NoduleDistances implements Command {
 		
 		ColorClustering cluster = new ColorClustering(NoduleDistances.image);
 	//	cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Eclipse Workspace\\noduledistances\\assets\\001_roots.model");
-		cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS013_Light_Bright.model");
+		cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Research\\resources_assets\\ClustererModels\\PS013_Light_Bright.model");
 		cluster.setChannels(channels);
 		
 		RootSegmentation root = new RootSegmentation(cluster);
@@ -368,6 +368,8 @@ public class NoduleDistances implements Command {
 		graph.addNodules(roiOverlay.getRoiCentroids());
 		
 		graphOverlay.overlayGraph(graph, root.binarymap.getProcessor().convertToColorProcessor());
+		
+		//overlayChunkedGraph(graph, root.binarymap.getProcessor().convertToColorProcessor(), skeleton);
 		
 		IJ.save(graphOverlay.overlayedGraph, "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS033\\" + roots.getTitle() + "_graph.jpg");
 		
