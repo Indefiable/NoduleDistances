@@ -80,13 +80,13 @@ public class NoduleDistances implements Command {
     private OpService opService;
    
     
-    /**
+    
     @Parameter(label = "Tif file with nodule data.")
 	private File tif;
     
     @Parameter(label = "Image of root system.")
-	private File rootsImage;
-  */
+	private File rootFile;
+  
     /*
     @Parameter(label = "cluster model to use for segmentation.")
     private File modelFile;
@@ -231,7 +231,6 @@ public class NoduleDistances implements Command {
 		return image;
 	}
 
-
 	
 	public static ImagePlus blackenOutsideRectangle(ImagePlus image) {
 		
@@ -285,7 +284,6 @@ public class NoduleDistances implements Command {
     }
 	
 	
-    
 	/**
 	 * Saves the computed distance data to a csv file to the provided
 	 * directory. 
@@ -351,11 +349,13 @@ public class NoduleDistances implements Command {
 		
 		
 		ColorClustering cluster = new ColorClustering(NoduleDistances.image);
-	//	cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Eclipse Workspace\\noduledistances\\assets\\001_roots.model");
-		cluster.loadClusterer("D:\\1EDUCATION\\aRESEARCH\\ClusterModels\\001_roots.model");
+		cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Eclipse Workspace\\noduledistances\\assets\\001_roots.model");
+		//cluster.loadClusterer("D:\\1EDUCATION\\aRESEARCH\\ClusterModels\\001_roots.model");
 		cluster.setChannels(channels);
 		
-		RootSegmentation root = new RootSegmentation(cluster);
+		RootSegmentation root = new RootSegmentation(cluster, roiOverlay.rois);
+		
+		
 		
 		ArrayList<ArrayList<int[]>> skeleton = Skeletonize.skeletonize(root.binarymap);
 		
@@ -375,7 +375,7 @@ public class NoduleDistances implements Command {
 		graph.computeShortestDistances(5);
 		try {
 			Statistics stats = new Statistics(roots.getTitle());
-			stats.generateData(graph, new int[] {100,150,250,500}, saveFile);
+			stats.generateData(graph, new int[] {100,150,250,500,1000}, saveFile);
 			
 		} catch (CsvValidationException e) {
 			// TODO Auto-generated catch block
@@ -465,7 +465,7 @@ public class NoduleDistances implements Command {
     		System.exit(0);
     		break;
     	}
-    	*/
+    	
     	File rootsFile = null;
     	File tifFile = null;
     	File saveFile = null;
@@ -517,6 +517,7 @@ public class NoduleDistances implements Command {
     	   return;
        }
     	
+    	
        for(File rootFile : rootsFile.listFiles()) {
 			int subtype = getFileType(rootFile);
 			File currentTif = getTifFile(rootFile, tifFile);
@@ -526,18 +527,21 @@ public class NoduleDistances implements Command {
 			else if(getFileType(currentTif) != IMAGE);
 			if(subtype != IMAGE) {
    			continue;
-   		}
-			try {
-				ImagePlus rootImp = new ImagePlus(rootFile.getPath());
-				ImagePlus tifImp = new ImagePlus(currentTif.getPath());
-				execute(rootImp, tifImp, saveFile.getAbsolutePath());
-			}catch(Exception e) {
-				e.printStackTrace();
-				System.out.println("Could not generate data for " + rootFile.getName());
-				continue;
-			}
+   		}*/
+		String saveString = "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\testing";
 			
+		try {
+			ImagePlus rootImp = new ImagePlus(rootFile.getPath());
+			ImagePlus tifImp = new ImagePlus(tif.getPath());
+			execute(rootImp, tifImp, saveString);
+		}catch(Exception e) {
+			e.printStackTrace();
+			System.out.println("Could not generate data for " + rootFile.getName());
 		}
+			
+			
+			
+		
    
     	
     	IJ.log("done");

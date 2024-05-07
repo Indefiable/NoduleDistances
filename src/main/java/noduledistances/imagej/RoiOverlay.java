@@ -22,6 +22,7 @@ import ij.gui.NewImage;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -76,8 +77,47 @@ public class RoiOverlay {
 	}
 	
 	
-
-
+	
+	
+	public void AttachmentPoints(RootGraph graph) {
+		
+		for(ShapeRoi roi : rois) {
+			String name = roi.getName();
+			int numNods = 0;
+			
+			try {
+				numNods = Integer.parseInt(name.substring(2));
+			}catch(Exception e) {
+				System.out.println(name);
+				System.out.println("Could not read ROI name.");
+				numNods=1;
+			}
+			if(numNods>1){
+				// if is clump, use k-means to separate into individual points, add those
+				// individual points, and go to next roi.
+				continue;
+			}
+			double[] centroid = roi.getContourCentroid();
+			
+			Point2D.Double pt = new Point2D.Double(centroid[0], centroid[1]);
+			
+			ArrayList<int[]> subgraph = graph.ballSubgraph(5, pt);
+			ArrayList<Line2D> lines = graph.ballSubgraphLines(5, pt);
+			
+			
+			
+			
+			
+			FloatPolygon poly = roi.getFloatPolygon();
+		
+		}
+		
+	}
+	
+	
+	
+	
+	
 	/**
 	 * finds the centroid of all ROI's, and returns them in [color,x,y,area] format. 
 	 * For nodules that were initially clumps, we return all of their information in one row. 
@@ -101,7 +141,7 @@ public class RoiOverlay {
 				numNods = Integer.parseInt(name.substring(2));
 			}catch(Exception e) {
 				System.out.println(name);
-				System.out.println("Could not convert to an integer.");
+				System.out.println("Could not read ROI name.");
 				numNods=1;
 			}
 			if(numNods>1){
@@ -213,8 +253,8 @@ public class RoiOverlay {
 	 * clump of several nodules. 
 	 * 
 	 * @param roi : roi that we're breaking into parts.
-	 * @param numNods : the number of parts we're breaking the roi into.
-	 * @return centroid and area of each ROI in color,x,y,area format.
+	 * @param numNods : the number of parts we're breaking the roi into{'.
+	 * @return centroid and area of each ROI in color,x,y,area format.;
 	 */
 	public int[] getClumpData(ShapeRoi roi, int numNods) {
 		

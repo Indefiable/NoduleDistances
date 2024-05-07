@@ -89,7 +89,7 @@ public boolean equals(Object obj) {
 		return true;
 	}
 	
-	if(this.distance(node) <= 6) {
+	if(this.distance(node) <= 8) {
 		return true;
 	}
 	
@@ -121,10 +121,10 @@ public String toString() {
 		color = "mixed";
 	}
 	else {
-		IJ.log("You shouldn't see this. Node has unknown type.");
+		//IJ.log("You shouldn't see this. Node has unknown type.");
 		color = "unknown";
 	}
-    return "{x=" + x + ", y=" + y + ", type=" + color + '}';
+    return nodeNumber + "{x=" + x + ", y=" + y + ", type=" + color + '}';
 }
 
 }

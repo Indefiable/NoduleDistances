@@ -36,7 +36,7 @@ public class RootSegmentation {
  * 
  * @param cluster : clustering object that holds the model file used for segmentation.
  */
-	public RootSegmentation(ColorClustering cluster) {
+	public RootSegmentation(ColorClustering cluster, ShapeRoi[] rois) {
 		
 		this.cluster = cluster;
 		ImagePlus image = cluster.getImage();
@@ -60,6 +60,7 @@ public class RootSegmentation {
 		
 		clean();
 		
+		//removeNodules(rois);
 	}
 
 	/**
@@ -147,7 +148,23 @@ public class RootSegmentation {
 	}
 	
 	
-	
+	private void removeNodules(ShapeRoi[] rois) {
+		
+		ImageProcessor ip = binarymap.getProcessor();
+		
+		for(ShapeRoi roi : rois) {
+			
+			 ip.setRoi(roi);
+
+	            
+	            ip.setColor(255); 
+	            ip.fill(roi); 
+		}
+		
+		
+		binarymap.show();
+		System.out.println("Breakpoint.");
+	}
 	
 	
 	

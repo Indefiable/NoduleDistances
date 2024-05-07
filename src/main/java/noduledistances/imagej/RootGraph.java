@@ -3,6 +3,7 @@ package noduledistances.imagej;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
@@ -15,6 +16,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.awt.geom.Line2D;
+
+
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -98,6 +102,9 @@ public class RootGraph {
 			    if(startPt.equals(endPt)) {
 			    	continue;
 			    }
+			    if(endPt.equals(startPt)) {
+			    	continue;
+			    }
 			    
 			    if(!nodes.contains(startPt)) {
 			    	nodes.add(startPt);
@@ -116,7 +123,9 @@ public class RootGraph {
 			    startPt.nodeIndex = node1;
 			    endPt.nodeIndex = node2;
 			    if(node1 == node2) {
-			    	System.out.println("Error. Adding a self-loop.");
+			    	System.out.println("Nodes passed first non-equivalence test, failed second. Skipping"
+			    			+ "the given edge");
+			    	continue;
 			    }
 			    fsRep.add(new int[] {node1, node2, length});
 			    fsRep.add(new int[] {node2, node1, length});
@@ -147,9 +156,43 @@ public class RootGraph {
 		
 		updatePointer();
 		
+		addMissingEdges();
+		
 		System.out.println("number of nodes: " + nodes.size());
 		System.out.println("number of edges: " + (fsRep.size() / 2));
 		}//enumerate nodes
+	
+	
+	
+	
+	/**
+	 * The skeletonization algorithm sometimes does not add edges/arcs
+	 * where it makes sense to. This happens in cases where the nodes are very
+	 * close together, so to compensate we will add arcs when nodes are within 
+	 * a small distance.
+	 */
+	private void addMissingEdges() {
+		
+		for (Node node : nodes) {
+			
+			for(Node node1 : nodes) {
+				
+				if(node == node1) {
+					continue;
+				}
+				if(node.distance(node1) <= 9) {
+				//	System.out.println("Adding arc between" + nodes.indexOf(node) + " and " + nodes.indexOf(node1));
+					//addEdge(new Node[] {node, node1});
+				}
+				
+			}
+		}
+		
+		
+		
+	}
+	
+	
 	
 	/**
 	 * Adds an edge to the graph.
@@ -275,6 +318,146 @@ public class RootGraph {
 		}
 		
 		pointer[pointer.length-1] = fsRep.size(); 
+	}
+	
+	/**
+	 * Find the numNodes closest Nodes to the given pt.
+	 * 
+	 * @param numNodes
+	 * @param pt
+	 * @return
+	 */
+	public ArrayList<int[]> ballSubgraph(int numNodes, Point2D pt) {
+		
+		ArrayList<int[]> subgraph = new ArrayList<>();
+		
+		Node[] retNodes = new Node[numNodes];
+		int[] rettNodes = new int[numNodes];
+		
+		for(Node node : nodes) {
+			int i =0;
+			
+			for(Node retNode : retNodes) {
+				if(retNode == null) {
+					retNodes[i] = node;
+					rettNodes[i] = nodes.indexOf(node);
+					break;
+				}
+				if( node.distance(pt) < retNode.distance(pt)) {
+					retNodes[i] = node;
+					rettNodes[i] = nodes.indexOf(node);
+					break;
+				}
+				i++;
+				
+			}
+			
+		}
+		
+		for(Node node : retNodes) {
+			if(node == null) {
+				System.out.println("Null node in closest Nodes method.");
+				System.out.println("Breakpoint");
+				
+			}
+		}
+		
+		
+		for(int[] edge : fsRep) {
+			
+			int n1 = edge[0];
+			int n2 = edge[1];
+			
+			boolean n11 = false;
+			boolean n22 = false;
+			
+			for(int node : rettNodes) {
+				
+				if(n1 == node) {
+					n11 = true;
+				}
+				else if(n2 == node) {
+					n22 = true;
+				}
+				
+			}
+			
+			if(n11 && n22) {
+				subgraph.add(edge);
+			}
+			
+		}
+		
+		
+		
+		return subgraph;
+	}
+	
+	
+	public ArrayList<Line2D> ballSubgraphLines(int numNodes, Point2D pt){
+		ArrayList<Line2D> lines = new ArrayList<>();
+		
+		
+		Node[] retNodes = new Node[numNodes];
+		int[] rettNodes = new int[numNodes];
+		
+		for(Node node : nodes) {
+			int i =0;
+			
+			for(Node retNode : retNodes) {
+				if(retNode == null) {
+					retNodes[i] = node;
+					rettNodes[i] = nodes.indexOf(node);
+					break;
+				}
+				if( node.distance(pt) < retNode.distance(pt)) {
+					retNodes[i] = node;
+					rettNodes[i] = nodes.indexOf(node);
+					break;
+				}
+				i++;
+				
+			}
+			
+		}
+		
+		for(Node node : retNodes) {
+			if(node == null) {
+				System.out.println("Null node in closest Nodes method.");
+				System.out.println("Breakpoint");
+				
+			}
+		}
+		
+		
+		for(int[] edge : fsRep) {
+			
+			int n1 = edge[0];
+			int n2 = edge[1];
+			
+			boolean n11 = false;
+			boolean n22 = false;
+			
+			for(int node : rettNodes) {
+				
+				if(n1 == node) {
+					n11 = true;
+				}
+				else if(n2 == node) {
+					n22 = true;
+				}
+				
+			}
+			
+			if(n11 && n22) {
+				Line2D.Double line = new Line2D.Double(nodes.get(n1), nodes.get(n2));
+				lines.add(line);
+			}
+			
+		}
+		
+		
+		return lines;
 	}
 	
 	

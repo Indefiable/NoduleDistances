@@ -181,8 +181,10 @@ public class Statistics {
 		int matCounter = 0;
 		
 		for (int ii = 0; ii < graph.nodes.size(); ii++) {
-			
 			Node nodule = graph.nodes.get(ii);
+			if(nodule.nodeNumber == 4) {
+				System.out.println("breakpoint.");
+			}
 			//ignore skeleton nodes.
 			if(nodule.type == Node.SKELETON) {
 				continue;
@@ -268,6 +270,7 @@ public class Statistics {
 			else {
 				System.out.println("Unknown node type.");
 				System.out.println("breakpoint.");
+				mat[matCounter+1][kk++] = "unknown";
 			}
 			
 			mat[matCounter+1][kk++] = Double.toString(data.get(MEANDISTANCE)[0]);
@@ -429,7 +432,8 @@ public class Statistics {
 				    }
 			   }
 			   if(options.contains(CLOSESTCOLORTYPE)) {
-				   if(path[1] < closestColorDistance) {
+				   int type = graph.nodes.get(path[0]).type;
+				   if(path[1] < closestColorDistance && type != 0) {
 				    	closestColorDistance = path[1];
 				    	closestColorType = graph.nodes.get(path[0]).type;
 				    }

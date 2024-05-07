@@ -145,16 +145,7 @@ public class GraphOverlay {
 		skellyMap.setOverlay(overlay);
 		int counter = 0;
 		
-		for (int[] edge : graph.fsRep) {
-			counter++;
-			Node node1 = graph.nodes.get(edge[0]);
-			Node node2 = graph.nodes.get(edge[1]);
-			
-		 	Line line = new Line(node1.x, node1.y, node2.x, node2.y);
-		    line.setStrokeWidth(5);
-		    line.setStrokeColor(Color.DARK_GRAY);
-		    overlay.add(line);
-		}
+		
 		
 		
 		for(Node node : graph.nodes) {
@@ -218,6 +209,18 @@ public class GraphOverlay {
 			}
 			
 		}
+		
+		for (int[] edge : graph.fsRep) {
+			counter++;
+			Node node1 = graph.nodes.get(edge[0]);
+			Node node2 = graph.nodes.get(edge[1]);
+			
+		 	Line line = new Line(node1.x, node1.y, node2.x, node2.y);
+		    line.setStrokeWidth(2);
+		    line.setStrokeColor(Color.CYAN);
+		    overlay.add(line);
+		}
+		
 		
 		skellyMap.setTitle("Graph");
 		

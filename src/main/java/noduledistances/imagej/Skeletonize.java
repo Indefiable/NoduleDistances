@@ -48,7 +48,7 @@ public class Skeletonize {
 	 */
 	public static ArrayList<ArrayList<int[]>> skeletonize(ImagePlus imp) {
 		
-		imp.show();
+		//imp.show();
 		
 		ArrayList<ArrayList<int[]>> skeleton; 
 		
@@ -63,7 +63,7 @@ public class Skeletonize {
 		
 		TraceSkeleton.thinningZS(im, width,height);
 		
-		ByteProcessor byt = new ByteProcessor(width, height, booleanToByte(im));
+		//ByteProcessor byt = new ByteProcessor(width, height, booleanToByte(im));
 		
 		skeleton = TraceSkeleton.traceSkeleton(im, width, height, 100);
 		
