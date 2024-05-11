@@ -383,8 +383,8 @@ public class NoduleDistances implements Command {
 		
 		
 		ColorClustering cluster = new ColorClustering(NoduleDistances.image);
-		//cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Eclipse Workspace\\noduledistances\\assets\\001_roots.model");
-		cluster.loadClusterer("D:\\1EDUCATION\\aRESEARCH\\ClusterModels\\001_roots.model");
+		cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Eclipse Workspace\\noduledistances\\assets\\001_roots.model");
+		//cluster.loadClusterer("D:\\1EDUCATION\\aRESEARCH\\ClusterModels\\001_roots.model");
 		cluster.setChannels(channels);
 		
 		RootSegmentation root = new RootSegmentation(cluster, roiOverlay.rois);
@@ -396,7 +396,11 @@ public class NoduleDistances implements Command {
 		
 		RootGraph graph = new RootGraph(skeleton, graphOverlay);
 		
+		
+		
 		graph.addNodules(roiOverlay.getRoiCentroids());
+		
+		roiOverlay.attachmentPoints(graph);
 		
 		graphOverlay.overlayGraph(graph, root.binarymap.getProcessor().convertToColorProcessor());
 		
@@ -407,6 +411,8 @@ public class NoduleDistances implements Command {
 		graph.computeShortestDistances(5);
 		//graphOverlay.overlayedGraph.show();
 		
+		
+		/**
 		List<int[]> pairs = findPairs(graph.numNodules, 5);
 		
 		for(int[] pair : pairs) {
@@ -414,7 +420,7 @@ public class NoduleDistances implements Command {
 			ImagePlus out = shortestPath(pair[0],pair[1],graph, graphOverlay);
 			IJ.saveAs(out, "jpg", "D:\\1EDUCATION\\aRESEARCH\\DistanceTesting\\DistanceTesting\\PS033\\PS033_paths_" 
 					+ Integer.toString(pair[0])+ "_" + Integer.toString(pair[1]));
-		}
+		}*/
 		
 		
 		

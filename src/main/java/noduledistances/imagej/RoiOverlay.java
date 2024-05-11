@@ -85,6 +85,10 @@ public class RoiOverlay {
 			String name = roi.getName();
 			int numNods = 0;
 			
+			System.out.println("=============");
+			System.out.println(name);
+			System.out.println("=============");
+			
 			try {
 				numNods = Integer.parseInt(name.substring(2));
 			}catch(Exception e) {
@@ -103,19 +107,25 @@ public class RoiOverlay {
 			
 			ArrayList<int[]> subgraph = graph.ballSubgraph(5, pt);
 			ArrayList<ShapeRoi> lines = graph.ballSubgraphLines(5, pt);
+			
 			System.out.println("size of lines: " + lines.size());
 			System.out.println("Size of subgraph: " + subgraph.size());
 			
 			ArrayList<ShapeRoi> intersections = new ArrayList<>();
+			System.out.println(roi.getBounds());
+			System.out.println("=============");
 			
 			for(ShapeRoi line : lines) {
+				System.out.println(line.getBounds());
+				System.out.println("=============");
 				line.and(roi);
 				if(line.getContainedPoints().length == 0) {
 					continue;
 				}
 				intersections.add(line);
 			}
-			
+			System.out.println("num intersections :" + intersections.size());
+			System.out.println("=============");
 			for(ShapeRoi inter : intersections) {
 				Point[] points = inter.getContainedPoints();
 				for(Point p : points) {

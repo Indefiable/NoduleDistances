@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.HashMap;
@@ -413,52 +414,48 @@ public class RootGraph {
 	
 	public ArrayList<ShapeRoi> ballSubgraphLines(int numNodes, Point2D pt){
 		ArrayList<ShapeRoi> lines = new ArrayList<>();
-		
-		
-		Node[] retNodes = new Node[numNodes];
 		int[] rettNodes = new int[numNodes];
-		double[] distances = new double [numNodes];
 		
+		System.out.println("++++++++++++++++++++");
+        System.out.println("FINDING CLOSEST POINTS TO");
+        System.out.println(pt);
+        System.out.println("++++++++++++++++++++");
+        
+		// Priority queue to store the k closest nodes
+        PriorityQueue<Node> closestNodesQueue = new PriorityQueue<>
+        (Comparator.comparingDouble(node -> ((Node) node).distance(pt)).reversed());
+        
+        // Iterate over each node
+        for (Node node : nodes) {
+            double distance = node.distance(pt);
+            
+            // If the queue is not full or the current node is closer than the farthest node in the queue
+            if (closestNodesQueue.size() < numNodes || distance < closestNodesQueue.peek().distance(pt)) {
+                closestNodesQueue.offer(node);
+            }
+            
+            // If the queue exceeds the limit, remove the farthest node
+            int size = closestNodesQueue.size();
+            if (size > numNodes) {
+                closestNodesQueue.poll();
+            }
+        }
+        
+        // Convert the priority queue to an array
+        Node[] retNodes = closestNodesQueue.toArray(new Node[0]);
 		
+        for(int ii = 0; ii < numNodes; ii++) {
+        	rettNodes[ii] = nodes.indexOf(retNodes[ii]);
+        	System.out.println("pt: " + retNodes[ii].x + ", " + retNodes[ii].y);
+        }
 		
-		for(Node node : nodes) {
-			
-			int minIndex = -1;
-			double minDistance = Double.MAX_VALUE;
-			
-			for(int ii = 0; ii < numNodes; ii++) {
-				distances[ii] = node.distance(pt);
-				
-				if(distances[ii] < minDistance) {
-					minDistance = distances[ii];
-					minIndex = ii;
-				}
-				
-			}
-			
-			int i =0;
-			for(Node retNode : retNodes) {
-				if(retNode == null) {
-					retNodes[i] = node;
-					rettNodes[i] = nodes.indexOf(node);
-					break;
-				}
-				i++;
-			}
-			
-			if( node.distance(pt) < minDistance) {
-				retNodes[minIndex] = node;
-				rettNodes[minIndex] = nodes.indexOf(node);
-			}
-			
-		}
 		
 		for(Node node : retNodes) {
 			if(node == null) {
 				System.out.println("Null node in closest Nodes method.");
 				System.out.println("Breakpoint");
-				
 			}
+			System.out.println("pt: " + node.x + ", " + node.y);
 		}
 		
 		
@@ -483,7 +480,8 @@ public class RootGraph {
 			
 			if(n11 && n22) {
 				Line line = new Line(nodes.get(n1).x,nodes.get(n1).y, nodes.get(n2).x,nodes.get(n2).y);
-				lines.add(new ShapeRoi(line));
+				ShapeRoi lineRoi = new ShapeRoi(line);
+				lines.add(lineRoi);
 			}
 			
 		}
