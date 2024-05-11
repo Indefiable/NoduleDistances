@@ -23,7 +23,9 @@ import java.awt.geom.Line2D;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Line;
+import ij.gui.ShapeRoi;
 import ij.gui.TextRoi;
+import ij.gui.Line;
 
 import com.programmerare.edu.asu.emit.algorithm.graph.EdgeYanQi;
 import com.programmerare.edu.asu.emit.algorithm.graph.GraphWithConstructor;
@@ -333,23 +335,38 @@ public class RootGraph {
 		
 		Node[] retNodes = new Node[numNodes];
 		int[] rettNodes = new int[numNodes];
+		double[] distances = new double [numNodes];
+		
+		
 		
 		for(Node node : nodes) {
-			int i =0;
 			
+			int minIndex = -1;
+			double minDistance = Double.MAX_VALUE;
+			
+			for(int ii = 0; ii < numNodes; ii++) {
+				distances[ii] = node.distance(pt);
+				
+				if(distances[ii] < minDistance) {
+					minDistance = distances[ii];
+					minIndex = ii;
+				}
+				
+			}
+			
+			int i =0;
 			for(Node retNode : retNodes) {
 				if(retNode == null) {
 					retNodes[i] = node;
 					rettNodes[i] = nodes.indexOf(node);
 					break;
 				}
-				if( node.distance(pt) < retNode.distance(pt)) {
-					retNodes[i] = node;
-					rettNodes[i] = nodes.indexOf(node);
-					break;
-				}
 				i++;
-				
+			}
+			
+			if( node.distance(pt) < minDistance) {
+				retNodes[minIndex] = node;
+				rettNodes[minIndex] = nodes.indexOf(node);
 			}
 			
 		}
@@ -394,29 +411,44 @@ public class RootGraph {
 	}
 	
 	
-	public ArrayList<Line2D> ballSubgraphLines(int numNodes, Point2D pt){
-		ArrayList<Line2D> lines = new ArrayList<>();
+	public ArrayList<ShapeRoi> ballSubgraphLines(int numNodes, Point2D pt){
+		ArrayList<ShapeRoi> lines = new ArrayList<>();
 		
 		
 		Node[] retNodes = new Node[numNodes];
 		int[] rettNodes = new int[numNodes];
+		double[] distances = new double [numNodes];
+		
+		
 		
 		for(Node node : nodes) {
-			int i =0;
 			
+			int minIndex = -1;
+			double minDistance = Double.MAX_VALUE;
+			
+			for(int ii = 0; ii < numNodes; ii++) {
+				distances[ii] = node.distance(pt);
+				
+				if(distances[ii] < minDistance) {
+					minDistance = distances[ii];
+					minIndex = ii;
+				}
+				
+			}
+			
+			int i =0;
 			for(Node retNode : retNodes) {
 				if(retNode == null) {
 					retNodes[i] = node;
 					rettNodes[i] = nodes.indexOf(node);
 					break;
 				}
-				if( node.distance(pt) < retNode.distance(pt)) {
-					retNodes[i] = node;
-					rettNodes[i] = nodes.indexOf(node);
-					break;
-				}
 				i++;
-				
+			}
+			
+			if( node.distance(pt) < minDistance) {
+				retNodes[minIndex] = node;
+				rettNodes[minIndex] = nodes.indexOf(node);
 			}
 			
 		}
@@ -450,8 +482,8 @@ public class RootGraph {
 			}
 			
 			if(n11 && n22) {
-				Line2D.Double line = new Line2D.Double(nodes.get(n1), nodes.get(n2));
-				lines.add(line);
+				Line line = new Line(nodes.get(n1).x,nodes.get(n1).y, nodes.get(n2).x,nodes.get(n2).y);
+				lines.add(new ShapeRoi(line));
 			}
 			
 		}
@@ -664,11 +696,14 @@ public class RootGraph {
     				System.out.println("breakpoint.");
     			}
     			
+    			System.out.println("Len of paths: " + shortest_paths_list.size());
+    			
     			//System.out.println("len of shortestPaths: " + shortest_paths_list.size());
     			if(shortest_paths_list.size() == 0) {
     				System.out.println("no paths between." + nodule.nodeNumber + "/" 
     			+ startingNodule+ " and " + nodule1.nodeNumber + "/" + endingNodule );
     			}
+    			
     			ArrayList<int[]> paths = shortestPathsToList(shortest_paths_list);
     			
     			if(paths.size() == 0) {

@@ -96,8 +96,28 @@ public boolean equals(Object obj) {
 	return false;
 	
 }
-
-
+/**
+ * Finds and returns the set of paths from this node to the given node.
+ * @param node
+ * @return
+ */
+public ArrayList<int[]> getPaths(int node){
+	ArrayList<int[]> paths = new ArrayList<>();
+	
+	for (ArrayList<int[]> ps : this.paths) {
+		System.out.println("out node:" + ps.get(0)[0]);
+		if(ps.get(0)[0] == node) {
+			paths = ps;
+			break;
+		}
+	}
+	
+	if(paths.size() == 0) {
+		System.out.println("Could not find paths from " + this.nodeNumber +" to " + node);
+	}
+	
+	return paths;
+}
 
 public double distance(Node node) {
 	return Point.distance(this.x, this.y, node.x, node.y);

@@ -9,6 +9,8 @@ import java.awt.Font;
 import java.awt.Point;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -111,14 +113,18 @@ public class NoduleDistances implements Command {
 		return imp;
     }
 	
+    
+    
 	/**
-	 * Finds the shortest path between the start and end nodules and colors the path between them.
+	 * Displays
 	 * @param startNode
 	 * @param endNode
 	 * @param graph
 	 * @param overlayedGraph
 	 */
-	public ImagePlus shortestPath(int startNodeIndex, int endNodeIndex, RootGraph graph, GraphOverlay graphOverlay, int iteration) {
+	public ImagePlus shortestPath(int startNodeIndex, int endNodeIndex, RootGraph graph, GraphOverlay graphOverlay) {
+		
+		ArrayList<ImagePlus> imps = new ArrayList<>();
 		
 		startNodeIndex--;
 		endNodeIndex--;
@@ -144,70 +150,85 @@ public class NoduleDistances implements Command {
 		Node startNode = graph.getNodules()[startNodeIndex];
 		Node endNode = graph.getNodules()[endNodeIndex];
 		
+		ArrayList<int[]> paths = startNode.getPaths(graph.nodes.indexOf(endNode));
 		
-		int distance = startNode.distance[iteration][endNode.nodeIndex];
-		
-		System.out.println(distance + " pixels between " + (startNodeIndex +1) +
-				" and " + (endNodeIndex+1));
-		
-		int[] prevNode = startNode.prevNode;
-		
-		int current = endNode.nodeIndex;
-		
-		if(current == -1) {
-			System.out.println("Error, there is no " + endNode.nodeIndex + " node.");
+		if(paths.size() == 0) {
+			System.out.println("No paths between the two nodes.");
 			return null;
 		}
 		
-		ArrayList<Integer> path = new ArrayList<>();
-	
-		int counter = 0;
-		//find path
-		while(true) {
-			counter++;
-			path.add(current);
-			
-			if(current == startNode.nodeIndex) {
-				break;
-			}
-			current = prevNode[current];
-			if(counter >= graph.nodes.size()) {
-				System.out.println("looping error.");
-				break;
-			}
-		}
+	    int numOfPaths = 0;
+	    for (int[] path : paths) {
+	        if (path != null) {
+	            numOfPaths++;
+	        }
+	    }
 		
-		//color edges to show path
-		for(int ii = 0; ii < path.size()-1; ii++) {
-			
-			Node node1 = graph.nodes.get(path.get(ii));
-			Node node2 = graph.nodes.get(path.get(ii+1));
-			
-			Line line = new Line(node1.x, node1.y, node2.x, node2.y);
-			line.setStrokeWidth(4);
-			line.setStrokeColor(Color.ORANGE);
-			SP.getOverlay().add(line);
-		}
-		
-		
-		//highlight start and end nodules
-		int noduleRadius = NODERADIUS+10;
+	    Font font = new Font("SansSerif", Font.BOLD, 30); // Example font with size 20
+	    TextRoi text = new TextRoi(10, 10, "Num of Paths: " + numOfPaths);
+	    text.setFont(font);
+	    text.setStrokeColor(Color.WHITE);
+	    text.setFillColor(Color.BLACK);
+	    SP.getOverlay().add(text);
 	    
-		OvalRoi ball1 = new OvalRoi( startNode.x - noduleRadius,  startNode.y - noduleRadius,
-				2 * noduleRadius, 2 * noduleRadius);
-		ball1.setFillColor(Color.ORANGE);
+	    
+	    
+		Color[] colors = new Color[] {new Color(255, 255, 255),
+									  new Color(0,0,255),
+									  new Color(255,0,255),
+									  new Color(255,165,0),
+									  new Color(128,0,128)};
 		
+		int jj =0;
 		
-		OvalRoi ball2 = new OvalRoi( endNode.x - noduleRadius,  endNode.y - noduleRadius,
-				2 * noduleRadius, 2 * noduleRadius);
-		ball2.setFillColor(Color.ORANGE);
-		
-		SP.getOverlay().add(ball1);
-		SP.getOverlay().add(ball2);
-		
+		for(int kk = numOfPaths-1; kk >= 0; kk--) {
+			
+			int[] path  = paths.get(kk);
+			
+			if(path == null) {
+				System.out.println("Can't cheese it like that, Farris. Gotta properly remove the null paths from paths before starting :/");
+			}
+			
+			int distance = path[1];
+			
+			System.out.println(distance + " pixels between " + (startNodeIndex +1) +
+					" and " + (endNodeIndex+1));
+			
+			
+			//color edges to show path
+			// ignore first two entries as they're not part of the path
+			for(int ii = 2; ii < path.length-1; ii++) {
+				
+				Node node1 = graph.nodes.get(path[ii]);
+				Node node2 = graph.nodes.get(path[ii+1]);
+				
+				Line line = new Line(node1.x, node1.y, node2.x, node2.y);
+				line.setStrokeWidth(7);
+				line.setStrokeColor(colors[jj]);
+				SP.getOverlay().add(line);
+			}
+			
+			
+			//highlight start and end nodules
+			int noduleRadius = NODERADIUS+10;
+		    
+			OvalRoi ball1 = new OvalRoi( startNode.x - noduleRadius,  startNode.y - noduleRadius,
+					2 * noduleRadius, 2 * noduleRadius);
+			ball1.setFillColor(Color.ORANGE);
+			
+			
+			OvalRoi ball2 = new OvalRoi( endNode.x - noduleRadius,  endNode.y - noduleRadius,
+					2 * noduleRadius, 2 * noduleRadius);
+			ball2.setFillColor(Color.ORANGE);
+			
+			SP.getOverlay().add(ball1);
+			SP.getOverlay().add(ball2);
+			
+			jj++;
+			
+		}
 		
 		return SP;
-		
 	}
 	
 	/**
@@ -294,6 +315,19 @@ public class NoduleDistances implements Command {
 	}
 	
 	
+	 public static List<int[]> findPairs(int num, int numIters) {
+	        List<int[]> pairs = new ArrayList<>();
+	        Random random = new Random();
+	        
+	        for (int i = 0; i <= numIters; i++) {
+	            int first = random.nextInt(num + 1);
+	            int second = random.nextInt(num + 1);
+	            pairs.add(new int[]{first, second});
+	        }
+	        
+	        return pairs;
+	    }
+	
 	/**
      * This method executes the image analysis.
      * 
@@ -327,7 +361,7 @@ public class NoduleDistances implements Command {
     		return;
     	}
     	
-    	roots = blackenOutsideRectangle(roots);
+    	//roots = blackenOutsideRectangle(roots);
     	
     	ArrayList<Channel> channels = new ArrayList<Channel>(); // channels to use when segmenting.
     	channels.add(Channel.Brightness);
@@ -349,13 +383,11 @@ public class NoduleDistances implements Command {
 		
 		
 		ColorClustering cluster = new ColorClustering(NoduleDistances.image);
-		cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Eclipse Workspace\\noduledistances\\assets\\001_roots.model");
-		//cluster.loadClusterer("D:\\1EDUCATION\\aRESEARCH\\ClusterModels\\001_roots.model");
+		//cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Eclipse Workspace\\noduledistances\\assets\\001_roots.model");
+		cluster.loadClusterer("D:\\1EDUCATION\\aRESEARCH\\ClusterModels\\001_roots.model");
 		cluster.setChannels(channels);
 		
 		RootSegmentation root = new RootSegmentation(cluster, roiOverlay.rois);
-		
-		
 		
 		ArrayList<ArrayList<int[]>> skeleton = Skeletonize.skeletonize(root.binarymap);
 		
@@ -364,15 +396,30 @@ public class NoduleDistances implements Command {
 		
 		RootGraph graph = new RootGraph(skeleton, graphOverlay);
 		
-		
 		graph.addNodules(roiOverlay.getRoiCentroids());
 		
 		graphOverlay.overlayGraph(graph, root.binarymap.getProcessor().convertToColorProcessor());
 		
-		IJ.save(graphOverlay.overlayedGraph, saveFile + "\\" + roots.getTitle() + "_graph.jpg");
+		//IJ.save(graphOverlay.overlayedGraph, saveFile + "\\" + roots.getTitle() + "_graph.jpg");
 		
 		//IJ.save(graphOverlay.overlayedGraph, "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS033\\" + "PS033_overlayed_graph.jpg");
+		//IJ.save(graphOverlay.overlayedGraph, "D:\\1EDUCATION\\aRESEARCH\\DistanceAnalysis_V0.1\\testingOutput\\" + tifImp.getTitle() + ".jpg");
 		graph.computeShortestDistances(5);
+		//graphOverlay.overlayedGraph.show();
+		
+		List<int[]> pairs = findPairs(graph.numNodules, 5);
+		
+		for(int[] pair : pairs) {
+			
+			ImagePlus out = shortestPath(pair[0],pair[1],graph, graphOverlay);
+			IJ.saveAs(out, "jpg", "D:\\1EDUCATION\\aRESEARCH\\DistanceTesting\\DistanceTesting\\PS033\\PS033_paths_" 
+					+ Integer.toString(pair[0])+ "_" + Integer.toString(pair[1]));
+		}
+		
+		
+		
+		
+		
 		try {
 			Statistics stats = new Statistics(roots.getTitle());
 			stats.generateData(graph, new int[] {100,150,250,500,1000}, saveFile);

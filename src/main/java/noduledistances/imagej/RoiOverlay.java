@@ -79,7 +79,7 @@ public class RoiOverlay {
 	
 	
 	
-	public void AttachmentPoints(RootGraph graph) {
+	public void attachmentPoints(RootGraph graph) {
 		
 		for(ShapeRoi roi : rois) {
 			String name = roi.getName();
@@ -102,18 +102,32 @@ public class RoiOverlay {
 			Point2D.Double pt = new Point2D.Double(centroid[0], centroid[1]);
 			
 			ArrayList<int[]> subgraph = graph.ballSubgraph(5, pt);
-			ArrayList<Line2D> lines = graph.ballSubgraphLines(5, pt);
+			ArrayList<ShapeRoi> lines = graph.ballSubgraphLines(5, pt);
+			System.out.println("size of lines: " + lines.size());
+			System.out.println("Size of subgraph: " + subgraph.size());
 			
+			ArrayList<ShapeRoi> intersections = new ArrayList<>();
 			
+			for(ShapeRoi line : lines) {
+				line.and(roi);
+				if(line.getContainedPoints().length == 0) {
+					continue;
+				}
+				intersections.add(line);
+			}
 			
+			for(ShapeRoi inter : intersections) {
+				Point[] points = inter.getContainedPoints();
+				for(Point p : points) {
+					System.out.println(p + " is in the intersection.");
+				}
+			}
 			
-			
-			FloatPolygon poly = roi.getFloatPolygon();
-		
+			System.out.println("Breakpoint.");
+
 		}
 		
 	}
-	
 	
 	
 	
