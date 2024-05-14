@@ -416,11 +416,14 @@ public class RootGraph {
 		ArrayList<ShapeRoi> lines = new ArrayList<>();
 		int[] rettNodes = new int[numNodes];
 		
+<<<<<<< Updated upstream
 		System.out.println("++++++++++++++++++++");
         System.out.println("FINDING CLOSEST POINTS TO");
         System.out.println(pt);
         System.out.println("++++++++++++++++++++");
         
+=======
+>>>>>>> Stashed changes
 		// Priority queue to store the k closest nodes
         PriorityQueue<Node> closestNodesQueue = new PriorityQueue<>
         (Comparator.comparingDouble(node -> ((Node) node).distance(pt)).reversed());
@@ -458,12 +461,22 @@ public class RootGraph {
 			System.out.println("pt: " + node.x + ", " + node.y);
 		}
 		
+		// Was using Set to not add reverse arcs, but it wasn't working properly, so 
+		// I'm instead going to remove duplicates at the end of the process.
+		//Set<String> processedEdges = new HashSet<>();
 		
 		for(int[] edge : fsRep) {
 			
 			int n1 = edge[0];
 			int n2 = edge[1];
 			
+			//String edgeKey = n1 + "-" + n2;
+		    ///String oppositeEdgeKey = n2 + "-" + n1;
+		    //if (processedEdges.contains(edgeKey) || processedEdges.contains(oppositeEdgeKey)) {
+		        // Skip processing the duplicate edge
+		     //   continue;
+		   // }
+		    
 			boolean n11 = false;
 			boolean n22 = false;
 			
@@ -479,6 +492,7 @@ public class RootGraph {
 			}
 			
 			if(n11 && n22) {
+				//processedEdges.add(edgeKey);
 				Line line = new Line(nodes.get(n1).x,nodes.get(n1).y, nodes.get(n2).x,nodes.get(n2).y);
 				ShapeRoi lineRoi = new ShapeRoi(line);
 				lines.add(lineRoi);

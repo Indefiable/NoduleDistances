@@ -22,6 +22,11 @@ import ij.gui.NewImage;
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
+<<<<<<< Updated upstream
+=======
+import java.awt.Shape;
+import java.awt.geom.Ellipse2D;
+>>>>>>> Stashed changes
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
@@ -105,11 +110,11 @@ public class RoiOverlay {
 			
 			Point2D.Double pt = new Point2D.Double(centroid[0], centroid[1]);
 			
-			ArrayList<int[]> subgraph = graph.ballSubgraph(5, pt);
-			ArrayList<ShapeRoi> lines = graph.ballSubgraphLines(5, pt);
+			//ArrayList<int[]> subgraph = graph.ballSubgraph(5, pt);
+			ArrayList<ShapeRoi> lines = graph.ballSubgraphLines(7, pt);
 			
 			System.out.println("size of lines: " + lines.size());
-			System.out.println("Size of subgraph: " + subgraph.size());
+			//System.out.println("Size of subgraph: " + subgraph.size());
 			
 			ArrayList<ShapeRoi> intersections = new ArrayList<>();
 			System.out.println(roi.getBounds());
@@ -124,6 +129,7 @@ public class RoiOverlay {
 				}
 				intersections.add(line);
 			}
+<<<<<<< Updated upstream
 			System.out.println("num intersections :" + intersections.size());
 			System.out.println("=============");
 			for(ShapeRoi inter : intersections) {
@@ -133,14 +139,186 @@ public class RoiOverlay {
 				}
 			}
 			
+=======
+			
+			
+			
+			System.out.println("width: " + roi.getBounds().width);
+			System.out.println("height: " + roi.getBounds().height);
+			
+			
+			Point[] bdPoints = getBoundaryPoints(roi, intersections);
+			
+			ArrayList<ShapeRoi> testing = new ArrayList<>();
+			
+			testing.add(roi);
+			
+			for(int ii = 0; ii < intersections.size(); ii++) {
+				testing.add(intersections.get(ii));
+			}
+			
+			
+			for(int ii = 0; ii < bdPoints.length; ii++) {
+		        
+		       OvalRoi ball = new OvalRoi( bdPoints[ii].x - 2,  bdPoints[ii].y - 2, 
+					2 * 2, 2 * 2);
+		       
+				testing.add(new ShapeRoi(ball));
+			}
+			Point center = averagePoint(bdPoints);
+			
+			OvalRoi ball = new OvalRoi( center.x - 3,  center.y - 3, 
+					2 * 3, 2 * 3);
+		       
+			testing.add(new ShapeRoi(ball));
+			
+			
+			showRois(testing.toArray(new ShapeRoi[0]), bdPoints);
+			
+			System.out.println("Number of boundary points: " + bdPoints.length);
+			
+>>>>>>> Stashed changes
 			System.out.println("Breakpoint.");
-
+			
 		}
 		
 	}
 	
+<<<<<<< Updated upstream
 	
 	
+=======
+	public Point averagePoint(Point[] points) {
+		
+		
+		double avgX = 0;
+		double avgY = 0;
+		
+		for(Point p : points) {
+			avgX += p.x;
+			avgY += p.y;
+		}
+		avgX = avgX / points.length;
+		avgY = avgY / points.length;
+		
+		
+		return new Point((int) avgX, (int) avgY);
+		
+	}
+	
+	public Point[] getBoundaryPoints(ShapeRoi roi, ArrayList<ShapeRoi> intersections) {
+		
+		HashSet<Point> bdPoints = new HashSet<>();
+		
+		for(ShapeRoi inter : intersections) {
+			
+			Point[] points = inter.getContainedPoints();
+			Point st = points[0];
+			Point end = points[points.length-1];
+			double[] coords = new double[2];
+	        double prevX = 0;
+	        double prevY = 0;
+	        double currX, currY;
+	        
+	        PathIterator iter = roi.getPolygon().getPathIterator(null);
+	        
+			while (!iter.isDone()) {
+	            int segmentType = iter.currentSegment(coords);
+	            currX = coords[0];
+	            currY = coords[1];
+	            
+	            if(segmentType == PathIterator.SEG_MOVETO) {
+	            	// Update previous point
+		            prevX = currX;
+		            prevY = currY;
+		            iter.next();
+	            	continue;
+	            }
+	            
+
+	            if (onBoundary(prevX, prevY, currX, currY, st.x, st.y)) {
+	                System.out.println("Added " + st + " to boundary points.");
+	                bdPoints.add(st);
+	                break;
+	            }
+	            
+	            if (onBoundary(prevX, prevY, currX, currY, end.x, end.y)) {
+	                System.out.println("Added " + end + " to boundary points.");
+	                bdPoints.add(end);
+	                break;
+	            }
+	            
+	            // Update previous point
+	            prevX = currX;
+	            prevY = currY;
+	            if(segmentType == PathIterator.SEG_CLOSE) {
+	            	break;
+	            }
+	            // Move to the next segment
+	            iter.next();
+	        }
+		}
+		
+		return bdPoints.toArray(new Point[0]);
+		
+	}
+	
+	public static boolean onBoundary(double p1x, double p1y, double p2x, double p2y, double x, double y) {
+	    // Calculate the vector from p1 to x
+	    double dx = x - p1x;
+	    double dy = y - p1y;
+	    
+	    // Calculate the vector from p1 to p2
+	    double vx = p2x - p1x;
+	    double vy = p2y - p1y;
+	    
+	    // Calculate the dot product (vx * dx + vy * dy)
+	    double dotProduct = vx * dx + vy * dy;
+	    
+	    // Calculate the squared magnitude of (p2 - p1)
+	    double magnitudeSquared = vx * vx + vy * vy;
+	    
+	    // Calculate r
+	    double r = dotProduct / magnitudeSquared;
+	    
+	    double dist;
+	    
+	    if (r < 0) {
+	        // Closest point is p1
+	        dist = distance(p1x, p1y, x, y);
+	    } else if (r > 1) {
+	        // Closest point is p2
+	        dist = distance(p2x, p2y, x, y);
+	    } else {
+	        // Closest point is on the line segment
+	        double px = p1x + r * vx;
+	        double py = p1y + r * vy;
+	        dist = distance(px, py, x, y);
+	    }
+	    
+	    return dist < 2;
+	}
+	    
+	 
+	    // Method to calculate the distance between two points
+	    private static double distance(double px, double py,double x, double y) {
+	    	double dx = px - x;
+	    	double dy = py - y;
+	        return Math.sqrt(dx * dx + dy * dy);
+	    }
+	    
+	    
+	// Method to check if a point is on a line segment
+    private static boolean isOnSegment(double x1, double y1, double x2, double y2, double x, double y) {
+        // Check if the point (x, y) lies on the line segment defined by (x1, y1) and (x2, y2)
+        // For simplicity, we'll use a distance-based approach
+        double dx = x2 - x1;
+        double dy = y2 - y1;
+        double distance = Math.abs(dx * (y - y1) - dy * (x - x1)) / Math.sqrt(dx * dx + dy * dy);
+        return distance < 1.0; // Adjust the threshold as needed
+    }
+
+>>>>>>> Stashed changes
 	
 	/**
 	 * finds the centroid of all ROI's, and returns them in [color,x,y,area] format. 
@@ -173,7 +351,6 @@ public class RoiOverlay {
 				// individual points, and go to next roi.
 				int[] clump = getClumpData(roi, numNods);
 				centroids.add(clump);
-				
 				continue;
 			}
 			
@@ -450,8 +627,6 @@ public class RoiOverlay {
 		return y;
 	}
 		
-	
-	
 	
 	//ALL METHODS BELOW THIS LINE ARE FOR TESTING PURPOSES.
 	
@@ -813,6 +988,7 @@ public class RoiOverlay {
 	}
 	
 	public void showRois(ShapeRoi[] rois) {
+		
 		Overlay overlay = new Overlay();
 		int[] widths = new int[rois.length];
 		int[] heights = new int[rois.length];
@@ -833,14 +1009,27 @@ public class RoiOverlay {
 		
 		for(ShapeRoi roi : rois) {
 			if(roi == null) {
+				System.out.println("null Roi.");
 				continue;
 			}
 			
 		    roi.update(true, false);
+<<<<<<< Updated upstream
 		    	
 		    // Add outlines to the ROI
 		    roi.setStrokeColor(Color.BLACK);
 		    roi.setStrokeWidth(2);
+=======
+		    int newlocx = cx-offsetX;
+		    int newlocy = cy-offsetY;
+		    System.out.println("Moving to (" + newlocx + ", " + newlocy + ")");
+		    roi.setLocation(newlocx, newlocy);
+		    roi.setStrokeWidth(2);
+		    
+		    // Add outlines to the ROI
+		    roi.setStrokeColor(colors[ii++]);
+		    
+>>>>>>> Stashed changes
 		   
 		    testing.getOverlay().add(roi);
 		}
@@ -850,6 +1039,69 @@ public class RoiOverlay {
 		
 	}
 
+	
+	
+	
+	public void showRois(ShapeRoi[] rois, Point[] bdPoints) {
+		
+		Overlay overlay = new Overlay();
+		int[] widths = new int[rois.length];
+		int[] heights = new int[rois.length];
+		ShapeRoi original = rois[0];
+		int offsetX = original.getBounds().x;
+		int offsetY = original.getBounds().y;
+		
+		Color[] colors = generateUniqueColors(rois.length);
+		System.out.println("colors size : " + colors.length);
+		for(int ii = 0; ii < rois.length; ii++) {
+			ShapeRoi roi = rois[ii];
+			if(roi == null) {
+				continue;
+			}
+			Rectangle rect = roi.getBounds();
+			widths[ii] = rect.width;
+			heights[ii] = rect.height;
+		}
+		
+		ImagePlus testing = testingSpace(maximum(widths), maximum(heights));
+		
+		testing.setOverlay(overlay);
+		int ii = 0;
+		
+		for(ShapeRoi roi : rois) {
+			if(roi == null) {
+				System.out.println("null Roi.");
+				continue;
+			}
+			int cx = roi.getBounds().x;
+			int cy = roi.getBounds().y;
+		    roi.update(true, false);
+		    int newlocx = cx-offsetX;
+		    int newlocy = cy-offsetY;
+		    System.out.println("Moving to (" + newlocx + ", " + newlocy + ")");
+		    roi.setLocation(newlocx, newlocy);
+		    roi.setStrokeWidth(2);
+		    
+		    // Add outlines to the ROI
+		    roi.setStrokeColor(colors[ii++]);
+		    
+		   
+		    testing.getOverlay().add(roi);
+		}
+		
+		
+		for(Point p : bdPoints) {
+			
+		}
+		
+		testing.show();
+		System.out.println("breakpoint.");
+		
+	}
+	
+	
+	
+	
 	public void showGraphBreakup(List<CentroidCluster<ClumpClusterPoint>> clusters, ShapeRoi roi, int radius, int numNods, ShapeRoi[] rois) {
 
 		Overlay overlay = new Overlay();

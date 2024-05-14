@@ -158,6 +158,7 @@ public class NoduleDistances implements Command {
 		}
 		
 	    int numOfPaths = 0;
+	   
 	    for (int[] path : paths) {
 	        if (path != null) {
 	            numOfPaths++;
@@ -396,11 +397,11 @@ public class NoduleDistances implements Command {
 		
 		RootGraph graph = new RootGraph(skeleton, graphOverlay);
 		
-		
+		roiOverlay.attachmentPoints(graph);
 		
 		graph.addNodules(roiOverlay.getRoiCentroids());
 		
-		roiOverlay.attachmentPoints(graph);
+		
 		
 		graphOverlay.overlayGraph(graph, root.binarymap.getProcessor().convertToColorProcessor());
 		
