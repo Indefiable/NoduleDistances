@@ -40,7 +40,7 @@ import java.io.IOException;
 public class Statistics {
 	
 	String[][] masterCSV = new String[2][18];
-	
+	String imageName;
 	/**
 	 * Strings stating whether an image's red nodules are Fix+ or Fix-, and same with green.
 	 * i.e. red = Fix+ , green = Fix- or vice versa. 
@@ -60,7 +60,7 @@ public class Statistics {
 	private static final int NUMGREENNODSINBALL = 9;
 	
 	public Statistics(String imageName) throws CsvValidationException {
-		
+		this.imageName = imageName;
 		String[][] dummy = new String[2][20];
 		System.out.println("Image name: " + imageName);
 		try  {
@@ -237,20 +237,20 @@ public class Statistics {
 			}
 			
 			if(data.get(CLOSESTDISTANCE)[0] == Integer.MAX_VALUE) {
-				mat[matCounter+1][kk++] = "N/A";
+				mat[matCounter+1][kk++] = "No Path";
 			}
 			else {
 				mat[matCounter+1][kk++] = Double.toString(data.get(CLOSESTDISTANCE)[0]);
 			}
 			
 			if(data.get(CLOSESTDISTANCETORED)[0] == Integer.MAX_VALUE) {
-				mat[matCounter+1][kk++] = "N/A";
+				mat[matCounter+1][kk++] = "No Path";
 			}
 			else {
 				mat[matCounter+1][kk++] = Double.toString(data.get(CLOSESTDISTANCETORED)[0]);
 			}
 			if(data.get(CLOSESTDISTANCETOGREEN)[0] == Integer.MAX_VALUE) {
-				mat[matCounter+1][kk++] = "N/A";
+				mat[matCounter+1][kk++] = "No Path";
 			}
 			else {
 				mat[matCounter+1][kk++] = Double.toString(data.get(CLOSESTDISTANCETOGREEN)[0]);
@@ -282,7 +282,7 @@ public class Statistics {
 		
 		mergeMasterData(mat, distanceHeader.size());
 		
-		String save = saveFile + "\\" + NoduleDistances.image.getShortTitle() + "_data.csv";
+		String save = saveFile + "\\" + this.imageName + "\\" + this.imageName + "_data.csv";
 	
 		try(FileWriter writer = new FileWriter(save)){
 	     		StringJoiner comma = new StringJoiner(",");
@@ -385,7 +385,9 @@ public class Statistics {
 		
 		for(int ii = 0; ii < paths.size(); ii++) {
 			ArrayList<int[]> SPToNodeii = paths.get(ii);
-			
+			if(SPToNodeii == null){
+				continue;
+			}
 			for(int jj = 0; jj < SPToNodeii.size(); jj++) {
 			    int[] path = SPToNodeii.get(jj);
 			    

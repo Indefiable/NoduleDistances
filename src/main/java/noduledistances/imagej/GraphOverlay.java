@@ -260,10 +260,6 @@ public class GraphOverlay {
        }
        
        
-       
-       System.out.println("loadTif breakpoint.");
-       
-       
 	}
 
 	

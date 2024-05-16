@@ -229,7 +229,6 @@ public class RootGraph {
 		updatePointer();
 	}
 	
-	
 	public void removeEdge(Node[] nodeEdge) {
 		int node1 = nodes.indexOf(nodeEdge[0]);
 		int node2 = nodes.indexOf(nodeEdge[1]);
@@ -323,6 +322,113 @@ public class RootGraph {
 		pointer[pointer.length-1] = fsRep.size(); 
 	}
 	
+	
+	
+	public void mergeNonemptyComponents(ArrayList<int[]> components) {
+		removeDeadComponents(components);
+		mergeComponents(components);
+		
+	}
+	
+	private void mergeComponents(ArrayList<int[]> components) {
+		
+		int[] comp1 = components.get(0);
+		double distance = Double.MAX_VALUE;
+		int node1Index = -1;
+		int nodeIndex = -1;
+		int componentIndex = -1;
+		
+		for(int index1 : comp1) {
+			Node node1 = this.nodes.get(index1);
+			if(node1 == null) {
+				System.out.println("Null node. ");
+			}
+			
+			for(int ii = 1; ii < components.size(); ii++) {
+			
+				for(int index : components.get(ii)) {
+					Node node = this.nodes.get(index);
+					if(node == null) {
+						System.out.println("Null node.");
+					}
+					if(node.distance(node1) < distance) {
+						node1Index = index1;
+						nodeIndex = index;
+						distance = node.distance(node1);
+						componentIndex = ii;
+					}
+				}
+			}
+		}
+		Node node1 = this.nodes.get(node1Index);
+		Node node2 = this.nodes.get(nodeIndex);
+		this.addEdge(new Node[] {node1,node2});
+		merge(componentIndex, components);
+		if(components.size() > 1) {
+			mergeComponents(components);
+		}
+		
+	}
+	
+	
+	private void merge(int index, ArrayList<int[]> components) {
+		if(index <1) {
+			System.out.println("Index error. Must be > 1 but index is " + Integer.toString(index));
+			return;
+		}
+		if(index > components.size()) {
+			System.out.println("Error, index > number of components.");
+			return;
+		}
+		
+		int[] comp = components.get(index);
+		
+		int[] master = components.get(0);
+		
+		int[] newMaster = new int[comp.length + master.length];
+		
+		System.arraycopy(master, 0, newMaster, 0, master.length);
+
+		System.arraycopy(comp, 0, newMaster, master.length, comp.length);
+		
+		components.remove(index);
+		components.set(0, newMaster);
+	}
+	
+	
+	
+	private void removeDeadComponents(ArrayList<int[]> components) {
+		
+		ArrayList<Integer> deadComps = new ArrayList<>();
+		
+		for(int ii = 0; ii < components.size(); ii++) {
+			int[] comp = components.get(ii);
+			boolean containsNodules = false;
+			
+			for(int vertex : comp) {
+				if( nodes.get(vertex).type >0) {
+					containsNodules = true;
+					break;
+				}
+			}
+			
+			if(!containsNodules) {
+				deadComps.add(ii);
+			}
+		}
+		 deadComps.sort((a, b) -> b.compareTo(a));
+		
+		 for (int index : deadComps) {
+	            if (index >= 0 && index < components.size()) {
+	                components.remove(index);
+	            }
+	     }
+		 
+		 
+	}
+	
+	
+	
 	/**
 	 * Find the numNodes closest Nodes to the given pt.
 	 * 
@@ -412,18 +518,15 @@ public class RootGraph {
 	}
 	
 	
+	
 	public ArrayList<ShapeRoi> ballSubgraphLines(int numNodes, Point2D pt){
 		ArrayList<ShapeRoi> lines = new ArrayList<>();
 		int[] rettNodes = new int[numNodes];
 		
-<<<<<<< Updated upstream
-		System.out.println("++++++++++++++++++++");
-        System.out.println("FINDING CLOSEST POINTS TO");
-        System.out.println(pt);
-        System.out.println("++++++++++++++++++++");
+
+		
         
-=======
->>>>>>> Stashed changes
+
 		// Priority queue to store the k closest nodes
         PriorityQueue<Node> closestNodesQueue = new PriorityQueue<>
         (Comparator.comparingDouble(node -> ((Node) node).distance(pt)).reversed());
@@ -449,7 +552,6 @@ public class RootGraph {
 		
         for(int ii = 0; ii < numNodes; ii++) {
         	rettNodes[ii] = nodes.indexOf(retNodes[ii]);
-        	System.out.println("pt: " + retNodes[ii].x + ", " + retNodes[ii].y);
         }
 		
 		
@@ -458,7 +560,6 @@ public class RootGraph {
 				System.out.println("Null node in closest Nodes method.");
 				System.out.println("Breakpoint");
 			}
-			System.out.println("pt: " + node.x + ", " + node.y);
 		}
 		
 		// Was using Set to not add reverse arcs, but it wasn't working properly, so 
@@ -689,12 +790,10 @@ public class RootGraph {
     			int endingNodule = nodes.indexOf(nodule1);
     			
     			if(startingNodule == endingNodule) {
+    				nodule.paths.add(null);
     				continue;
     			}
     			
-    			if(startingNodule == 215 && endingNodule == 225) {
-    				System.out.println("Breakpoint.");
-    			}
     			//System.out.println("=======================");
     			//System.out.println("paths from " + nodule.nodeNumber + " to " + nodule1.nodeNumber);
     			
@@ -702,13 +801,12 @@ public class RootGraph {
     					yanGraph.getVertex(startingNodule), yanGraph.getVertex(endingNodule), numIterations);
     			
     			
-    			
     			if(shortest_paths_list == null) {
     				System.out.println("No paths between the two nodules.");
     				System.out.println("breakpoint.");
     			}
     			
-    			System.out.println("Len of paths: " + shortest_paths_list.size());
+    			//System.out.println("Len of paths: " + shortest_paths_list.size());
     			
     			//System.out.println("len of shortestPaths: " + shortest_paths_list.size());
     			if(shortest_paths_list.size() == 0) {

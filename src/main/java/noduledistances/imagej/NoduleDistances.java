@@ -14,6 +14,9 @@ import java.util.Random;
 
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import ij.process.ColorSpaceConverter;
+import ij.process.FloatProcessor;
+import ij.process.ImageConverter;
 
 import org.scijava.command.Command;
 import org.scijava.log.LogService;
@@ -25,6 +28,7 @@ import com.opencsv.exceptions.CsvValidationException;
 
 import ij.IJ;
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.gui.FreehandRoi;
 import ij.gui.GenericDialog;
 import ij.gui.ImageWindow;
@@ -36,7 +40,9 @@ import ij.gui.ShapeRoi;
 import ij.gui.TextRoi;
 import ij.gui.Toolbar;
 import ij.gui.WaitForUserDialog;
+import ij.plugin.ContrastEnhancer;
 import ij.process.ColorProcessor;
+import ij.process.ImageProcessor;
 import net.imagej.ImageJ;
 import ij.gui.ImageCanvas;
 import net.imagej.ops.OpService;
@@ -126,8 +132,6 @@ public class NoduleDistances implements Command {
 		
 		ArrayList<ImagePlus> imps = new ArrayList<>();
 		
-		startNodeIndex--;
-		endNodeIndex--;
 		
 		ColorProcessor cp = new ColorProcessor(graphOverlay.overlayedGraph.getImage());
 		ImagePlus SP = new ImagePlus("Shortest Path", cp);
@@ -153,7 +157,8 @@ public class NoduleDistances implements Command {
 		ArrayList<int[]> paths = startNode.getPaths(graph.nodes.indexOf(endNode));
 		
 		if(paths.size() == 0) {
-			System.out.println("No paths between the two nodes.");
+			System.out.println("No paths between" 
+			+ Double.toString(startNode.nodeNumber) +" and " + Double.toString(endNode.nodeNumber) );
 			return null;
 		}
 		
@@ -188,6 +193,7 @@ public class NoduleDistances implements Command {
 			
 			if(path == null) {
 				System.out.println("Can't cheese it like that, Farris. Gotta properly remove the null paths from paths before starting :/");
+				continue;
 			}
 			
 			int distance = path[1];
@@ -232,6 +238,97 @@ public class NoduleDistances implements Command {
 		return SP;
 	}
 	
+	
+	
+	private static ImagePlus convertRGBtoYUV(ImageProcessor cp) {
+        
+		int width = cp.getWidth();
+        int height = cp.getHeight();
+        ImageStack stack = new ImageStack(width,height);
+        
+        FloatProcessor yp = new FloatProcessor(width, height);
+        FloatProcessor up = new FloatProcessor(width, height);
+        FloatProcessor vp = new FloatProcessor(width, height);
+        
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                int[] rgb = cp.getPixel(x, y, null);
+                
+                int r = rgb[0];
+                int g = rgb[1];
+                int b = rgb[2];
+
+                float yVal = (float) (0.299 * r + 0.587 * g + 0.114 * b);
+                float uVal =(float) (-0.14713 * r - 0.28886 * g + 0.436 * b);
+                float vVal =(float) (0.615 * r - 0.51499 * g - 0.10001 * b);
+                
+                yp.setf(x, y, yVal);
+                up.setf(x, y, uVal);
+                vp.setf(x, y, vVal);
+            }
+        }
+        
+        stack.addSlice(yp);
+        
+        Object[] arrays = stack.getImageArray();
+		if (arrays==null || (arrays.length>0&&arrays[0]==null)) {
+			System.out.println("Null shit.");
+		}
+        stack.addSlice(up);
+        
+       arrays = stack.getImageArray();
+		if (arrays==null || (arrays.length>0&&arrays[0]==null)) {
+			System.out.println("Null shit.");
+		}
+        stack.addSlice(vp);
+        
+        arrays = stack.getImageArray();
+		if (arrays==null || (arrays.length>0&&arrays[0]==null)) {
+			System.out.println("Null shit.");
+		}
+		
+        
+			
+	
+        return new ImagePlus("yuv", stack);
+    }
+	
+	
+	
+    private static ColorProcessor convertYUVtoRGB(ImageProcessor ipYUV) {
+        int width = ipYUV.getWidth();
+        int height = ipYUV.getHeight();
+        
+        
+        ColorProcessor cp = new ColorProcessor(width, height);
+        
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+            	
+                int[] yuv = ipYUV.getPixel(x, y,null);
+                
+                
+                int yVal = yuv[0];
+                int uVal = yuv[1];
+                int vVal = yuv[2];
+
+                int r = (int) (yVal + 1.13983 * vVal);
+                int g = (int) (yVal - 0.39465 * uVal - 0.58060 * vVal);
+                int b = (int) (yVal + 2.03211 * uVal);
+
+                r = Math.min(255, Math.max(0, r));
+                g = Math.min(255, Math.max(0, g));
+                b = Math.min(255, Math.max(0, b));
+
+                cp.putPixel(x, y, new int[] {r, g, b});
+            }
+        }
+
+        return cp;
+    }
+	
+	
+	
 	/**
 	 * increases brightness and contrast in the image to improve segmentation of root system.
 	 * Also crops the image for testing purposes if I'm working on my laptop.
@@ -239,8 +336,25 @@ public class NoduleDistances implements Command {
 	 * @return
 	 */
 	public ImagePlus preprocessing(ImagePlus imp) {
+ 		
+	    ImagePlus hsb = new ImagePlus("HSB", imp.getProcessor().convertToRGB());
+        ImageConverter ic = new ImageConverter(hsb);
+        ic.convertToHSB();
+        
+        
+        ImageProcessor bright = hsb.getStack().getProcessor(3).convertToFloatProcessor();
+        ContrastEnhancer ce = new ContrastEnhancer();
+        ce.stretchHistogram(bright, 0.5); // Adjust the percentage stretch as needed
+        
+        hsb.getStack().addSlice("brightness", bright, 2);
+        hsb.getStack().deleteLastSlice();
+        ic.convertHSBToRGB();
+        if(hsb.isRGB()) {
+        	System.out.println("Convert3ed back to RGB");
+        }
+       
 		
-		ImagePlus image = new ImagePlus(imp.getTitle(), imp.getProcessor());
+		ImagePlus image = new ImagePlus(imp.getTitle(), hsb.getProcessor());
 		
 		//first entry is percent contrast change (2f = 200%), second value is brightness increase
 		RescaleOp op = new RescaleOp(2f, 25, null);
@@ -321,8 +435,8 @@ public class NoduleDistances implements Command {
 	        Random random = new Random();
 	        
 	        for (int i = 0; i <= numIters; i++) {
-	            int first = random.nextInt(num + 1);
-	            int second = random.nextInt(num + 1);
+	            int first = random.nextInt(num);
+	            int second = random.nextInt(num);
 	            pairs.add(new int[]{first, second});
 	        }
 	        
@@ -338,6 +452,9 @@ public class NoduleDistances implements Command {
     //ImagePlus image, String model
     private void execute(ImagePlus roots, ImagePlus tifImp, String saveFile) {
     	
+    	if(roots.getType() != ImagePlus.COLOR_RGB) {
+			roots = new ImagePlus(roots.getTitle(), roots.getProcessor().convertToRGB());
+		}
     	
 		tifImp.setTitle(tifImp.getTitle().substring(0,5));
 		roots.setTitle(roots.getTitle().substring(0,5));
@@ -371,6 +488,7 @@ public class NoduleDistances implements Command {
 		if(roots.getType() != ImagePlus.COLOR_RGB) {
 			roots = new ImagePlus(roots.getTitle(), roots.getProcessor().convertToRGB());
 		}
+		
 		RoiOverlay roiOverlay;
 		
 		try {
@@ -381,7 +499,7 @@ public class NoduleDistances implements Command {
 		}
 		
 		NoduleDistances.image = preprocessing(roots);
-		
+		//NoduleDistances.image.show();
 		
 		ColorClustering cluster = new ColorClustering(NoduleDistances.image);
 		cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Eclipse Workspace\\noduledistances\\assets\\001_roots.model");
@@ -390,6 +508,7 @@ public class NoduleDistances implements Command {
 		
 		RootSegmentation root = new RootSegmentation(cluster, roiOverlay.rois);
 		
+		
 		ArrayList<ArrayList<int[]>> skeleton = Skeletonize.skeletonize(root.binarymap);
 		
 		GraphOverlay graphOverlay = new GraphOverlay();
@@ -397,34 +516,43 @@ public class NoduleDistances implements Command {
 		
 		RootGraph graph = new RootGraph(skeleton, graphOverlay);
 		
-		roiOverlay.attachmentPoints(graph);
+		graph.addNodules(roiOverlay.getRoiCentroids(graph));
 		
-		graph.addNodules(roiOverlay.getRoiCentroids());
+		ArrayList<int[]> components = UnionFind.connectedComponents(graph.fsRep, graph.nodes.size());
 		
+		if(components.size() >1) {
+			System.out.println("Multiple components. Merging components that contain nodules.");
+			graph.mergeNonemptyComponents(components);
+		}
 		
 		
 		graphOverlay.overlayGraph(graph, root.binarymap.getProcessor().convertToColorProcessor());
 		
-		//IJ.save(graphOverlay.overlayedGraph, saveFile + "\\" + roots.getTitle() + "_graph.jpg");
+		graphOverlay.overlayedGraph.show();
 		
-		//IJ.save(graphOverlay.overlayedGraph, "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS033\\" + "PS033_overlayed_graph.jpg");
-		//IJ.save(graphOverlay.overlayedGraph, "D:\\1EDUCATION\\aRESEARCH\\DistanceAnalysis_V0.1\\testingOutput\\" + tifImp.getTitle() + ".jpg");
+		IJ.save(graphOverlay.overlayedGraph, saveFile + "\\" + roots.getTitle() + "\\" + roots.getTitle() + "_graph.jpg");
+		
+		//IJ.save(graphOverlay.overlayedGraph, "D:\\1EDUCATION\\aRESEARCH\\DistanceAnalysis_V0.1\\testingOutput\\" + tifImp.getTitle() + "_graph.jpg");
 		graph.computeShortestDistances(5);
 		//graphOverlay.overlayedGraph.show();
 		
 		
-		/**
 		List<int[]> pairs = findPairs(graph.numNodules, 5);
 		
 		for(int[] pair : pairs) {
 			
 			ImagePlus out = shortestPath(pair[0],pair[1],graph, graphOverlay);
-			IJ.saveAs(out, "jpg", "D:\\1EDUCATION\\aRESEARCH\\DistanceTesting\\DistanceTesting\\PS033\\PS033_paths_" 
-					+ Integer.toString(pair[0])+ "_" + Integer.toString(pair[1]));
-		}*/
-		
-		
-		
+			//IJ.saveAs(out, "jpg", "D:\\1EDUCATION\\aRESEARCH\\DistanceTesting\\DistanceTesting\\PS033\\PS033_paths_" 
+				//	+ Integer.toString(pair[0])+ "_" + Integer.toString(pair[1]));
+			if(out == null) {
+				//System.out.println("Could not generate images for paths between"
+			    //+ Integer.toString(pair[0]) + " and " + Integer.toString(pair[1]));
+				continue;
+			}
+			IJ.saveAs(out, "jpg", saveFile + "\\" + roots.getTitle() 
+			+ roots.getTitle() + Integer.toString(pair[0])+ "_" + Integer.toString(pair[1]));
+			
+		}
 		
 		
 		try {
@@ -582,7 +710,7 @@ public class NoduleDistances implements Command {
 			if(subtype != IMAGE) {
    			continue;
    		}*/
-		String saveString = "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\testing";
+		String saveString = "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\DistanceTesting";
 			
 		try {
 			ImagePlus rootImp = new ImagePlus(rootFile.getPath());
