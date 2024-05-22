@@ -217,7 +217,10 @@ public class RootGraph {
 		
 		int node1 = nodes.indexOf(edge[0]);
 		int node2 = nodes.indexOf(edge[1]);
-		
+		if(node1 == node2) {
+			System.out.println("Will not add self-looping edges.");
+			return;
+		}
 		Line line = new Line(edge[0].x, edge[0].y, edge[1].x, edge[1].y);
 		int length = (int) line.getLength();
 		
@@ -326,8 +329,9 @@ public class RootGraph {
 	
 	public void mergeNonemptyComponents(ArrayList<int[]> components) {
 		removeDeadComponents(components);
-		mergeComponents(components);
-		
+		if(components.size() != 1) {
+			mergeComponents(components);
+		}
 	}
 	
 	private void mergeComponents(ArrayList<int[]> components) {
@@ -337,21 +341,30 @@ public class RootGraph {
 		int node1Index = -1;
 		int nodeIndex = -1;
 		int componentIndex = -1;
+		if(comp1.length == 0) {
+			System.out.println("Breakpoint.");
+		}
 		
 		for(int index1 : comp1) {
+			
 			Node node1 = this.nodes.get(index1);
 			if(node1 == null) {
 				System.out.println("Null node. ");
 			}
 			
 			for(int ii = 1; ii < components.size(); ii++) {
-			
+				
+				if(components.get(ii).length == 0) {
+					System.out.println("Breakpoint.");
+				}
 				for(int index : components.get(ii)) {
 					Node node = this.nodes.get(index);
 					if(node == null) {
 						System.out.println("Null node.");
 					}
-					if(node.distance(node1) < distance) {
+					double distance1 = node.distance(node1);
+					
+					if(distance1 < distance) {
 						node1Index = index1;
 						nodeIndex = index;
 						distance = node.distance(node1);
@@ -360,10 +373,17 @@ public class RootGraph {
 				}
 			}
 		}
+		if(node1Index == -1) {
+			System.out.println("Breakpoint.");
+		}
 		Node node1 = this.nodes.get(node1Index);
 		Node node2 = this.nodes.get(nodeIndex);
+		if(node1 == node2) {
+			System.out.println("breakpoint.");
+		}
 		this.addEdge(new Node[] {node1,node2});
 		merge(componentIndex, components);
+		
 		if(components.size() > 1) {
 			mergeComponents(components);
 		}
@@ -402,6 +422,12 @@ public class RootGraph {
 		ArrayList<Integer> deadComps = new ArrayList<>();
 		
 		for(int ii = 0; ii < components.size(); ii++) {
+			
+			if(components.get(ii).length == 0) {
+				deadComps.add(ii);
+				continue;
+			}
+			
 			int[] comp = components.get(ii);
 			boolean containsNodules = false;
 			
@@ -664,6 +690,24 @@ public class RootGraph {
     		}
     		
     		Node nod = new Node(nodule[ii+1],nodule[ii+2], nodule[ii], number, nodule[ii+3]);
+    		
+    		if(nodes.contains(nod)) {
+    			int index = nodes.indexOf(nod);
+    			if(nodes.get(index).type != 0) {
+    				System.out.println("Breakpoint.");
+    			}
+    			else {
+    				nodes.get(index).update(nodule[ii+1],nodule[ii+2], nodule[ii], number, nodule[ii+3]);
+        			nodes.get(index).nodeIndex = index;
+        			ii+=4;
+        			numNodules++;
+        			continue;
+    			}
+    			
+    		}
+    			
+    			
+    			
     		if(nod.type <1 || nod.type > 3) {
     			System.out.println("nod type is " + nod.type + " and unclear. breakpointing.");
     			System.out.println("breakpoint.");
@@ -893,19 +937,19 @@ public class RootGraph {
     protected GraphWithConstructor convertToYanGraph() {
     	
     	List<EdgeYanQi> edges = new ArrayList<>();
-    	int cc = 0;
+    	
     	for (int[] edge : fsRep) {
     		if(edge[0] == edge[1]) {
-    			System.out.println("Error. ");
+    			System.out.println("Error, graph contains an edge [e,e] (self loop)");
+    			continue;
     		}
     		
     		EdgeYanQi yanEdge = new EdgeYanQi(edge[0], edge[1], edge[2]);
     		edges.add(yanEdge);
-    		cc++;
+    		
     	}
     	
     	GraphWithConstructor yanQiGraph = new GraphWithConstructor(nodes.size(), edges);
-    	
     	
     	
     	return yanQiGraph;

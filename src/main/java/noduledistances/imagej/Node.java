@@ -8,17 +8,23 @@ import ij.IJ;
 
 public class Node extends Point{
 	
-	/**
-	 * Node.type == 0 -> skeleton node
-	 * type == 1 -> red nodule
-	 * type == 2 -> green nodule
-	 * type == 3 -> mixed nodule
-	 */
+/**
+ * Node.type == 0 -> skeleton node
+ * type == 1 -> red nodule
+ * type == 2 -> green nodule
+ * type == 3 -> mixed nodule
+ */
 public static final int SKELETON = 0;
 public static final int RED = 1;
 public final static int GREEN = 2;
 public final static int MIXED = 3;
 
+/**
+ * Node.type == 0 -> skeleton node
+ * type == 1 -> red nodule
+ * type == 2 -> green nodule
+ * type == 3 -> mixed nodule
+ */
 public int type;
 public int area;
 
@@ -73,6 +79,23 @@ public Node(int x, int y, int type, double nodeNumber) {
 	
 }
 
+public void update(int x, int y, int type, double nodeNumber, int area) {
+	this.x = x;
+	this.y=y;
+	this.type=type;
+	this.nodeNumber=nodeNumber;
+	this.area=area;
+}
+
+public void update(int type, double nodeNumber, int area) {
+	this.type=type;
+	this.nodeNumber=nodeNumber;
+	this.area=area;
+}
+
+public void update(int type) {
+	this.type=type;
+} 
 
 @Override
 public boolean equals(Object obj) {
@@ -83,13 +106,20 @@ public boolean equals(Object obj) {
          return false;
      }
 	 
-	 Node node = (Node) obj;
+	Node node = (Node) obj;
 	 
 	if(node.x == this.x && node.y == this.y && node.type == this.type) {
 		return true;
 	}
+	boolean typeDiff = true;
+	if(this.type != 0 && this.type != 0) {
+		return false;
+	}
+	else if((this.type <1 && node.type != 0 )|| this.type !=0 && node.type <1) {
+		typeDiff = true;
+	}
 	
-	if(this.distance(node) <= 8) {
+	if(this.distance(node) <= 8 && typeDiff) {
 		return true;
 	}
 	

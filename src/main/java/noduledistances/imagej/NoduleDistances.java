@@ -88,14 +88,14 @@ public class NoduleDistances implements Command {
     private OpService opService;
    
     
-    
+    /*
     @Parameter(label = "Tif file with nodule data.")
 	private File tif;
     
     @Parameter(label = "Image of root system.")
 	private File rootFile;
   
-    /*
+   
     @Parameter(label = "cluster model to use for segmentation.")
     private File modelFile;
     */
@@ -441,7 +441,7 @@ public class NoduleDistances implements Command {
 	        }
 	        
 	        return pairs;
-	    }
+	    } 
 	
 	/**
      * This method executes the image analysis.
@@ -468,7 +468,7 @@ public class NoduleDistances implements Command {
 	//	IJ.save(roots, "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\PS033\\" + "PS033_preprocessed44.jpg");
 		
     	if(roots.getHeight() != tifImp.getHeight()) {
-    		roots = crop(roots);
+    		//roots = crop(roots);
     		System.out.println("roots: " + roots.getWidth() + " x " + roots.getHeight());
 
         	System.out.println("tifImp: " + tifImp.getWidth() + " x " + tifImp.getHeight());
@@ -479,7 +479,7 @@ public class NoduleDistances implements Command {
     		return;
     	}
     	
-    	//roots = blackenOutsideRectangle(roots);
+    	roots = blackenOutsideRectangle(roots);
     	
     	ArrayList<Channel> channels = new ArrayList<Channel>(); // channels to use when segmenting.
     	channels.add(Channel.Brightness);
@@ -497,65 +497,83 @@ public class NoduleDistances implements Command {
 			e.printStackTrace();
 			return;
 		}
-		
+		System.out.println("Presprocessing...");
 		NoduleDistances.image = preprocessing(roots);
 		//NoduleDistances.image.show();
 		
 		ColorClustering cluster = new ColorClustering(NoduleDistances.image);
-		cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Eclipse Workspace\\noduledistances\\assets\\001_roots.model");
-		//cluster.loadClusterer("D:\\1EDUCATION\\aRESEARCH\\ClusterModels\\001_roots.model");
+		//cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Eclipse Workspace\\noduledistances\\assets\\001_roots.model");
+		cluster.loadClusterer("D:\\1EDUCATION\\aRESEARCH\\ClusterModels\\001_roots.model");
 		cluster.setChannels(channels);
 		
+		System.out.println("Segmenting...");
 		RootSegmentation root = new RootSegmentation(cluster, roiOverlay.rois);
 		
-		
+		System.out.println("Skeletonizing...");
 		ArrayList<ArrayList<int[]>> skeleton = Skeletonize.skeletonize(root.binarymap);
 		
 		GraphOverlay graphOverlay = new GraphOverlay();
 		//graphOverlay.loadTif();
 		
+		System.out.println("Making graph...");
 		RootGraph graph = new RootGraph(skeleton, graphOverlay);
 		
-		graph.addNodules(roiOverlay.getRoiCentroids(graph));
+		System.out.println("Adding nodules...");
+		ArrayList<int[]> centroids = roiOverlay.getRoiCentroids(graph);
 		
-		ArrayList<int[]> components = UnionFind.connectedComponents(graph.fsRep, graph.nodes.size());
-		
-		if(components.size() >1) {
-			System.out.println("Multiple components. Merging components that contain nodules.");
-			graph.mergeNonemptyComponents(components);
+		for(int[] center : centroids) {
+			
+			if(center == null) {
+				System.out.println("Breakpoint.");
+			}
 		}
 		
 		
+		graph.addNodules(centroids);
+		
+		System.out.println("Merging components...");
+		ArrayList<int[]> components = UnionFind.connectedComponents(graph.fsRep, graph.nodes.size());
+		
+		if(components.size() >1) {
+			//System.out.println("Multiple components. Merging components that contain nodules.");
+			graph.mergeNonemptyComponents(components);
+		}
+		
+		System.out.println("Overlaying graph...");
 		graphOverlay.overlayGraph(graph, root.binarymap.getProcessor().convertToColorProcessor());
 		
-		graphOverlay.overlayedGraph.show();
+		//graphOverlay.overlayedGraph.show();
 		
-		IJ.save(graphOverlay.overlayedGraph, saveFile + "\\" + roots.getTitle() + "\\" + roots.getTitle() + "_graph.jpg");
+		//IJ.save(graphOverlay.overlayedGraph, saveFile + "\\" + roots.getTitle() + "\\" + roots.getTitle() + "_graph.jpg");
 		
-		//IJ.save(graphOverlay.overlayedGraph, "D:\\1EDUCATION\\aRESEARCH\\DistanceAnalysis_V0.1\\testingOutput\\" + tifImp.getTitle() + "_graph.jpg");
+		IJ.save(graphOverlay.overlayedGraph, saveFile + "\\" + roots.getTitle() + "_graph.jpg");
+		System.out.println("Computing shortest distances...");
 		graph.computeShortestDistances(5);
 		//graphOverlay.overlayedGraph.show();
 		
-		
-		List<int[]> pairs = findPairs(graph.numNodules, 5);
+		/**
+		System.out.println("Finding random paths...");
+		List<int[]> pairs = findPairs(graph.numNodules-1, 5);
 		
 		for(int[] pair : pairs) {
 			
 			ImagePlus out = shortestPath(pair[0],pair[1],graph, graphOverlay);
-			//IJ.saveAs(out, "jpg", "D:\\1EDUCATION\\aRESEARCH\\DistanceTesting\\DistanceTesting\\PS033\\PS033_paths_" 
-				//	+ Integer.toString(pair[0])+ "_" + Integer.toString(pair[1]));
 			if(out == null) {
 				//System.out.println("Could not generate images for paths between"
 			    //+ Integer.toString(pair[0]) + " and " + Integer.toString(pair[1]));
 				continue;
 			}
-			IJ.saveAs(out, "jpg", saveFile + "\\" + roots.getTitle() 
-			+ roots.getTitle() + Integer.toString(pair[0])+ "_" + Integer.toString(pair[1]));
+			//IJ.saveAs(out, "jpg", saveFile + "\\" + roots.getTitle() + "\\" + roots.getTitle() 
+			//+ Integer.toString(pair[0])+ "_" + Integer.toString(pair[1]));
 			
-		}
+			IJ.saveAs(out, "jpg", saveFile + "\\" + roots.getTitle() +"_" 
+			+ Integer.toString(pair[0])+ "_" + Integer.toString(pair[1]));
+			
+		}*/
 		
 		
 		try {
+			System.out.println("Generating statistics.");
 			Statistics stats = new Statistics(roots.getTitle());
 			stats.generateData(graph, new int[] {100,150,250,500,1000}, saveFile);
 			
@@ -600,7 +618,7 @@ public class NoduleDistances implements Command {
     public void run() {
     	
     	
-    	/*
+    	/**
     	int FILETYPE = 0;
     	
     	
@@ -646,13 +664,13 @@ public class NoduleDistances implements Command {
     	case OTHERFILETYPE:
     		System.exit(0);
     		break;
-    	}
+    	}*/
     	
     	File rootsFile = null;
     	File tifFile = null;
     	File saveFile = null;
     	
-    	File initialDirectory = new File("D:\\1EDUCATION\\aRESEARCH\\DistanceAnalysis_V0.1");
+    	File initialDirectory = new File("D:\\1EDUCATION\\aRESEARCH\\DistanceTesting\\DistanceAnalysis_V1.0");
         
         
         JFileChooser fileChooser = new JFileChooser();
@@ -669,6 +687,7 @@ public class NoduleDistances implements Command {
         	System.out.println("error, you did not choose an acceptable file type.");
         	System.exit(0);
         }
+        
         fileChooser.setCurrentDirectory(initialDirectory);
         fileChooser.setDialogTitle("folder containing tif images.");
         fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
@@ -701,30 +720,35 @@ public class NoduleDistances implements Command {
     	
     	
        for(File rootFile : rootsFile.listFiles()) {
+    	   
 			int subtype = getFileType(rootFile);
 			File currentTif = getTifFile(rootFile, tifFile);
 			if(currentTif == null) {
 				continue;
 			}
-			else if(getFileType(currentTif) != IMAGE);
+			else if(getFileType(currentTif) != IMAGE) {
+				continue;
+			}
+			
 			if(subtype != IMAGE) {
-   			continue;
-   		}*/
-		String saveString = "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\DistanceTesting";
+				continue;
+			}
 			
-		try {
-			ImagePlus rootImp = new ImagePlus(rootFile.getPath());
-			ImagePlus tifImp = new ImagePlus(tif.getPath());
-			execute(rootImp, tifImp, saveString);
-		}catch(Exception e) {
-			e.printStackTrace();
-			System.out.println("Could not generate data for " + rootFile.getName());
-		}
-			
-			
-			
-		
-   
+			//String saveString = "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\DistanceTesting";
+			//String saveFile = "D:\\1EDUCATION\\aRESEARCH\\tempGitHub\\Nodule-Distances\\testing";
+			try {
+				ImagePlus rootImp = new ImagePlus(rootFile.getPath());
+				ImagePlus tifImp = new ImagePlus(currentTif.getPath());
+				System.out.println("==================");
+				System.out.println(rootImp.getShortTitle());
+				System.out.println("==================");
+				execute(rootImp, tifImp, saveFile.getAbsolutePath());
+			}catch(Exception e) {
+				e.printStackTrace();
+				System.out.println("Could not generate data for " + rootFile.getName());
+			}
+       
+       }
     	
     	IJ.log("done");
     }//===========================================================================================
@@ -733,13 +757,13 @@ public class NoduleDistances implements Command {
     	
     	String name = rootFile.getName();
     	name = name.substring(0,5);
-    	 for(File tif : tifFile.listFiles()) {
+    	for(File tif : tifFile.listFiles()) {
     		 
-    		 if (tif.getName().startsWith(name)) {
-    			 return tif;
-    		 }
+    		if (tif.getName().startsWith(name)) {
+    			return tif;
+    		}
  			
- 		}
+    	}
     	
     	return null;
     }

@@ -69,42 +69,17 @@ public class RoiOverlay {
 		
 		for(int ii = 0; ii < overlay.size(); ii++) {
 			rois[ii] = (ij.gui.ShapeRoi) overlay.get(ii);
-			System.out.println(rois[ii].getName());
+			//System.out.println(rois[ii].getName());
 		}
 		
 		this.rois = rois;
 	}
 	
 	
-	public RoiOverlay() {
-		// TODO Auto-generated constructor stub
-	}
-	
-	
-	
 	
 	public double[] attachmentPoint(ShapeRoi roi, RootGraph graph) {
 		
 		double[] attachmentPoint = new double[2];
-		
-		String name = roi.getName();
-		int numNods = 0;
-		
-		
-		try {
-			numNods = Integer.parseInt(name.substring(2));
-		}catch(Exception e) {
-			System.out.println(name);
-			System.out.println("Could not read ROI name.");
-			numNods=1;
-		}
-		
-		/**
-		if(numNods>1){
-			// if is clump, use k-means to separate into individual points, add those
-			// individual points, and go to next roi.
-			continue;
-		}*/
 		
 		double[] centroid = roi.getContourCentroid();
 		
@@ -113,7 +88,7 @@ public class RoiOverlay {
 		//ArrayList<int[]> subgraph = graph.ballSubgraph(5, pt);
 		ArrayList<ShapeRoi> lines = graph.ballSubgraphLines(7, pt);
 		
-		System.out.println("size of lines: " + lines.size());
+		//System.out.println("size of lines: " + lines.size());
 		//System.out.println("Size of subgraph: " + subgraph.size());
 		
 		ArrayList<ShapeRoi> intersections = new ArrayList<>();
@@ -127,10 +102,15 @@ public class RoiOverlay {
 		}
 		
 		Point[] bdPoints = getBoundaryPoints(roi, intersections);
-		Point center = averagePoint(bdPoints);
-		attachmentPoint[0] = center.x;
-		attachmentPoint[1] = center.y;
-		
+		if(bdPoints.length == 0) {
+			attachmentPoint[0] = centroid[0];
+			attachmentPoint[1] = centroid[1];
+		}
+		else {
+			Point center = averagePoint(bdPoints);
+			attachmentPoint[0] = center.x;
+			attachmentPoint[1] = center.y;
+		}
 		/** for looking at the ROI and the points found.
 		ArrayList<ShapeRoi> testing = new ArrayList<>();
 		
@@ -164,8 +144,9 @@ public class RoiOverlay {
 	
 
 	public Point averagePoint(Point[] points) {
-		
-		
+		if(points.length == 0) {
+			System.out.println("Zero points.");
+		}
 		double avgX = 0;
 		double avgY = 0;
 		
@@ -173,6 +154,7 @@ public class RoiOverlay {
 			avgX += p.x;
 			avgY += p.y;
 		}
+		
 		avgX = avgX / points.length;
 		avgY = avgY / points.length;
 		
@@ -180,6 +162,7 @@ public class RoiOverlay {
 		return new Point((int) avgX, (int) avgY);
 		
 	}
+	
 	
 	public Point[] getBoundaryPoints(ShapeRoi roi, ArrayList<ShapeRoi> intersections) {
 		
@@ -237,6 +220,7 @@ public class RoiOverlay {
 		return bdPoints.toArray(new Point[0]);
 		
 	}
+	
 	
 	public static boolean onBoundary(double p1x, double p1y, double p2x, double p2y, double x, double y) {
 	    // Calculate the vector from p1 to x
@@ -307,7 +291,6 @@ public class RoiOverlay {
 		
 		for(ShapeRoi roi : rois) {
 			
-			
 			String name = roi.getName();
 			
 			int numNods = 0;
@@ -320,15 +303,8 @@ public class RoiOverlay {
 				numNods=1;
 			}
 			if(numNods>1){
-				// if is clump, use k-means to separate into individual points, add those
-				// individual points, and go to next roi.
-				ArrayList<ShapeRoi> clumpedRois = getClumpData(roi, numNods);
-				
-				for(ShapeRoi clumpRoi : clumpedRois) {
-					addCentroid(centroids, clumpRoi, graph);
-				}
-				
-				//centroids.add(clump);
+				int[] clumpedRois = getClumpData(roi, numNods, graph);
+				centroids.add(clumpedRois);
 				continue;
 			}
 			
@@ -355,8 +331,7 @@ public class RoiOverlay {
 		
 		double[] centroid = attachmentPoint(roi,graph);
 		if(centroid[0] < 5 && centroid[1] < 5) {
-			System.out.println("Nodule found in top left corner. Ignoring.");
-			return;
+			System.out.println("corner point.");
 		}
 		coords[1] = (int) centroid[0];
 		coords[2] = (int) centroid[1];
@@ -448,20 +423,18 @@ public class RoiOverlay {
 	 * @param numNods : the number of parts we're breaking the roi into{'.
 	 * @return centroid and area of each ROI in color,x,y,area format.;
 	 */
-	public ArrayList<ShapeRoi> getClumpData(ShapeRoi roi, int numNods) {
+	public int[] getClumpData(ShapeRoi roi, int numNods,RootGraph graph) {
 		
 		List<ClumpClusterPoint> halton = getHaltonSequence(roi);
 		
 		List<CentroidCluster<ClumpClusterPoint>> clusters = kMeansClustering(halton, numNods);
 		
-		//ArrayList<Integer> nodn = new ArrayList<>();
+		ArrayList<Integer> nodn = new ArrayList<>();
 		
-		//String name = roi.getName();
+		String name = roi.getName();
 		
 		ArrayList<ShapeRoi> brokenRois = breakupClump(roi, numNods,clusters);
-		return brokenRois;
 		
-		/**
 		double[] centroid;
 		
 		for(ShapeRoi brokeRoi : brokenRois) {
@@ -475,14 +448,18 @@ public class RoiOverlay {
 			else if(name.substring(0, 1).equalsIgnoreCase("m")) {
 				nodn.add(3);
 			}
-			centroid = brokeRoi.getContourCentroid();
+			else {
+				System.out.println("ERROR, no type known.");
+				
+			}
+			centroid = attachmentPoint(brokeRoi, graph);
 			
 			nodn.add((int) centroid[0]);
 			nodn.add((int) centroid[1]);
 			nodn.add(brokeRoi.getContainedPoints().length);
 		}
 		
-		return nodn.stream().mapToInt(Integer::intValue).toArray();*/
+		return nodn.stream().mapToInt(Integer::intValue).toArray();
 	}
 	
 	

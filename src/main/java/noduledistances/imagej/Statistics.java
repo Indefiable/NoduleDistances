@@ -179,18 +179,26 @@ public class Statistics {
 	    mat[0] = header;
 		HashMap<Integer,double[]> data = null;
 		int matCounter = 0;
-		
+		if(graph.numNodules != graph.nodes.size()) {
+			System.out.println(graph.nodes.size());
+			System.out.println();
+		}
 		for (int ii = 0; ii < graph.nodes.size(); ii++) {
 			Node nodule = graph.nodes.get(ii);
+			
 			if(nodule.nodeNumber == 4) {
 				System.out.println("breakpoint.");
 			}
+			
 			//ignore skeleton nodes.
 			if(nodule.type == Node.SKELETON) {
 				continue;
 			}
 			
 			data = computeStatistics(radii, nodule, graph, options);
+			if(data == null) {
+				System.out.println("Breakpoint.");
+			}
 			
 			mat[matCounter+1][1] = Double.toString(nodule.nodeNumber);
 			mat[matCounter+1][2] = Integer.toString(nodule.area);
@@ -282,7 +290,7 @@ public class Statistics {
 		
 		mergeMasterData(mat, distanceHeader.size());
 		
-		String save = saveFile + "\\" + this.imageName + "\\" + this.imageName + "_data.csv";
+		String save = saveFile + "\\" + this.imageName + "_data.csv";
 	
 		try(FileWriter writer = new FileWriter(save)){
 	     		StringJoiner comma = new StringJoiner(",");
@@ -511,7 +519,6 @@ public class Statistics {
 		//	data.add(MEANDISTANCETOGREEN, new double[] {-1});
 			map.put(MEANDISTANCETOGREEN, new double[] {-1});
 		}
-		
 		
 		
 		return map;
