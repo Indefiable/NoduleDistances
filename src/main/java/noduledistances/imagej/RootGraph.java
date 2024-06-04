@@ -329,14 +329,14 @@ public class RootGraph {
 	
 	public void mergeNonemptyComponents(ArrayList<int[]> components) {
 		removeDeadComponents(components);
-		if(components.size() != 1) {
-			mergeComponents(components);
+		for(int ii = 0; ii < components.size(); ii++) {
+			mergeComponents(components, ii);
 		}
 	}
 	
-	private void mergeComponents(ArrayList<int[]> components) {
+	private void mergeComponents(ArrayList<int[]> components, int index0) {
 		
-		int[] comp1 = components.get(0);
+		int[] comp1 = components.get(index0);
 		double distance = Double.MAX_VALUE;
 		int node1Index = -1;
 		int nodeIndex = -1;
@@ -352,8 +352,10 @@ public class RootGraph {
 				System.out.println("Null node. ");
 			}
 			
-			for(int ii = 1; ii < components.size(); ii++) {
-				
+			for(int ii = 0; ii < components.size(); ii++) {
+				if(ii == index0) {
+					continue;
+				}
 				if(components.get(ii).length == 0) {
 					System.out.println("Breakpoint.");
 				}
@@ -364,46 +366,45 @@ public class RootGraph {
 					}
 					double distance1 = node.distance(node1);
 					
-					if(distance1 < distance) {
+					if(distance1 < 10) {
 						node1Index = index1;
 						nodeIndex = index;
-						distance = node.distance(node1);
 						componentIndex = ii;
+						
+						if(node1Index == -1) {
+							System.out.println("Breakpoint.");
+						}
+						if(node1 == node) {
+							continue;
+						}
+						this.addEdge(new Node[] {node1,node});
+						merge(componentIndex,index0, components);
+						mergeComponents(components, index0);
+						return;
 					}
 				}
 			}
 		}
-		if(node1Index == -1) {
-			System.out.println("Breakpoint.");
-		}
-		Node node1 = this.nodes.get(node1Index);
-		Node node2 = this.nodes.get(nodeIndex);
-		if(node1 == node2) {
-			System.out.println("breakpoint.");
-		}
-		this.addEdge(new Node[] {node1,node2});
-		merge(componentIndex, components);
 		
-		if(components.size() > 1) {
-			mergeComponents(components);
-		}
+		
 		
 	}
 	
 	
-	private void merge(int index, ArrayList<int[]> components) {
-		if(index <1) {
-			System.out.println("Index error. Must be > 1 but index is " + Integer.toString(index));
+	private void merge(int index,int index0, ArrayList<int[]> components) {
+		
+		if(index > components.size()) {
+			System.out.println("Error, index > number of components.");
 			return;
 		}
-		if(index > components.size()) {
+		else if(index0 > components.size()) {
 			System.out.println("Error, index > number of components.");
 			return;
 		}
 		
 		int[] comp = components.get(index);
 		
-		int[] master = components.get(0);
+		int[] master = components.get(index0);
 		
 		int[] newMaster = new int[comp.length + master.length];
 		
@@ -412,7 +413,7 @@ public class RootGraph {
 		System.arraycopy(comp, 0, newMaster, master.length, comp.length);
 		
 		components.remove(index);
-		components.set(0, newMaster);
+		components.set(index0, newMaster);
 	}
 	
 	
@@ -853,10 +854,11 @@ public class RootGraph {
     			//System.out.println("Len of paths: " + shortest_paths_list.size());
     			
     			//System.out.println("len of shortestPaths: " + shortest_paths_list.size());
+    			/**
     			if(shortest_paths_list.size() == 0) {
     				System.out.println("no paths between." + nodule.nodeNumber + "/" 
     			+ startingNodule+ " and " + nodule1.nodeNumber + "/" + endingNodule );
-    			}
+    			}*/
     			
     			ArrayList<int[]> paths = shortestPathsToList(shortest_paths_list);
     			

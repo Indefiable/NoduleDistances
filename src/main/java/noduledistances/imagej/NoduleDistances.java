@@ -132,8 +132,14 @@ public class NoduleDistances implements Command {
 		
 		ArrayList<ImagePlus> imps = new ArrayList<>();
 		
+		int width = graphOverlay.overlayedGraph.getWidth();
+		int height = graphOverlay.overlayedGraph.getHeight();
 		
-		ColorProcessor cp = new ColorProcessor(graphOverlay.overlayedGraph.getImage());
+		ColorProcessor cp = new ColorProcessor(width, height);
+		
+		cp.setColor(Color.WHITE);
+		cp.setRoi(0, 0, width, height);
+		cp.fill();
 		ImagePlus SP = new ImagePlus("Shortest Path", cp);
 		
 		Overlay overlay = new Overlay();
@@ -179,7 +185,7 @@ public class NoduleDistances implements Command {
 	    
 	    
 	    
-		Color[] colors = new Color[] {new Color(255, 255, 255),
+		Color[] colors = new Color[] {new Color(0, 0, 0),
 									  new Color(0,0,255),
 									  new Color(255,0,255),
 									  new Color(255,165,0),
@@ -551,7 +557,7 @@ public class NoduleDistances implements Command {
 		graph.computeShortestDistances(5);
 		//graphOverlay.overlayedGraph.show();
 		
-		/**
+		
 		System.out.println("Finding random paths...");
 		List<int[]> pairs = findPairs(graph.numNodules-1, 5);
 		
@@ -566,10 +572,10 @@ public class NoduleDistances implements Command {
 			//IJ.saveAs(out, "jpg", saveFile + "\\" + roots.getTitle() + "\\" + roots.getTitle() 
 			//+ Integer.toString(pair[0])+ "_" + Integer.toString(pair[1]));
 			
-			IJ.saveAs(out, "jpg", saveFile + "\\" + roots.getTitle() +"_" 
+			IJ.saveAs(out, "jpg", saveFile + "\\paths\\" + roots.getTitle() +"_" 
 			+ Integer.toString(pair[0])+ "_" + Integer.toString(pair[1]));
 			
-		}*/
+		}
 		
 		
 		try {

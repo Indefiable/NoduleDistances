@@ -75,10 +75,12 @@ public class Statistics {
             while ((nextLine = reader.readNext()) != null) {
                 // Process each row (nextLine) as needed	
             	if (nextLine.length > 0 && nextLine[0].equalsIgnoreCase(imageName)) {
-            		int size = nextLine.length;
 			        dummy[1] = nextLine;
 			        break;
 			    }
+            }
+            if(dummy[1][1] == null) {
+            	System.out.println("This image is not in the master reference file, so we cannot determine it's strain.");
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -394,6 +396,9 @@ public class Statistics {
 		for(int ii = 0; ii < paths.size(); ii++) {
 			ArrayList<int[]> SPToNodeii = paths.get(ii);
 			if(SPToNodeii == null){
+				continue;
+			}
+			else if(SPToNodeii.size() == 0) {
 				continue;
 			}
 			for(int jj = 0; jj < SPToNodeii.size(); jj++) {
