@@ -66,10 +66,7 @@ import traceskeleton.TraceSkeleton;
 @Plugin(type = Command.class, menuPath = "Plugins>NoduleData")
 public class NoduleDistances implements Command {
 	
-	private final int FOLDER = 1;
-	private final int IMAGE = 2;
-	private final int MODEL = 3;
-	private final int OTHERFILETYPE = 4;
+	
 	private final int NODERADIUS=3;
 	public static ImagePlus image;
 	
@@ -456,7 +453,7 @@ public class NoduleDistances implements Command {
      * @param model : path file to selected .model file 
      */
     //ImagePlus image, String model
-    private void execute(ImagePlus roots, ImagePlus tifImp, String saveFile) {
+    private void execute(ImagePlus roots, ImagePlus tifImp, String saveFile, File modelFile) {
     	
     	if(roots.getType() != ImagePlus.COLOR_RGB) {
 			roots = new ImagePlus(roots.getTitle(), roots.getProcessor().convertToRGB());
@@ -509,7 +506,8 @@ public class NoduleDistances implements Command {
 		
 		ColorClustering cluster = new ColorClustering(NoduleDistances.image);
 		//cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Eclipse Workspace\\noduledistances\\assets\\001_roots.model");
-		cluster.loadClusterer("D:\\1EDUCATION\\aRESEARCH\\ClusterModels\\001_roots.model");
+		//cluster.loadClusterer("D:\\1EDUCATION\\aRESEARCH\\ClusterModels\\001_roots.model");
+		cluster.loadClusterer(modelFile.getAbsolutePath());
 		cluster.setChannels(channels);
 		
 		System.out.println("Segmenting...");
@@ -591,38 +589,12 @@ public class NoduleDistances implements Command {
 		//shortestPath(1,7,graph, graphOverlay).show();
     }
 
-    /**
-     * Returns 1 for folder, 2 for accepted image type, 3 for .model file, or 4 for any other filetype. 
-     */
-    private int getFileType(File file) {
-    	String extension = file.getName().substring(file.getName().lastIndexOf(".") + 1);
-    	int FILETYPE = 0;
-    	if(file.isDirectory()) {
-    		FILETYPE = FOLDER;
-    	}
-    	// all currently accepted image file types.
-    	else if(extension.equalsIgnoreCase("jpg") || extension.equalsIgnoreCase("png")
-    			|| extension.equalsIgnoreCase("jpeg") || extension.equalsIgnoreCase("gif")
-    			|| extension.equalsIgnoreCase("tiff") || extension.equalsIgnoreCase("dcm")
-    			|| extension.equalsIgnoreCase("tif")){
-    		FILETYPE = IMAGE;
-    	}
-    	else if(extension.equalsIgnoreCase("model")) {
-    		FILETYPE = MODEL;
-    	}
-    	else {
-    		System.out.println("Selected file ir not a folder or an acceptable "
-    				+ "image type. Please ensure the image you're trying to enter"
-    				+ "has the correct end abbreviation.");
-    		FILETYPE = OTHERFILETYPE;
-    	}
-    	
-    	return FILETYPE;
-    }
+
     
     @Override
     public void run() {
-    	
+    	Menu menu = new Menu();
+    	menu.run();
     	
     	/**
     	int FILETYPE = 0;
@@ -670,15 +642,9 @@ public class NoduleDistances implements Command {
     	case OTHERFILETYPE:
     		System.exit(0);
     		break;
-    	}*/
-    	
-    	File rootsFile = null;
-    	File tifFile = null;
-    	File saveFile = null;
+    	}
     	
     	File initialDirectory = new File("D:\\1EDUCATION\\aRESEARCH\\DistanceTesting\\DistanceAnalysis_V1.0");
-        
-        
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("folder containing root images.");
         fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
@@ -723,20 +689,49 @@ public class NoduleDistances implements Command {
     	   System.out.println("Sorry, but the file you selected is not valid.");
     	   return;
        }
+    	*/
+    	if(menu.rootFile == null || menu.tifFile == null || menu.modelFile == null || menu.saveFile == null) {
+    		IJ.log("done");
+    		return;
+    	}
     	
+    	File rootsFile = menu.rootFile;
+    	File tifFile = menu.tifFile;
+    	File modelFile = menu.modelFile;
+    	File saveFile = menu.saveFile;
     	
-       for(File rootFile : rootsFile.listFiles()) {
+    	if(Menu.getFileType(rootsFile) == Menu.IMAGE && Menu.getFileType(tifFile) != Menu.IMAGE) {
+    		IJ.log("Error, if the roots file chosen is a folder, the tif file chosen must also be a folder.");
+    		return;
+    	}
+    	
+    	if(Menu.getFileType(rootsFile) != Menu.IMAGE && Menu.getFileType(tifFile) == Menu.IMAGE) {
+    		IJ.log("Error, if the tif file chosen is a folder, the roots file chosen must also be a folder.");
+    		return;
+    	}
+    	
+    	if(Menu.getFileType(rootsFile) == Menu.IMAGE && Menu.getFileType(tifFile) == Menu.IMAGE) {
+    		ImagePlus rootImp = new ImagePlus(rootsFile.getAbsolutePath());
+			ImagePlus tifImp = new ImagePlus(tifFile.getAbsolutePath());
+			System.out.println("==================");
+			System.out.println(rootImp.getShortTitle());
+			System.out.println("==================");
+			execute(rootImp, tifImp, saveFile.getAbsolutePath(), modelFile);
+			
+    	}
+    	else {//rootsFile is a folder containing root files.
+        for(File rootFile : rootsFile.listFiles()) {
     	   
-			int subtype = getFileType(rootFile);
+			int subtype = Menu.getFileType(rootFile);
 			File currentTif = getTifFile(rootFile, tifFile);
 			if(currentTif == null) {
 				continue;
 			}
-			else if(getFileType(currentTif) != IMAGE) {
+			else if(Menu.getFileType(currentTif) != Menu.IMAGE) {
 				continue;
 			}
 			
-			if(subtype != IMAGE) {
+			if(subtype != Menu.IMAGE) {
 				continue;
 			}
 			
@@ -748,14 +743,14 @@ public class NoduleDistances implements Command {
 				System.out.println("==================");
 				System.out.println(rootImp.getShortTitle());
 				System.out.println("==================");
-				execute(rootImp, tifImp, saveFile.getAbsolutePath());
+				execute(rootImp, tifImp, saveFile.getAbsolutePath(), modelFile);
 			}catch(Exception e) {
 				e.printStackTrace();
 				System.out.println("Could not generate data for " + rootFile.getName());
 			}
        
-       }
-    	
+       }//end looping through files
+    	}//end else{}
     	IJ.log("done");
     }//===========================================================================================
 

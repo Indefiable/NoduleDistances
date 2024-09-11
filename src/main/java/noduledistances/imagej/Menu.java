@@ -1,0 +1,212 @@
+package noduledistances.imagej;
+
+import org.scijava.command.Command;
+import org.scijava.plugin.Plugin;
+import org.scijava.ui.UIService;
+import org.scijava.ui.swing.search.SwingSearchBar;
+
+import ij.gui.GenericDialog;
+
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.File;
+
+
+
+public class Menu implements Command {
+	
+	private UIService uiService;
+	
+	
+	protected static final int FOLDER = 1;
+	protected static final int IMAGE = 2;
+	protected static final int MODEL = 3;
+	protected static final int OTHERFILETYPE = 4;
+	
+	protected File rootFile;
+	protected File tifFile;
+    protected File saveFile;
+    protected File modelFile;
+    
+    protected int redSingle = -1;
+    protected int greenSingle = -1;
+    protected int mixedSingle = -1;
+    
+    
+    private JTextArea fileArea;
+    private double lowerBound;
+    private double upperBound;
+    
+    
+    
+	private void display() {
+		// Create the dialog
+        GenericDialog gd = new GenericDialog("Nodule Distances Plugin");
+
+        // Add a button to select files
+        gd.addButton("Select Roots Image or Folder", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                selectFiles(1);
+            }
+        });
+        
+        gd.addButton("Select Tif Image or Folder", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                selectFiles(2);
+            }
+        });
+        
+        gd.addButton("Select model File", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                selectFiles(3);
+            }
+        });
+        
+        gd.addButton("Select save File", new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                selectFiles(4);
+            }
+        });
+
+       
+        gd.showDialog();
+        
+        
+        
+        if (gd.wasOKed()) {
+            // Retrieve the numbers
+           
+            if(rootFile == null || tifFile == null || saveFile == null || modelFile == null) {
+	            System.out.println("Error, you must fill in all of the blanks to generate data. Please try again.");
+	            display();
+            }
+            
+            int type = getFileType(rootFile);
+            if(type == MODEL || type == OTHERFILETYPE) {
+            	System.out.println("RootFile Error, you must select a folder or image file for the segmentation file.");
+	            display();
+            }
+            
+            type = getFileType(tifFile);
+            if(type == MODEL || type == OTHERFILETYPE) {
+            	System.out.println("tifFile Error, you must select a folder or image file for the segmentation file.");
+	            display();
+            }
+            
+            type = getFileType(saveFile);
+            if(type != FOLDER) {
+            	System.out.println("saveFile Error, you must select a folder for the save file");
+	            display();
+            }
+            
+            type = getFileType(modelFile);
+            if(type != MODEL) {
+            	System.out.println("modelFile Error, the model file must be a .model file. You can generate .model files "
+            			+ "using Weka's ColorClustering ImageJ plugin. See the github page for more instructions.");
+	            display();
+            }
+            
+        }
+        else {
+        	return;
+        }
+        
+        
+	}
+	
+	public void run() {
+		display();
+	}
+	
+	private void selectFiles(int file) {
+		System.out.println("FILE :" + file);
+		JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Image to load or file to iterate through.");
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+       // FileNameExtensionFilter tiffFilter = new FileNameExtensionFilter("TIFF Images", "tif", "tiff");
+        //fileChooser.setFileFilter(tiffFilter);
+        
+        // Add a file filter for image files (you can customize this for specific image types)
+        FileNameExtensionFilter imageFilter = new FileNameExtensionFilter("Image Files and Folders", "jpg", "jpeg", "png", "gif", "model");
+        fileChooser.setFileFilter(imageFilter);
+        
+        int result = fileChooser.showOpenDialog(null);
+        
+        if(result != JFileChooser.APPROVE_OPTION) {
+        	System.out.println("Error, invalid option.");
+        	return;
+        }
+        
+        
+    	switch(file) {
+    	
+    	case 1:
+    		this.rootFile = fileChooser.getSelectedFile();
+    		System.out.println("Chosen: " + this.rootFile.getAbsolutePath());
+    		break;
+    	case 2:
+    		this.tifFile = fileChooser.getSelectedFile();
+    		System.out.println("Chosen: " + this.tifFile.getAbsolutePath());
+    		break;
+    		
+    	case 3:
+    		this.modelFile = fileChooser.getSelectedFile();
+    		System.out.println("Chosen: " + this.modelFile.getAbsolutePath());
+    		break;
+    		
+    	case 4: 
+    		this.saveFile = fileChooser.getSelectedFile();
+    		System.out.println("Chosen: " + this.saveFile.getAbsolutePath());
+    		break;
+    	}
+    
+        
+	}
+
+	
+	
+	
+	 /**
+     * Returns 1 for folder, 2 for accepted 
+image type, 3 for .model file, or 4 for any other filetype. 
+     */
+    public static int getFileType(File file) {
+    	String extension = file.getName().substring(file.getName().lastIndexOf(".") + 1);
+    	int FILETYPE = 0;
+    	if(file.isDirectory()) {
+    		FILETYPE = FOLDER;
+    	}
+    	// all currently accepted image file types.
+    	else if(extension.equalsIgnoreCase("jpg") || extension.equalsIgnoreCase("png")
+    			|| extension.equalsIgnoreCase("jpeg") || extension.equalsIgnoreCase("gif")
+    			|| extension.equalsIgnoreCase("tif") || extension.equalsIgnoreCase("dcm")){
+    		FILETYPE = IMAGE;
+    	}
+    	else if(extension.equalsIgnoreCase("model")) {
+    		FILETYPE = MODEL;
+    	}
+    	else {
+    		System.out.println("Selected file is not a folder or an acceptable "
+    				+ "image type. Please ensure the image you're trying to enter"
+    				+ "is the correct file type.");
+    		FILETYPE = OTHERFILETYPE;
+    	}
+    	
+    	return FILETYPE;
+    }
+	
+	
+	
+	
+	
+	
+	
+	
+	
+}//end Menu class
+
+
