@@ -334,9 +334,8 @@ public class NoduleDistances implements Command {
 	
 	/**
 	 * increases brightness and contrast in the image to improve segmentation of root system.
-	 * Also crops the image for testing purposes if I'm working on my laptop.
-	 * @param imp
-	 * @return
+	 * @param imp image
+	 * @return preprocessed image
 	 */
 	public ImagePlus preprocessing(ImagePlus imp) {
  		
@@ -353,7 +352,7 @@ public class NoduleDistances implements Command {
         hsb.getStack().deleteLastSlice();
         ic.convertHSBToRGB();
         if(hsb.isRGB()) {
-        	System.out.println("Convert3ed back to RGB");
+        	System.out.println("Converted back to RGB");
         }
        
 		
@@ -482,9 +481,12 @@ public class NoduleDistances implements Command {
     		return;
     	}
     	
+    	//remove some noise by having user highlight only the root system.
     	roots = blackenOutsideRectangle(roots);
     	
-    	ArrayList<Channel> channels = new ArrayList<Channel>(); // channels to use when segmenting.
+    	
+    	// channels to use when segmenting.
+    	ArrayList<Channel> channels = new ArrayList<Channel>(); 
     	channels.add(Channel.Brightness);
     	channels.add(Channel.Lightness);
 		
@@ -492,15 +494,17 @@ public class NoduleDistances implements Command {
 			roots = new ImagePlus(roots.getTitle(), roots.getProcessor().convertToRGB());
 		}
 		
+		//retrieve roi information from tif image
 		RoiOverlay roiOverlay;
-		
 		try {
 			roiOverlay = new RoiOverlay(tifImp);
 		}catch(Exception e) {
 			e.printStackTrace();
 			return;
 		}
-		System.out.println("Presprocessing...");
+		
+		
+		System.out.println("Preprocessing...");
 		NoduleDistances.image = preprocessing(roots);
 		//NoduleDistances.image.show();
 		
@@ -509,6 +513,7 @@ public class NoduleDistances implements Command {
 		//cluster.loadClusterer("D:\\1EDUCATION\\aRESEARCH\\ClusterModels\\001_roots.model");
 		cluster.loadClusterer(modelFile.getAbsolutePath());
 		cluster.setChannels(channels);
+		
 		
 		System.out.println("Segmenting...");
 		RootSegmentation root = new RootSegmentation(cluster, roiOverlay.rois);
@@ -522,6 +527,7 @@ public class NoduleDistances implements Command {
 		System.out.println("Making graph...");
 		RootGraph graph = new RootGraph(skeleton, graphOverlay);
 		
+		//computes the centroids of the rois to use as nodes in the graph.
 		System.out.println("Adding nodules...");
 		ArrayList<int[]> centroids = roiOverlay.getRoiCentroids(graph);
 		
@@ -535,13 +541,17 @@ public class NoduleDistances implements Command {
 		
 		graph.addNodules(centroids);
 		
+		//Locates and merges sections of the graph that are disconnected. This is due to 
+		//Ling Dong's skeletonization algorithm not always producing a connected skeleton.
 		System.out.println("Merging components...");
 		ArrayList<int[]> components = UnionFind.connectedComponents(graph.fsRep, graph.nodes.size());
-		
 		if(components.size() >1) {
 			//System.out.println("Multiple components. Merging components that contain nodules.");
 			graph.mergeNonemptyComponents(components);
 		}
+		
+		
+		
 		
 		System.out.println("Overlaying graph...");
 		graphOverlay.overlayGraph(graph, root.binarymap.getProcessor().convertToColorProcessor());
@@ -551,30 +561,11 @@ public class NoduleDistances implements Command {
 		//IJ.save(graphOverlay.overlayedGraph, saveFile + "\\" + roots.getTitle() + "\\" + roots.getTitle() + "_graph.jpg");
 		
 		IJ.save(graphOverlay.overlayedGraph, saveFile + "\\" + roots.getTitle() + "_graph.jpg");
+		
+		
 		System.out.println("Computing shortest distances...");
 		graph.computeShortestDistances(5);
 		//graphOverlay.overlayedGraph.show();
-		
-		
-		System.out.println("Finding random paths...");
-		List<int[]> pairs = findPairs(graph.numNodules-1, 5);
-		
-		for(int[] pair : pairs) {
-			
-			ImagePlus out = shortestPath(pair[0],pair[1],graph, graphOverlay);
-			if(out == null) {
-				//System.out.println("Could not generate images for paths between"
-			    //+ Integer.toString(pair[0]) + " and " + Integer.toString(pair[1]));
-				continue;
-			}
-			//IJ.saveAs(out, "jpg", saveFile + "\\" + roots.getTitle() + "\\" + roots.getTitle() 
-			//+ Integer.toString(pair[0])+ "_" + Integer.toString(pair[1]));
-			
-			IJ.saveAs(out, "jpg", saveFile + "\\paths\\" + roots.getTitle() +"_" 
-			+ Integer.toString(pair[0])+ "_" + Integer.toString(pair[1]));
-			
-		}
-		
 		
 		try {
 			System.out.println("Generating statistics.");
@@ -589,12 +580,45 @@ public class NoduleDistances implements Command {
 		//shortestPath(1,7,graph, graphOverlay).show();
     }
 
-
+    /**
+     * Saves a set of images that are random computed shortest paths between the nodule nodes.
+     * 
+     * @param graph
+     * @param graphOverlay
+     * @param saveFile
+     * @param title
+     */
+    public void saveRandomPaths(RootGraph graph, GraphOverlay graphOverlay, String saveFile, String title) {
+    	System.out.println("Finding random paths...");
+		List<int[]> pairs = findPairs(graph.numNodules-1, 5);
+		
+		for(int[] pair : pairs) {
+			
+			ImagePlus out = shortestPath(pair[0],pair[1],graph, graphOverlay);
+			if(out == null) {
+				//System.out.println("Could not generate images for paths between"
+			    //+ Integer.toString(pair[0]) + " and " + Integer.toString(pair[1]));
+				continue;
+			}
+			//IJ.saveAs(out, "jpg", saveFile + "\\" + roots.getTitle() + "\\" + roots.getTitle() 
+			//+ Integer.toString(pair[0])+ "_" + Integer.toString(pair[1]));
+			
+			IJ.saveAs(out, "jpg", saveFile + title +"_" 
+			+ Integer.toString(pair[0])+ "_" + Integer.toString(pair[1]));
+			
+		}
+    }
+    
+    
+    
+    
     
     @Override
     public void run() {
     	Menu menu = new Menu();
     	menu.run();
+    	
+    	
     	
     	/**
     	int FILETYPE = 0;
@@ -689,16 +713,24 @@ public class NoduleDistances implements Command {
     	   System.out.println("Sorry, but the file you selected is not valid.");
     	   return;
        }
-    	*/
+    	
     	if(menu.rootFile == null || menu.tifFile == null || menu.modelFile == null || menu.saveFile == null) {
     		IJ.log("done");
     		return;
     	}
+    	File rootsFile = new File("D:\\1EDUCATION\\aRESEARCH\\DistanceTesting\\DistanceAnalysis_V1.0\\DistancesInput\\visible\\PS001_Trimmed_Image_1_Visible.JPG");
+    	File tifFile = new File("D:\\1EDUCATION\\aRESEARCH\\DistanceTesting\\DistanceAnalysis_V1.0\\DistancesInput\\done\\PS001_Trimmed_Image_1.tif");
+    	File modelFile = new File("D:\\1EDUCATION\\aRESEARCH\\ClusterModels\\001_roots.model");
+    	File saveFile = new File("D:\\1EDUCATION\\aRESEARCH\\DistanceTesting\\DistanceAnalysis_V1.0\\testing_out");
+    	*/
     	
     	File rootsFile = menu.rootFile;
     	File tifFile = menu.tifFile;
     	File modelFile = menu.modelFile;
     	File saveFile = menu.saveFile;
+    	
+    	
+    	
     	
     	if(Menu.getFileType(rootsFile) == Menu.IMAGE && Menu.getFileType(tifFile) != Menu.IMAGE) {
     		IJ.log("Error, if the roots file chosen is a folder, the tif file chosen must also be a folder.");
@@ -723,6 +755,9 @@ public class NoduleDistances implements Command {
         for(File rootFile : rootsFile.listFiles()) {
     	   
 			int subtype = Menu.getFileType(rootFile);
+			if(subtype != Menu.IMAGE) {
+				continue;
+			}
 			File currentTif = getTifFile(rootFile, tifFile);
 			if(currentTif == null) {
 				continue;
@@ -731,9 +766,7 @@ public class NoduleDistances implements Command {
 				continue;
 			}
 			
-			if(subtype != Menu.IMAGE) {
-				continue;
-			}
+			
 			
 			//String saveString = "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\DistanceTesting";
 			//String saveFile = "D:\\1EDUCATION\\aRESEARCH\\tempGitHub\\Nodule-Distances\\testing";

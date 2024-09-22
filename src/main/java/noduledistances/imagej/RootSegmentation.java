@@ -35,6 +35,9 @@ public class RootSegmentation {
  * performs color clustering segmentation to create a binary map of the root system.
  * 
  * @param cluster : clustering object that holds the model file used for segmentation.
+ * 
+ * It's one of the biggest bottlenecks of the program. I'm using Weka's color clustering
+ * for this so I'm not sure what optimization I can do.
  */
 	public RootSegmentation(ColorClustering cluster, ShapeRoi[] rois) {
 		
@@ -47,7 +50,6 @@ public class RootSegmentation {
 		fsa = cluster.createFSArray(image);
 		
 		ImagePlus binarymap = cluster.createProbabilityMaps(fsa); // intensive
-		
 		
 		ImageStack mapStack = binarymap.getStack();
 		
@@ -66,7 +68,8 @@ public class RootSegmentation {
 	/**
 	 * initial segmentation of the root system includes a lot of noise. 
 	 * We remove this by creating ROI's using an ImageJ plugin that outlines 
-	 * all black objects, and remove them based on their size.
+	 * all black objects, and remove them based on their size (in general, the 
+	 * noise is small black shapes).
 	 */
 	private void clean() {
 		
@@ -168,8 +171,13 @@ public class RootSegmentation {
 	
 	
 	
+	/**
+	 * It replaces the given roi array with an roi array without the given indices.
+	 * 
+	 * @param indices indices to remove
+	 * @param rois roi array to update
+	 */
 	private void delete(ArrayList<Integer> indices, ShapeRoi[] rois) {
-		
 		
 		ImageProcessor newp = this.binarymap.getProcessor();
 		

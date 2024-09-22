@@ -76,7 +76,15 @@ public class RoiOverlay {
 	}
 	
 	
-	
+	/**
+	 * Computes what we will use as the node for the given nodule. 
+	 * Does this in a few different ways:
+	 * 
+	 * 
+	 * @param roi :nodule to find the node location(attachment point) of.
+	 * @param graph graph object.
+	 * @return
+	 */
 	public double[] attachmentPoint(ShapeRoi roi, RootGraph graph) {
 		
 		double[] attachmentPoint = new double[2];
@@ -259,8 +267,8 @@ public class RoiOverlay {
 	}
 	    
 	 
-	    // Method to calculate the distance between two points
-	    private static double distance(double px, double py,double x, double y) {
+    // Method to calculate the distance between two points
+    private static double distance(double px, double py,double x, double y) {
 	    	double dx = px - x;
 	    	double dy = py - y;
 	        return Math.sqrt(dx * dx + dy * dy);
@@ -283,7 +291,7 @@ public class RoiOverlay {
 	 * finds the centroid of all ROI's, and returns them in [color,x,y,area] format. 
 	 * For nodules that were initially clumps, we return all of their information in one row. 
 	 * color: red==1, green==2, mixed==3 
-	 * @return [color,x,y] coordinates of the roi centroids. 
+	 * @return [color,x,y,area] coordinates of the roi centroids. 
 	 */
 	public ArrayList<int[]> getRoiCentroids(RootGraph graph){
 		
@@ -314,6 +322,7 @@ public class RoiOverlay {
 		
 		return centroids;
 	}
+	
 	
 	private void addCentroid(ArrayList<int[]> centroids, ShapeRoi roi,RootGraph graph) {
 		int[] coords = new int[4];
@@ -599,6 +608,12 @@ public class RoiOverlay {
 		return y;
 	}
 		
+	
+	
+	
+	
+	
+	
 	
 	//ALL METHODS BELOW THIS LINE ARE FOR TESTING PURPOSES.
 	

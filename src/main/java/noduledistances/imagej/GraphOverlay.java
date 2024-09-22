@@ -136,6 +136,7 @@ public class GraphOverlay {
 	}
 	
 	
+	
 	public void overlayGraph(RootGraph graph, ColorProcessor cp) {
 		ImagePlus skellyMap = new ImagePlus("skeleton", cp);
 		TextRoi.setFont("SansSerif",30 , Font.BOLD);
@@ -227,6 +228,7 @@ public class GraphOverlay {
 		this.overlayedGraph = skellyMap;
 		
 	}
+	
 	
 	
 	public void loadTif() {

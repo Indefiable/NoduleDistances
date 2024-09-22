@@ -59,6 +59,8 @@ public class Statistics {
 	private static final int NUMREDNODSINBALL = 8;
 	private static final int NUMGREENNODSINBALL = 9;
 	
+	
+	
 	public Statistics(String imageName) throws CsvValidationException {
 		this.imageName = imageName;
 		String[][] dummy = new String[2][20];
@@ -86,7 +88,7 @@ public class Statistics {
             e.printStackTrace();
         }
 		if(masterCSV[1] == null) {
-			System.out.println("No data has been found for that the following image: " + imageName);
+			System.out.println("No data has been found for the following image: " + imageName);
 		}
 		String color = dummy[1][1];
 		String strain = dummy[1][19];
@@ -188,9 +190,6 @@ public class Statistics {
 		for (int ii = 0; ii < graph.nodes.size(); ii++) {
 			Node nodule = graph.nodes.get(ii);
 			
-			if(nodule.nodeNumber == 4) {
-				System.out.println("breakpoint.");
-			}
 			
 			//ignore skeleton nodes.
 			if(nodule.type == Node.SKELETON) {
@@ -242,10 +241,6 @@ public class Statistics {
 				}
 			}
 			
-			if(kk == -1) {
-				System.out.println("Breakpoint.");
-			}
-			
 			if(data.get(CLOSESTDISTANCE)[0] == Integer.MAX_VALUE) {
 				mat[matCounter+1][kk++] = "No Path";
 			}
@@ -282,10 +277,25 @@ public class Statistics {
 				System.out.println("breakpoint.");
 				mat[matCounter+1][kk++] = "unknown";
 			}
+			if(data.get(MEANDISTANCE)[0] == 0) {
+				mat[matCounter+1][kk++] = "N/A";
+			}
+			else {
+				mat[matCounter+1][kk++] = Double.toString(data.get(MEANDISTANCE)[0]);
+			}
 			
-			mat[matCounter+1][kk++] = Double.toString(data.get(MEANDISTANCE)[0]);
-			mat[matCounter+1][kk++] = Double.toString(data.get(MEANDISTANCETORED)[0]);
-			mat[matCounter+1][kk++] = Double.toString(data.get(MEANDISTANCETOGREEN)[0]);
+			if(data.get(MEANDISTANCETORED)[0] == 0) {
+				mat[matCounter+1][kk++] = "N/A";
+			}
+			else {
+				mat[matCounter+1][kk++] = Double.toString(data.get(MEANDISTANCETORED)[0]);
+			}
+			if(data.get(MEANDISTANCETOGREEN)[0] == 0) {
+				mat[matCounter+1][kk++] = "N/A";
+			}
+			else {
+				mat[matCounter+1][kk++] = Double.toString(data.get(MEANDISTANCETOGREEN)[0]);
+			}
 			
 			matCounter++;
 		}
@@ -319,6 +329,7 @@ public class Statistics {
 		
 	}
 	
+	
 	/**
 	 * Merges data from master csv file to the image specific distance data.
 	 * @param data
@@ -339,6 +350,16 @@ public class Statistics {
 			
 		}
 		System.out.println("=====================");
+	}
+	
+	
+	/**
+	 * Saves the pair-wise distance matrices as csv files. 
+	 * the _i at the end of csv names is the i'th set of shortest paths 
+	 * (i.e. the _1 is the absolute shortest paths)
+	 */
+	public void savePairwiseDistanceMatrices() {
+		
 	}
 	
 	
@@ -660,6 +681,7 @@ public class Statistics {
 		return mean;
 		
 	}
+	
 	
 	
 }

@@ -110,6 +110,13 @@ public class Menu implements Command {
 	            display();
             }
             
+            
+            if(getFileType(tifFile) != getFileType(rootFile)) {
+            	System.out.println("Error, the chosen tif file and root file must be of the same type (i.e. if you choose a folder for "
+            			+ "the tif file you must choose a folder for the root file.");
+            	display();
+            }
+            
         }
         else {
         	return;

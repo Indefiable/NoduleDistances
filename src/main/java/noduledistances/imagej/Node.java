@@ -38,7 +38,9 @@ public int nodeIndex;
  */
 public double nodeNumber;
 
+
 /**
+ * DEPRECATED
  * 2d array where each element A_ij is the distance to the j'th node on the 
  * i'th iteration of dijkstra's. Each row is one iteration of Dijkstra's, 
  * we remove a used edge from the original graph and perform another iteration of 
@@ -126,6 +128,8 @@ public boolean equals(Object obj) {
 	return false;
 	
 }
+
+
 /**
  * Finds and returns the set of paths from this node to the given node.
  * @param node
@@ -152,6 +156,8 @@ public ArrayList<int[]> getPaths(int node){
 	
 	return paths;
 }
+
+
 
 public double distance(Node node) {
 	return Point.distance(this.x, this.y, node.x, node.y);
