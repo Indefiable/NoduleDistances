@@ -119,7 +119,9 @@ public class NoduleDistances implements Command {
     
     
 	/**
-	 * Displays
+	 * Generates an image showing the shortest 5 paths between the two given nodes by \
+	 * coloring the paths taken 5 distinct colors
+	 * 
 	 * @param startNode
 	 * @param endNode
 	 * @param graph
@@ -369,7 +371,14 @@ public class NoduleDistances implements Command {
 		return image;
 	}
 
-	
+	/**
+	 * Method that asks the user to draw a rectangle around the part of the image
+	 * containing the root system to remove any noise outside the root system. This greatly 
+	 * improves the root segmentation process.
+	 * 
+	 * @param image
+	 * @return
+	 */
 	public static ImagePlus blackenOutsideRectangle(ImagePlus image) {
 		
 		image.show();
@@ -431,7 +440,12 @@ public class NoduleDistances implements Command {
 	    	
 	}
 	
-	
+	/**
+	 * Finds random sets of pairs of nodules.
+	 * @param num
+	 * @param numIters
+	 * @return
+	 */
 	 public static List<int[]> findPairs(int num, int numIters) {
 	        List<int[]> pairs = new ArrayList<>();
 	        Random random = new Random();
@@ -580,6 +594,7 @@ public class NoduleDistances implements Command {
 		//shortestPath(1,7,graph, graphOverlay).show();
     }
 
+    
     /**
      * Saves a set of images that are random computed shortest paths between the nodule nodes.
      * 

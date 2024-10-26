@@ -99,6 +99,13 @@ public void update(int type) {
 	this.type=type;
 } 
 
+
+/**
+ * We say two nodes are equal when any of the following are true:
+ * 1. they reference the same object in memory
+ * 2. their x/y values are the same
+ * 3. if they are the same type of node( skeleton/nodule) AND are within 8 pixels
+ */
 @Override
 public boolean equals(Object obj) {
 	if(this == obj) {

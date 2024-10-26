@@ -151,7 +151,15 @@ public class RootSegmentation {
 	}
 	
 	
-	private void removeNodules(ShapeRoi[] rois) {
+	
+	
+	/**
+	 * Used for testing purposes, this method completely fills in 
+	 * the given rois onto the image with a given color, and shows that image.
+	 * Destructively draws over the binary map object.
+	 * @param rois
+	 */
+	private void removeNodules(ShapeRoi[] rois, int color) {
 		
 		ImageProcessor ip = binarymap.getProcessor();
 		
@@ -160,7 +168,7 @@ public class RootSegmentation {
 			 ip.setRoi(roi);
 
 	            
-	            ip.setColor(255); 
+	            ip.setColor(color); 
 	            ip.fill(roi); 
 		}
 		

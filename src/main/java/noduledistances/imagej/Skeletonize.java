@@ -160,6 +160,9 @@ public class Skeletonize {
         return (int) value;
     }
     
+    
+    
+    
     /**
      * blurs the image. Used to make the edges of the image smoother to improve the output of the 
      * skeletonization algorithm.

@@ -87,21 +87,22 @@ public class RootGraph {
 		this.graphOverlay = graphOverlay;
 		this.skeleton = skeleton;
 		
-		// enumerate all nodes and creates the forward start rep.
+		// enumerate all nodes and creates the forward star representation.
+		// chunk object is a list of of points. Each set of two points is the starting
+		// and ending point for an edge of the skeleton.
 		for( ArrayList<int[]> chunk : skeleton) {
 			
 			for(int ii = 0; ii < chunk.size(); ii+=2) {
+				
 				int[] start = chunk.get(ii);
 			    int[] end = chunk.get(ii+1);
 			    
 			    Node startPt = new Node(start[0], start[1], 0, -1);
 			    Node endPt = new Node(end[0], end[1], 0, -1);
-			    /**
-			    if(nodes.size() > 106) {
-			    	System.out.println("104.");
-			    	
-			    	System.out.println("104-106 distance: " + nodes.get(104).distance(nodes.get(106)));
-			    }*/
+			    
+			    // sometimes the skeletonization algorithm will create 
+			    // a line that is very very small, so I will say those 
+			    // nodes are "equal"
 			    if(startPt.equals(endPt)) {
 			    	continue;
 			    }
@@ -334,12 +335,16 @@ public class RootGraph {
 		}
 	}
 	
+	
+	/**
+	 * Attempts to merge any disconnected pieces of graph. 
+	 * @param components
+	 * @param index0
+	 */
 	private void mergeComponents(ArrayList<int[]> components, int index0) {
 		
 		int[] comp1 = components.get(index0);
-		double distance = Double.MAX_VALUE;
 		int node1Index = -1;
-		int nodeIndex = -1;
 		int componentIndex = -1;
 		if(comp1.length == 0) {
 			System.out.println("Breakpoint.");
@@ -368,7 +373,6 @@ public class RootGraph {
 					
 					if(distance1 < 10) {
 						node1Index = index1;
-						nodeIndex = index;
 						componentIndex = ii;
 						
 						if(node1Index == -1) {
@@ -390,7 +394,12 @@ public class RootGraph {
 		
 	}
 	
-	
+	/**
+	 * We merge the given components.
+	 * @param index of component to merge
+	 * @param index0 of component to merge
+	 * @param components array of components
+	 */
 	private void merge(int index,int index0, ArrayList<int[]> components) {
 		
 		if(index > components.size()) {
@@ -631,6 +640,7 @@ public class RootGraph {
 		
 		return lines;
 	}
+	
 	
 	
 	/**

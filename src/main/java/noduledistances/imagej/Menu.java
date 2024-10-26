@@ -176,7 +176,6 @@ public class Menu implements Command {
 
 	
 	
-	
 	 /**
      * Returns 1 for folder, 2 for accepted 
 image type, 3 for .model file, or 4 for any other filetype. 
