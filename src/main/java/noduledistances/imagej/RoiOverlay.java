@@ -10,12 +10,10 @@ import ij.gui.OvalRoi;
 import ij.gui.PointRoi;
 import ij.gui.PolygonRoi;
 import ij.gui.Roi;
-import ij.gui.TextRoi;
 
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
 import ij.process.FloatPolygon;
-import traceskeleton.TraceSkeleton;
 import ij.gui.ShapeRoi;
 import ij.gui.NewImage;
 
@@ -23,9 +21,6 @@ import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
 
-import java.awt.Shape;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Line2D;
 import java.awt.geom.PathIterator;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
@@ -44,7 +39,6 @@ import kn.uni.voronoitreemap.datastructure.OpenList;
 import kn.uni.voronoitreemap.diagram.PowerDiagram;
 import kn.uni.voronoitreemap.j2d.PolygonSimple;
 import kn.uni.voronoitreemap.j2d.Site;
-
 
 public class RoiOverlay {
 

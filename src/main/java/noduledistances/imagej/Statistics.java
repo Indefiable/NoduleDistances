@@ -2,7 +2,6 @@ package noduledistances.imagej;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -11,7 +10,6 @@ import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
 
 import java.io.FileReader;
-import java.io.IOException;
 
 /**
  * A class that generates all of the statistical data for analysis, and saves it as
@@ -43,7 +41,6 @@ public class Statistics {
 	String imageName;
 	/**
 	 * Strings stating whether an image's red nodules are Fix+ or Fix-, and same with green.
-	 * i.e. red = Fix+ , green = Fix- or vice versa. 
 	 */
 	String red;
 	String green;
@@ -60,10 +57,26 @@ public class Statistics {
 	private static final int NUMGREENNODSINBALL = 9;
 	
 	
-	
+	/**
+	 * Initializer method for the Statistics class.
+	 * 
+	 * This method preps the program for computing the desired statistics.
+	 * It first pulls the strain of the image from the MasterCSV by finding
+	 * two rows in the master, one of a green nodule and one of a red.
+	 * Classifies the red/green nodules in to Fix+/Fix- by referencing the two rows.
+	 *
+	 *FIX+ : red and green nodules are both Fix+
+	 *FIX- : red and green nodules are both Fix-
+	 *MIX1 : red are Fix-, green are Fix+
+	 *MIX2 : red are Fix+, green are Fix-
+	 *
+	 * @param imageName
+	 * @throws CsvValidationException
+	 */
 	public Statistics(String imageName) throws CsvValidationException {
 		this.imageName = imageName;
-		String[][] dummy = new String[2][20];
+		// pulls specific Plant.ID from masterCSV to identify the strain
+		String[][] strainIdentifier = new String[2][20];
 		System.out.println("Image name: " + imageName);
 		try  {
 			CSVReader reader = new CSVReader(new FileReader("assets\\master.csv"));
@@ -72,67 +85,67 @@ public class Statistics {
             while(nextLine == null) {
             	nextLine = reader.readNext();
             }
-            dummy[0] = nextLine;
-            
+            strainIdentifier[0] = nextLine;
             while ((nextLine = reader.readNext()) != null) {
-                // Process each row (nextLine) as needed	
+                // Process each row looking for both rows for the given Plant.ID	
             	if (nextLine.length > 0 && nextLine[0].equalsIgnoreCase(imageName)) {
-			        dummy[1] = nextLine;
+			        strainIdentifier[1] = nextLine;
 			        break;
 			    }
             }
-            if(dummy[1][1] == null) {
-            	System.out.println("This image is not in the master reference file, so we cannot determine it's strain.");
-            }
+        if(strainIdentifier[1][1] == null) {
+        	System.out.println("This image is not in the master reference file, so we cannot determine it's strain.");
+        }
         } catch (IOException e) {
             e.printStackTrace();
         }
+		
+		
+		switch(strainIdentifier[1][19]) {
+		case "Fix+":
+			this.red = "Fix+";
+			this.green = "Fix+";
+			break;
+		
+		case "Fix-":
+			this.red = "Fix-";
+			this.green = "Fix-";
+			break;
+			
+		case "Mix1":
+			this.red = "Fix-";
+			this.green = "Fix+";
+			break;
+			
+		case "Mix2":
+			this.red = "Fix+";
+			this.green = "Fix-";
+			break;
+			
+		default:
+				System.out.println("ERROR, unable to determine nodule Strains. Marking them as 'NA'.");
+				this.red = "NA";
+				this.green = "NA";
+		}
+		
+		for(int ii =0; ii < strainIdentifier[0].length; ii++) {
+			if(ii < 1) {
+				masterCSV[0][ii] = strainIdentifier[0][ii];
+				masterCSV[1][ii] = strainIdentifier[1][ii];
+			}
+			if (ii > 1 && ii < 19) {
+				masterCSV[0][ii-1] = strainIdentifier[0][ii];
+				masterCSV[1][ii-1] = strainIdentifier[1][ii];
+			}
+			if(ii > 19) {
+				masterCSV[0][ii-2] = strainIdentifier[0][ii];
+				masterCSV[1][ii-2] = strainIdentifier[1][ii];
+			}
+		}
+		
 		if(masterCSV[1] == null) {
 			System.out.println("No data has been found for the following image: " + imageName);
 		}
-		String color = dummy[1][1];
-		String strain = dummy[1][19];
-		
-		if(color.equalsIgnoreCase("Red") && strain.equalsIgnoreCase("Fix-")) {
-			this.red = "Fix+";
-			this.green = "Fix-";
-		}
-		else if(color.equalsIgnoreCase("Red") && strain.equalsIgnoreCase("Fix+")) {
-			this.red = "Fix-";
-			this.green = "Fix+";
-		}
-		else if(color.equalsIgnoreCase("Green") && strain.equalsIgnoreCase("Fix+")) {
-			this.green = "Fix+";
-			this.red = "Fix-";
-		}
-		else if(color.equalsIgnoreCase("Green") && strain.equalsIgnoreCase("Fix-")) {
-			this.green = "Fix-";
-			this.red = "Fix+";
-		}
-		else {
-			System.out.println("ERROR WITH DETERMINING THE STRAIN FOR THE IMAGE.");
-		}
-		
-		for(int ii =0; ii < dummy[0].length; ii++) {
-			
-			if(ii < 1) {
-				masterCSV[0][ii] = dummy[0][ii];
-				masterCSV[1][ii] = dummy[1][ii];
-			}
-			if (ii > 1 && ii < 19) {
-				masterCSV[0][ii-1] = dummy[0][ii];
-				masterCSV[1][ii-1] = dummy[1][ii];
-			}
-			if(ii > 19) {
-				masterCSV[0][ii-2] = dummy[0][ii];
-				masterCSV[1][ii-2] = dummy[1][ii];
-			}
-		}
-		
-		System.out.println("COLOR: " + color);
-		System.out.println("STRAIN: " + strain);
-		System.out.println(Arrays.toString(masterCSV[0]));
-		System.out.println(Arrays.toString(masterCSV[1]));
 	}
 	
 
@@ -200,7 +213,7 @@ public class Statistics {
 			if(data == null) {
 				System.out.println("Breakpoint.");
 			}
-			
+			System.out.println("Saving statistics data.");
 			mat[matCounter+1][1] = Double.toString(nodule.nodeNumber);
 			mat[matCounter+1][2] = Integer.toString(nodule.area);
 			
@@ -359,7 +372,7 @@ public class Statistics {
 	 * (i.e. the _1 is the absolute shortest paths)
 	 */
 	public void savePairwiseDistanceMatrices() {
-		
+		//TODO: create this method and call it during runtime.
 	}
 	
 	

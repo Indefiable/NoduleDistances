@@ -6,15 +6,11 @@ package noduledistances.imagej;
 
 import java.awt.Color;
 import java.awt.Font;
-import java.awt.Point;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import javax.swing.JFileChooser;
-import javax.swing.filechooser.FileNameExtensionFilter;
-import ij.process.ColorSpaceConverter;
 import ij.process.FloatProcessor;
 import ij.process.ImageConverter;
 
@@ -29,9 +25,6 @@ import com.opencsv.exceptions.CsvValidationException;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
-import ij.gui.FreehandRoi;
-import ij.gui.GenericDialog;
-import ij.gui.ImageWindow;
 import ij.gui.Line;
 import ij.gui.OvalRoi;
 import ij.gui.Overlay;
@@ -44,7 +37,6 @@ import ij.plugin.ContrastEnhancer;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 import net.imagej.ImageJ;
-import ij.gui.ImageCanvas;
 import net.imagej.ops.OpService;
 import trainableSegmentation.unsupervised.ColorClustering;
 import trainableSegmentation.unsupervised.ColorClustering.Channel;
@@ -54,7 +46,6 @@ import java.awt.image.RescaleOp;
 
 
 
-import traceskeleton.TraceSkeleton;
 
 
 /**
@@ -582,8 +573,9 @@ public class NoduleDistances implements Command {
 		//graphOverlay.overlayedGraph.show();
 		
 		try {
-			System.out.println("Generating statistics.");
+			System.out.println("Initializing statistics generator.");
 			Statistics stats = new Statistics(roots.getTitle());
+			System.out.println("Generating Statistics.");
 			stats.generateData(graph, new int[] {100,150,250,500,1000}, saveFile);
 			
 		} catch (CsvValidationException e) {
@@ -623,8 +615,6 @@ public class NoduleDistances implements Command {
 			
 		}
     }
-    
-    
     
     
     
@@ -738,7 +728,9 @@ public class NoduleDistances implements Command {
     	File modelFile = new File("D:\\1EDUCATION\\aRESEARCH\\ClusterModels\\001_roots.model");
     	File saveFile = new File("D:\\1EDUCATION\\aRESEARCH\\DistanceTesting\\DistanceAnalysis_V1.0\\testing_out");
     	*/
-    	
+    	if(menu.rootFile == null) {
+    		return;
+    	}
     	File rootsFile = menu.rootFile;
     	File tifFile = menu.tifFile;
     	File modelFile = menu.modelFile;

@@ -138,7 +138,7 @@ public class Menu implements Command {
         //fileChooser.setFileFilter(tiffFilter);
         
         // Add a file filter for image files (you can customize this for specific image types)
-        FileNameExtensionFilter imageFilter = new FileNameExtensionFilter("Image Files and Folders", "jpg", "jpeg", "png", "gif", "model");
+        FileNameExtensionFilter imageFilter = new FileNameExtensionFilter("Image Files and Folders", "jpg", "jpeg", "png", "gif", "model","tif","tiff");
         fileChooser.setFileFilter(imageFilter);
         
         int result = fileChooser.showOpenDialog(null);

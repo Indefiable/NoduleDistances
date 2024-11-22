@@ -3,18 +3,14 @@ package noduledistances.imagej;
 import java.awt.Point;
 import java.util.ArrayList;
 
-import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.Roi;
 import ij.gui.ShapeRoi;
-import ij.plugin.filter.RankFilters;
 import ij.plugin.filter.ThresholdToSelection;
 import ij.plugin.frame.RoiManager;
 import ij.process.ByteProcessor;
-import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
-import traceskeleton.TraceSkeleton;
 
 import trainableSegmentation.FeatureStackArray;
 import trainableSegmentation.unsupervised.ColorClustering;

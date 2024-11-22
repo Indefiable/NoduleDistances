@@ -7,7 +7,8 @@ import ij.plugin.filter.RankFilters;
 import ij.process.ByteProcessor;
 import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
-import traceskeleton.TraceSkeleton;
+
+
 
 public class Skeletonize {
 	ImagePlus binarymap;
