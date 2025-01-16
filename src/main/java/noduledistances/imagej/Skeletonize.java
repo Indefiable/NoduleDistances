@@ -2,13 +2,14 @@ package noduledistances.imagej;
 
 import java.util.ArrayList;
 
+import ij.IJ;
 import ij.ImagePlus;
 import ij.plugin.filter.RankFilters;
 import ij.process.ByteProcessor;
 import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
 
-
+import traceskeleton.TraceSkeleton;
 
 public class Skeletonize {
 	ImagePlus binarymap;
@@ -61,7 +62,6 @@ public class Skeletonize {
 		for(int ii = 0; ii < im.length; ii++) {
 			im[ii] = !im[ii];
 		}
-		
 		TraceSkeleton.thinningZS(im, width,height);
 		
 		//ByteProcessor byt = new ByteProcessor(width, height, booleanToByte(im));

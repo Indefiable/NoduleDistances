@@ -175,16 +175,16 @@ public class Statistics {
         distanceHeader.add("Nod.Strain");
         for(int radius : radii) {
         	distanceHeader.add("numNods in r = " + radius);
-            distanceHeader.add("num " + red + " Nods in r = " + radius);
-            distanceHeader.add("num " + green + " Nods in r = " + radius);
+            distanceHeader.add("num Red " + red + " Nods in r = " + radius);
+            distanceHeader.add("num Green " + green + " Nods in r = " + radius);
         }
         distanceHeader.add("distance to closest nodule");
-        distanceHeader.add("distance to closest " + red + " nodule");
-        distanceHeader.add("distance to closest " + green + " nodule");
+        distanceHeader.add("distance to closest Red " + red + " nodule");
+        distanceHeader.add("distance to closest Green " + green + " nodule");
         distanceHeader.add("closest color type");
         distanceHeader.add("mean distance");
-        distanceHeader.add("mean distance to " + red + " nodules");
-        distanceHeader.add("mean distance to " + green + " nodules");
+        distanceHeader.add("mean distance to Red " + red + " nodules");
+        distanceHeader.add("mean distance to Green " + green + " nodules");
 	    
 		String[] header = new String[distanceHeader.size() + masterCSV[0].length-1];
 		
@@ -213,7 +213,6 @@ public class Statistics {
 			if(data == null) {
 				System.out.println("Breakpoint.");
 			}
-			System.out.println("Saving statistics data.");
 			mat[matCounter+1][1] = Double.toString(nodule.nodeNumber);
 			mat[matCounter+1][2] = Integer.toString(nodule.area);
 			
@@ -232,10 +231,11 @@ public class Statistics {
 			}
 			
 			if(nodule.type == Node.RED) {
-				mat[matCounter+1][4] = this.red;
+				mat[matCounter+1][4] = "Red " + this.red;
+		
 			}
 			else if(nodule.type == Node.GREEN) {
-				mat[matCounter+1][4] = this.green;
+				mat[matCounter+1][4] = "Green " + this.green;
 			}
 			else if(nodule.type == Node.MIXED) {
 				mat[matCounter+1][4] = "Mixed";
@@ -371,11 +371,65 @@ public class Statistics {
 	 * the _i at the end of csv names is the i'th set of shortest paths 
 	 * (i.e. the _1 is the absolute shortest paths)
 	 */
-	public void savePairwiseDistanceMatrices() {
-		//TODO: create this method and call it during runtime.
+	public void savePairwiseDistanceMatrices(RootGraph graph, String saveFile, int numIters) {
+		String[][] distances;
+		for (int ii = 0; ii < numIters; ii++) {
+			distances = distances(graph, ii, numIters);
+			String save = saveFile + "\\" + this.imageName + "_path_data_" + ii + ".csv";
+			
+			try(FileWriter writer = new FileWriter(save)){
+	     		StringJoiner comma = new StringJoiner(",");
+	     		for ( String[] row : distances) {
+	     			comma.setEmptyValue("");
+	     			comma.add(String.join(",", row));
+	     			writer.write(comma.toString());
+	     			writer.write(System.lineSeparator());
+	     			comma = new StringJoiner(",");
+	     		}
+	     		
+	     		writer.flush();
+	     		writer.close();
+	     		System.out.println("=================");
+	     		System.out.println("CSV FILE SAVED.");
+	     		System.out.println("=================");
+	     		
+	     	}catch(IOException e) {
+	     		System.out.println("=============================");
+	     		System.err.println("Error writing CSV file: " + e.getMessage());
+	     		System.out.println("============================");
+	     	}
+		}
+		
 	}
 	
-	
+	private String[][] distances(RootGraph graph, int iter, int numIters){
+		String[][] distances = new String[graph.numNodules][graph.numNodules];
+		
+		for (int ii = 0; ii < graph.numNodules; ii++) {
+			Node node = graph.getNodules()[ii];
+			
+			for (int jj = 0; jj < graph.numNodules; jj++) {
+				if(ii == jj) {
+					distances[ii][jj] = Integer.toString(0);
+					continue;
+				}
+				Node node2 = graph.getNodules()[jj];
+				ArrayList<int[]> paths = node.getPaths(graph.nodes.indexOf(node2));
+				if (paths == null || paths.size() == 0) {
+					System.out.println("No paths between " + node.nodeNumber + " and " + graph.getNodules()[jj].nodeNumber);
+					continue;
+				}
+				else if(paths.size() < iter+1) {
+					System.out.println("There are not " + numIters + " paths between " + node.nodeNumber + " and " + graph.getNodules()[jj].nodeNumber);
+					continue;
+				}
+				distances[ii][jj] =Integer.toString( paths.get(iter)[1] );
+			}
+			
+		}
+		
+		return distances;
+	}
 	
 	 /**
 	  * Computes the number of nodules within a given radius of a given color. Note that 
@@ -435,6 +489,7 @@ public class Statistics {
 			else if(SPToNodeii.size() == 0) {
 				continue;
 			}
+			// iterating through every computed path to node ii. First path is shortest path.
 			for(int jj = 0; jj < SPToNodeii.size(); jj++) {
 			    int[] path = SPToNodeii.get(jj);
 			    
@@ -445,7 +500,6 @@ public class Statistics {
 						   numNodsInBall[kk]++;
 					   }
 				   }
-				   
 			   }
 			   if(options.contains(NUMREDNODSINBALL)) {
 				   

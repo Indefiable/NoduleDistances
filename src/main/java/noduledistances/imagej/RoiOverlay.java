@@ -40,6 +40,8 @@ import kn.uni.voronoitreemap.diagram.PowerDiagram;
 import kn.uni.voronoitreemap.j2d.PolygonSimple;
 import kn.uni.voronoitreemap.j2d.Site;
 
+import traceskeleton.TraceSkeleton;
+
 public class RoiOverlay {
 
 	ShapeRoi[] rois;

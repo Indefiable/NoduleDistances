@@ -51,7 +51,8 @@ public int[][] distance;
 public int[] prevNode;
 
 /**
- * 2d array where each element Aij is an int[]. The first element is what node 
+ * 2d array where each element Aij is an int[] p. First index of paths is what node we're going to. The second index is 
+ * what iteration of shortest path. The first element of p is what node 
  * the path goes to, the second element is the pixel distance, and the remaining elements
  * are the nodes of the path used to get there.
  */

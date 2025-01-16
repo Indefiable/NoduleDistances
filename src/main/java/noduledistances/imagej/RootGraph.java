@@ -28,13 +28,16 @@ import com.programmerare.edu.asu.emit.algorithm.graph.GraphWithConstructor;
 
 import edu.asu.emit.algorithm.graph.Path;
 import edu.asu.emit.algorithm.graph.abstraction.BaseVertex;
+import edu.asu.emit.algorithm.graph.abstraction.BaseGraph;
 import edu.asu.emit.algorithm.graph.shortestpaths.YenTopKShortestPathsAlg;
+import edu.asu.emit.algorithm.graph.*;
+
 
 
 
 
 /**
- * The purpose of the class Graph is to hold all information related to the graph derived from 
+ * The purpose of the class RootGraph is to hold all information related to the graph derived from 
  * the initial image, including the data and methods to translate between the abstract graph and
  * the point and edges on the skeleton of the image. 
  * The class also holds all computational methods relating to the abstract graph.
@@ -365,7 +368,7 @@ public class RootGraph {
 					}
 					double distance1 = node.distance(node1);
 					
-					if(distance1 < 10) {
+					if(distance1 < 15) {
 						node1Index = index1;
 						componentIndex = ii;
 						
@@ -859,11 +862,13 @@ public class RootGraph {
     			
     			//System.out.println("len of shortestPaths: " + shortest_paths_list.size());
     			/**
+    			 * 
+    			
+    			}*/
     			if(shortest_paths_list.size() == 0) {
     				System.out.println("no paths between." + nodule.nodeNumber + "/" 
     			+ startingNodule+ " and " + nodule1.nodeNumber + "/" + endingNodule );
-    			}*/
-    			
+    			}	
     			ArrayList<int[]> paths = shortestPathsToList(shortest_paths_list);
     			
     			if(paths.size() == 0) {

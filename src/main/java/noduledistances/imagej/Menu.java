@@ -32,10 +32,8 @@ public class Menu implements Command {
     protected File saveFile;
     protected File modelFile;
     
-    protected int redSingle = -1;
-    protected int greenSingle = -1;
-    protected int mixedSingle = -1;
-    
+    // number of paths to compute between each pair of nodules
+    protected int numIters = 1;
     
     private JTextArea fileArea;
     private double lowerBound;
@@ -71,7 +69,8 @@ public class Menu implements Command {
                 selectFiles(4);
             }
         });
-
+        
+        gd.addNumericField("number of paths to commpute between nodules:", 5, 0);
        
         gd.showDialog();
         
@@ -79,7 +78,10 @@ public class Menu implements Command {
         
         if (gd.wasOKed()) {
             // Retrieve the numbers
-           
+        	int numIters = (int)gd.getNextNumber();
+        	if(numIters > 0) {
+        		this.numIters = numIters;
+        	}
             if(rootFile == null || tifFile == null || saveFile == null || modelFile == null) {
 	            System.out.println("Error, you must fill in all of the blanks to generate data. Please try again.");
 	            display();

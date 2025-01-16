@@ -167,7 +167,7 @@ public class NoduleDistances implements Command {
 	    }
 		
 	    Font font = new Font("SansSerif", Font.BOLD, 30); // Example font with size 20
-	    TextRoi text = new TextRoi(10, 10, "Num of Paths: " + numOfPaths);
+	    TextRoi text = new TextRoi(10, 10, "Num of Paths: " + numOfPaths+ "   ");
 	    text.setFont(font);
 	    text.setStrokeColor(Color.WHITE);
 	    text.setFillColor(Color.BLACK);
@@ -421,15 +421,7 @@ public class NoduleDistances implements Command {
 		
     }
 	
-	
-	/**
-	 * Saves the computed distance data to a csv file to the provided
-	 * directory. 
-	 * @param graph graph object used to compute and hold the distance data.
-	 */
-	private void saveDistanceData(RootGraph graph) {
-	    	
-	}
+
 	
 	/**
 	 * Finds random sets of pairs of nodules.
@@ -457,7 +449,7 @@ public class NoduleDistances implements Command {
      * @param model : path file to selected .model file 
      */
     //ImagePlus image, String model
-    private void execute(ImagePlus roots, ImagePlus tifImp, String saveFile, File modelFile) {
+    private void execute(ImagePlus roots, ImagePlus tifImp, String saveFile, File modelFile, int numIters) {
     	
     	if(roots.getType() != ImagePlus.COLOR_RGB) {
 			roots = new ImagePlus(roots.getTitle(), roots.getProcessor().convertToRGB());
@@ -482,7 +474,7 @@ public class NoduleDistances implements Command {
     	}
     	
     	if(roots.getWidth() != tifImp.getWidth()) {
-    		System.out.println("I dunno at this point bruh.");
+    		System.out.println("Error, roots image and tif image are not identical in size.");
     		return;
     	}
     	
@@ -557,7 +549,6 @@ public class NoduleDistances implements Command {
 		
 		
 		
-		
 		System.out.println("Overlaying graph...");
 		graphOverlay.overlayGraph(graph, root.binarymap.getProcessor().convertToColorProcessor());
 		
@@ -569,15 +560,15 @@ public class NoduleDistances implements Command {
 		
 		
 		System.out.println("Computing shortest distances...");
-		graph.computeShortestDistances(5);
+		graph.computeShortestDistances(numIters);
 		//graphOverlay.overlayedGraph.show();
-		
+	
 		try {
 			System.out.println("Initializing statistics generator.");
 			Statistics stats = new Statistics(roots.getTitle());
 			System.out.println("Generating Statistics.");
 			stats.generateData(graph, new int[] {100,150,250,500,1000}, saveFile);
-			
+			stats.savePairwiseDistanceMatrices(graph, saveFile, numIters);
 		} catch (CsvValidationException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -755,7 +746,7 @@ public class NoduleDistances implements Command {
 			System.out.println("==================");
 			System.out.println(rootImp.getShortTitle());
 			System.out.println("==================");
-			execute(rootImp, tifImp, saveFile.getAbsolutePath(), modelFile);
+			execute(rootImp, tifImp, saveFile.getAbsolutePath(), modelFile, menu.numIters);
 			
     	}
     	else {//rootsFile is a folder containing root files.
@@ -783,7 +774,7 @@ public class NoduleDistances implements Command {
 				System.out.println("==================");
 				System.out.println(rootImp.getShortTitle());
 				System.out.println("==================");
-				execute(rootImp, tifImp, saveFile.getAbsolutePath(), modelFile);
+				execute(rootImp, tifImp, saveFile.getAbsolutePath(), modelFile, menu.numIters);
 			}catch(Exception e) {
 				e.printStackTrace();
 				System.out.println("Could not generate data for " + rootFile.getName());
