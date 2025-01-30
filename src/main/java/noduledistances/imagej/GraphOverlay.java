@@ -13,6 +13,7 @@ import ij.ImagePlus;
 import ij.gui.Line;
 import ij.gui.OvalRoi;
 import ij.gui.Overlay;
+import ij.gui.Roi;
 import ij.gui.TextRoi;
 import ij.process.ColorProcessor;
 
@@ -175,7 +176,136 @@ public class GraphOverlay {
 	// methods beyond this line are deprecated or used for testing purposes.
 	//==========================================================================
 	
+	
+	public void overlayChunkedGraph(RootGraph graph, ColorProcessor cp, ArrayList<ArrayList<int[]>> skeleton) {
+		ImagePlus skellyMap = new ImagePlus("skeleton", cp);
+		TextRoi.setFont("SansSerif",30 , Font.BOLD);
+    	Font font = new Font("SansSerif",Font.BOLD,30);
+    	  
+		Overlay overlay = new Overlay();
+		skellyMap.setOverlay(overlay);
+		int counter = 0;
+		
+		for (int[] edge : graph.fsRep) {
+			counter++;
+			Node node1 = graph.nodes.get(edge[0]);
+			Node node2 = graph.nodes.get(edge[1]);
+			
+		 	Line line = new Line(node1.x, node1.y, node2.x, node2.y);
+		    line.setStrokeWidth(5);
+		    line.setStrokeColor(Color.DARK_GRAY);
+		    overlay.add(line);
+		}
+		
+		
+		for(Node node : graph.nodes) {
+			
+			if(node.type < 1) {
+				OvalRoi ball = new OvalRoi( node.x - NODERADIUS,  node.y - NODERADIUS, 2 * NODERADIUS, 2 * NODERADIUS);
+				ball.setFillColor(Color.BLUE);
+				skellyMap.getOverlay().add(ball);
+				
+				
+				String label =Integer.toString( graph.nodes.indexOf(node));
+				TextRoi textLabel = new TextRoi(node.x,
+		    			node.y, label,font);
+				textLabel.setStrokeWidth(2); 
+				textLabel.setStrokeColor(Color.CYAN); 
+				skellyMap.getOverlay().add(textLabel);
+			}
+			
+			else {
+				
+				String label = Double.toString(node.nodeNumber);
 
+				String[] parts = label.split("\\.");
+				String part2;
+				
+				if(parts.length > 1 && !parts[1].equals("0")) {
+					parts[1] = Integer.toString(Integer.parseInt(parts[1]));
+					part2 = "_" + parts[1];
+				}
+				
+				else {
+					part2 = "";
+				}
+				
+				label = parts[0] + part2;
+				
+		    	TextRoi textLabel = new TextRoi(node.x,
+			    			node.y, label,font);
+		    	
+		    	
+		    	textLabel.setStrokeWidth(2); 
+		    	
+				int radius = NODERADIUS + 8;
+				OvalRoi ball = new OvalRoi( node.x - radius,  node.y - radius, 2 * radius, 2 * radius);
+				
+				if(node.type ==1) {
+					ball.setFillColor(Color.RED);
+					textLabel.setStrokeColor(Color.RED); 
+				}
+				if(node.type == 2) {
+					ball.setFillColor(Color.GREEN);
+					textLabel.setStrokeColor(Color.GREEN); 
+				}
+				if(node.type == 3) {
+					ball.setFillColor(Color.YELLOW);
+					textLabel.setStrokeColor(Color.YELLOW); 
+				}
+				skellyMap.getOverlay().add(ball);
+				skellyMap.getOverlay().add(textLabel);
+		    	
+			
+			}
+			
+		}
+		
+		
+		
+		for (ArrayList<int[]> chunk : skeleton) {
+			Roi roi = getChunk(chunk);
+			
+			roi.setStrokeColor(Color.YELLOW);
+			roi.setStrokeWidth(4);
+			
+			skellyMap.getOverlay().add(roi);
+		}
+		
+		
+		skellyMap.setTitle("Graph");
+		
+		skellyMap.show();
+		
+		System.out.println("breakpoint.");
+		
+	}
+	
+	
+	public Roi getChunk(ArrayList<int[]> chunk) {
+		int x = Integer.MAX_VALUE;
+		int y = Integer.MAX_VALUE;
+		int width = Integer.MIN_VALUE;
+		int height = Integer.MIN_VALUE;
+		
+		for(int[] coords : chunk) {
+			
+			if(coords[0] < x) {
+				x = coords[0];
+			}
+			if(coords[1] < y) {
+				y = coords[1];
+			}
+			if(coords[0] > width) {
+				width = coords[0];
+			}
+			if(coords[1] > height) {
+				height = coords[1];
+			}
+		}
+		
+		return new Roi(x,y, width-x, height-y);
+	}
 	
 	/**
 	 * created for testing purposes, this method returns a copy of the image
@@ -270,7 +400,7 @@ public class GraphOverlay {
 		return highlightedGraph;
 	}
 	
-	
+
 	/**
 	 * Overlays the skeleton of the root system onto the image. Also overlays 
 	 * @param nodes: list of nodes.

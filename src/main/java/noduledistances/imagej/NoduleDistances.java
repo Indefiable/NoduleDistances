@@ -478,6 +478,7 @@ public class NoduleDistances implements Command {
     		return;
     	}
     	
+
     	//remove some noise by having user highlight only the root system.
     	roots = blackenOutsideRectangle(roots);
     	
@@ -509,6 +510,7 @@ public class NoduleDistances implements Command {
 		//cluster.loadClusterer("C:\\Users\\Brand\\Documents\\Eclipse Workspace\\noduledistances\\assets\\001_roots.model");
 		//cluster.loadClusterer("D:\\1EDUCATION\\aRESEARCH\\ClusterModels\\001_roots.model");
 		cluster.loadClusterer(modelFile.getAbsolutePath());
+
 		cluster.setChannels(channels);
 		
 		
@@ -553,6 +555,7 @@ public class NoduleDistances implements Command {
 		graphOverlay.overlayGraph(graph, root.binarymap.getProcessor().convertToColorProcessor());
 		
 		//graphOverlay.overlayedGraph.show();
+
 		
 		//IJ.save(graphOverlay.overlayedGraph, saveFile + "\\" + roots.getTitle() + "\\" + roots.getTitle() + "_graph.jpg");
 		

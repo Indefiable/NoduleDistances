@@ -93,13 +93,16 @@ public class RootGraph {
 				
 				int[] start = chunk.get(ii);
 			    int[] end = chunk.get(ii+1);
-			    
+			    if(nodes.size() == 116) {
+			    	System.out.println("Breakpoint.");
+			    }
 			    Node startPt = new Node(start[0], start[1], 0, -1);
 			    Node endPt = new Node(end[0], end[1], 0, -1);
 			    
 			    // sometimes the skeletonization algorithm will create 
 			    // a line that is very very small, so I will say those 
 			    // nodes are "equal"
+
 			    if(startPt.equals(endPt)) {
 			    	continue;
 			    }
@@ -110,10 +113,20 @@ public class RootGraph {
 			    if(!nodes.contains(startPt)) {
 			    	nodes.add(startPt);
 			    }
+			    /**
+			    else {
+			    	int index = nodes.indexOf(startPt);
+			    	startPt = nodes.get(index);
+			    }*/
 			    
 			    if(!nodes.contains(endPt)) {
 			    	nodes.add(endPt);
 			    }
+			    /**
+			    else {
+			    	int index = nodes.indexOf(endPt);
+			    	endPt = nodes.get(index);
+			    }*/
 			    
 			    Line line = new Line(startPt.x, startPt.y, endPt.x, endPt.y);
 			    int length = (int) line.getLength();
@@ -659,6 +672,8 @@ public class RootGraph {
 			    	instances.add(new Point[] {node, new Point(end[0], end[1])});
 			    	}
 			    }
+			
+			
 			}
 		
 		return instances;
