@@ -2,11 +2,13 @@ package noduledistances.imagej;
 
 import java.util.ArrayList;
 
+import ij.IJ;
 import ij.ImagePlus;
 import ij.plugin.filter.RankFilters;
 import ij.process.ByteProcessor;
 import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
+
 import traceskeleton.TraceSkeleton;
 
 public class Skeletonize {
@@ -48,7 +50,7 @@ public class Skeletonize {
 	 */
 	public static ArrayList<ArrayList<int[]>> skeletonize(ImagePlus imp) {
 		
-		imp.show();
+		//imp.show();
 		
 		ArrayList<ArrayList<int[]>> skeleton; 
 		
@@ -60,10 +62,9 @@ public class Skeletonize {
 		for(int ii = 0; ii < im.length; ii++) {
 			im[ii] = !im[ii];
 		}
-		
 		TraceSkeleton.thinningZS(im, width,height);
 		
-		ByteProcessor byt = new ByteProcessor(width, height, booleanToByte(im));
+		//ByteProcessor byt = new ByteProcessor(width, height, booleanToByte(im));
 		
 		skeleton = TraceSkeleton.traceSkeleton(im, width, height, 100);
 		
@@ -159,6 +160,9 @@ public class Skeletonize {
 
         return (int) value;
     }
+    
+    
+    
     
     /**
      * blurs the image. Used to make the edges of the image smoother to improve the output of the 

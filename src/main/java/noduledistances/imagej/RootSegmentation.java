@@ -3,18 +3,14 @@ package noduledistances.imagej;
 import java.awt.Point;
 import java.util.ArrayList;
 
-import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.Roi;
 import ij.gui.ShapeRoi;
-import ij.plugin.filter.RankFilters;
 import ij.plugin.filter.ThresholdToSelection;
 import ij.plugin.frame.RoiManager;
 import ij.process.ByteProcessor;
-import ij.process.ImageConverter;
 import ij.process.ImageProcessor;
-import traceskeleton.TraceSkeleton;
 
 import trainableSegmentation.FeatureStackArray;
 import trainableSegmentation.unsupervised.ColorClustering;
@@ -35,13 +31,16 @@ public class RootSegmentation {
  * performs color clustering segmentation to create a binary map of the root system.
  * 
  * @param cluster : clustering object that holds the model file used for segmentation.
+ * 
+ * It's one of the biggest bottlenecks of the program. I'm using Weka's color clustering
+ * for this so I'm not sure what optimization I can do.
  */
-	public RootSegmentation(ColorClustering cluster) {
+	public RootSegmentation(ColorClustering cluster, ShapeRoi[] rois) {
 		
 		this.cluster = cluster;
 		ImagePlus image = cluster.getImage();
-	
-		cluster.setNumSamples((int) (image.getWidth() * image.getHeight() * .04));
+		
+		cluster.setNumSamples((int) (image.getWidth() * image.getHeight() * .02));
 		this.fsa = new FeatureStackArray(image.getStackSize());
 		
 		fsa = cluster.createFSArray(image);
@@ -50,21 +49,23 @@ public class RootSegmentation {
 		
 		ImageStack mapStack = binarymap.getStack();
 		
-		mapStack.deleteSlice(2);
+		binarymap = new ImagePlus("roots", mapStack.getProcessor(3));
 		
-		binarymap = new ImagePlus("roots", mapStack.getProcessor(1));
+		
 		ByteProcessor pc = binarymap.getProcessor().convertToByteProcessor();
 		this.binarymap = new ImagePlus(image.getShortTitle(), pc);
 		
 		
 		clean();
 		
+		//removeNodules(rois);
 	}
 
 	/**
 	 * initial segmentation of the root system includes a lot of noise. 
 	 * We remove this by creating ROI's using an ImageJ plugin that outlines 
-	 * all black objects, and remove them based on their size.
+	 * all black objects, and remove them based on their size (in general, the 
+	 * noise is small black shapes).
 	 */
 	private void clean() {
 		
@@ -141,16 +142,46 @@ public class RootSegmentation {
 	   
 	    this.binarymap = result;
 	    
-	    
+	    manager.reset();
+	    manager.close();
 	}
 	
 	
 	
 	
-	
-	
-	private void delete(ArrayList<Integer> indices, ShapeRoi[] rois) {
+	/**
+	 * Used for testing purposes, this method completely fills in 
+	 * the given rois onto the image with a given color, and shows that image.
+	 * Destructively draws over the binary map object.
+	 * @param rois
+	 */
+	private void removeNodules(ShapeRoi[] rois, int color) {
 		
+		ImageProcessor ip = binarymap.getProcessor();
+		
+		for(ShapeRoi roi : rois) {
+			
+			 ip.setRoi(roi);
+
+	            
+	            ip.setColor(color); 
+	            ip.fill(roi); 
+		}
+		
+		
+		binarymap.show();
+		System.out.println("Breakpoint.");
+	}
+	
+	
+	
+	/**
+	 * It replaces the given roi array with an roi array without the given indices.
+	 * 
+	 * @param indices indices to remove
+	 * @param rois roi array to update
+	 */
+	private void delete(ArrayList<Integer> indices, ShapeRoi[] rois) {
 		
 		ImageProcessor newp = this.binarymap.getProcessor();
 		

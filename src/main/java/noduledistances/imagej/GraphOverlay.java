@@ -43,99 +43,6 @@ public class GraphOverlay {
 	}
 	
 	
-	/**
-	 * created for testing purposes, this method returns a copy of the image
-	 * overlay with the first set of nodes and edges highlighted in Color.ORANGE and the second
-	 * set highlighted in Color.CYAN.
-	 * 
-	 * @param graph 
-	 * @param nodeList : list of node indices from graph.nodes
-	 * @param edgeList : list of edge indices from graph.fsRep
-	 * @return a copy of overlayedGraph with highlighted nodes+edges.
-	 */
-	public ImagePlus highlightGraphSection(RootGraph graph, ArrayList<Integer> nodeList, 
-		ArrayList<Integer> edgeList, ArrayList<Integer> nodeList1, 
-		ArrayList<Integer> edgeList1) {
-		
-		ImagePlus highlightedGraph = new ImagePlus("highlighted", overlayedGraph.getProcessor());
-		Overlay overlay = new Overlay();
-		overlay.add(overlayedGraph.getOverlay());
-		highlightedGraph.setOverlay(overlay);
-		
-		int highlightRadius = NODERADIUS;
-		
-		TextRoi.setFont("SansSerif",25 , Font.PLAIN);
-		 Font font = new Font("SansSerif",Font.PLAIN,25);
-		
-		for(int nodeIndex : nodeList) {
-			Node node = graph.nodes.get(nodeIndex);
-			
-			OvalRoi ball = new OvalRoi( node.x - highlightRadius,  node.y - highlightRadius, 
-					2 * highlightRadius, 2 * highlightRadius);
-			
-			ball.setFillColor(Color.ORANGE);
-			highlightedGraph.getOverlay().add(ball);
-			
-			TextRoi.setColor(Color.CYAN);
-			TextRoi textROI = new TextRoi(node.x, node.y, Integer.toString(nodeIndex), font);
-			textROI.setStrokeColor(Color.CYAN); 
-	    	textROI.setStrokeWidth(1); 
-	    	
-			overlay.add(textROI);
-			
-		}
-		
-		for(int edgeIndex : edgeList) {
-			int[] edge = graph.fsRep.get(edgeIndex);
-			
-			Node node1 = graph.nodes.get(edge[0]);
-			Node node2 = graph.nodes.get(edge[1]);
-			
-			
-			Line line = new Line(node1.x, node1.y, node2.x, node2.y);
-		    line.setStrokeWidth(5);
-		    line.setStrokeColor(Color.ORANGE);
-		    overlay.add(line);
-		}
-		
-		
-		
-		for(int nodeIndex : nodeList1) {
-			Node node = graph.nodes.get(nodeIndex);
-			
-			OvalRoi ball = new OvalRoi( node.x - highlightRadius,  node.y - highlightRadius, 
-					2 * highlightRadius, 2 * highlightRadius);
-			
-			ball.setFillColor(Color.CYAN);
-			highlightedGraph.getOverlay().add(ball);
-			
-			TextRoi.setColor(Color.CYAN);
-			TextRoi textROI = new TextRoi(node.x, node.y, Integer.toString(nodeIndex), font);
-			textROI.setStrokeColor(Color.CYAN); 
-	    	textROI.setStrokeWidth(1); 
-	    	
-			overlay.add(textROI);
-			
-		}
-		
-		for(int edgeIndex : edgeList1) {
-			int[] edge = graph.fsRep.get(edgeIndex);
-			
-			Node node1 = graph.nodes.get(edge[0]);
-			Node node2 = graph.nodes.get(edge[1]);
-			
-			
-			Line line = new Line(node1.x, node1.y, node2.x, node2.y);
-		    line.setStrokeWidth(5);
-		    line.setStrokeColor(Color.CYAN);
-		    overlay.add(line);
-		}
-		
-		 
-			
-		return highlightedGraph;
-	}
-	
 	
 	public void overlayGraph(RootGraph graph, ColorProcessor cp) {
 		ImagePlus skellyMap = new ImagePlus("skeleton", cp);
@@ -146,16 +53,7 @@ public class GraphOverlay {
 		skellyMap.setOverlay(overlay);
 		int counter = 0;
 		
-		for (int[] edge : graph.fsRep) {
-			counter++;
-			Node node1 = graph.nodes.get(edge[0]);
-			Node node2 = graph.nodes.get(edge[1]);
-			
-		 	Line line = new Line(node1.x, node1.y, node2.x, node2.y);
-		    line.setStrokeWidth(5);
-		    line.setStrokeColor(Color.DARK_GRAY);
-		    overlay.add(line);
-		}
+		
 		
 		
 		for(Node node : graph.nodes) {
@@ -165,13 +63,13 @@ public class GraphOverlay {
 			ball.setFillColor(Color.BLUE);
 			skellyMap.getOverlay().add(ball);
 			
-			
+			/**
 			String label =Integer.toString( graph.nodes.indexOf(node));
 			TextRoi textLabel = new TextRoi(node.x,
 	    			node.y, label,font);
 			textLabel.setStrokeWidth(2); 
 			textLabel.setStrokeColor(Color.CYAN); 
-			skellyMap.getOverlay().add(textLabel);
+			skellyMap.getOverlay().add(textLabel);*/
 			}
 			
 			else {
@@ -220,12 +118,63 @@ public class GraphOverlay {
 			
 		}
 		
+		for (int[] edge : graph.fsRep) {
+			counter++;
+			Node node1 = graph.nodes.get(edge[0]);
+			Node node2 = graph.nodes.get(edge[1]);
+			
+		 	Line line = new Line(node1.x, node1.y, node2.x, node2.y);
+		    line.setStrokeWidth(2);
+		    line.setStrokeColor(Color.CYAN);
+		    overlay.add(line);
+		}
+		
+		
 		skellyMap.setTitle("Graph");
 		
 		this.overlayedGraph = skellyMap;
 		
 	}
 	
+	
+	
+	public void loadTif() {
+		
+		ImagePlus tifImp = null;
+		
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Image to load or file to iterate through.");
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+
+        // Add a file filter for image files (you can customize this for specific image types)
+        FileNameExtensionFilter imageFilter = new FileNameExtensionFilter("Tif", "tif");
+        fileChooser.setFileFilter(imageFilter);
+        
+        int result = fileChooser.showOpenDialog(null);
+        
+        if( result == JFileChooser.APPROVE_OPTION) {
+        	tifImp = new ImagePlus(fileChooser.getSelectedFile().getAbsolutePath());
+        }
+        
+       if(tifImp == null) {
+    	   System.out.println("failed to load Tif file. Did you choose a Tif file?");
+    	   return;
+       }
+       
+       tifImp.show();
+       Overlay nodules = tifImp.getOverlay();
+       
+       if(nodules == null) {
+    	   System.out.println("no overlay.");
+       }
+       
+       
+	}
+
+	
+	
+	// methods beyond this line are deprecated or used for testing purposes.
+	//==========================================================================
 	
 	
 	public void overlayChunkedGraph(RootGraph graph, ColorProcessor cp, ArrayList<ArrayList<int[]>> skeleton) {
@@ -358,49 +307,100 @@ public class GraphOverlay {
 		return new Roi(x,y, width-x, height-y);
 	}
 	
-	
-	
-	public void loadTif() {
+	/**
+	 * created for testing purposes, this method returns a copy of the image
+	 * overlay with the first set of nodes and edges highlighted in Color.ORANGE and the second
+	 * set highlighted in Color.CYAN.
+	 * 
+	 * @param graph 
+	 * @param nodeList : list of node indices from graph.nodes
+	 * @param edgeList : list of edge indices from graph.fsRep
+	 * @return a copy of overlayedGraph with highlighted nodes+edges.
+	 */
+	public ImagePlus highlightGraphSection(RootGraph graph, ArrayList<Integer> nodeList, 
+		ArrayList<Integer> edgeList, ArrayList<Integer> nodeList1, 
+		ArrayList<Integer> edgeList1) {
 		
-		ImagePlus tifImp = null;
+		ImagePlus highlightedGraph = new ImagePlus("highlighted", overlayedGraph.getProcessor());
+		Overlay overlay = new Overlay();
+		overlay.add(overlayedGraph.getOverlay());
+		highlightedGraph.setOverlay(overlay);
 		
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Image to load or file to iterate through.");
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-
-        // Add a file filter for image files (you can customize this for specific image types)
-        FileNameExtensionFilter imageFilter = new FileNameExtensionFilter("Tif", "tif");
-        fileChooser.setFileFilter(imageFilter);
-        
-        int result = fileChooser.showOpenDialog(null);
-        
-        if( result == JFileChooser.APPROVE_OPTION) {
-        	tifImp = new ImagePlus(fileChooser.getSelectedFile().getAbsolutePath());
-        }
-        
-       if(tifImp == null) {
-    	   System.out.println("failed to load Tif file. Did you choose a Tif file?");
-    	   return;
-       }
-       
-       tifImp.show();
-       Overlay nodules = tifImp.getOverlay();
-       
-       if(nodules == null) {
-    	   System.out.println("no overlay.");
-       }
-       
-       
-       
-       System.out.println("loadTif breakpoint.");
-       
-       
+		int highlightRadius = NODERADIUS;
+		
+		TextRoi.setFont("SansSerif",25 , Font.PLAIN);
+		 Font font = new Font("SansSerif",Font.PLAIN,25);
+		
+		for(int nodeIndex : nodeList) {
+			Node node = graph.nodes.get(nodeIndex);
+			
+			OvalRoi ball = new OvalRoi( node.x - highlightRadius,  node.y - highlightRadius, 
+					2 * highlightRadius, 2 * highlightRadius);
+			
+			ball.setFillColor(Color.ORANGE);
+			highlightedGraph.getOverlay().add(ball);
+			
+			TextRoi.setColor(Color.CYAN);
+			TextRoi textROI = new TextRoi(node.x, node.y, Integer.toString(nodeIndex), font);
+			textROI.setStrokeColor(Color.CYAN); 
+	    	textROI.setStrokeWidth(1); 
+	    	
+			overlay.add(textROI);
+			
+		}
+		
+		for(int edgeIndex : edgeList) {
+			int[] edge = graph.fsRep.get(edgeIndex);
+			
+			Node node1 = graph.nodes.get(edge[0]);
+			Node node2 = graph.nodes.get(edge[1]);
+			
+			
+			Line line = new Line(node1.x, node1.y, node2.x, node2.y);
+		    line.setStrokeWidth(5);
+		    line.setStrokeColor(Color.ORANGE);
+		    overlay.add(line);
+		}
+		
+		
+		
+		for(int nodeIndex : nodeList1) {
+			Node node = graph.nodes.get(nodeIndex);
+			
+			OvalRoi ball = new OvalRoi( node.x - highlightRadius,  node.y - highlightRadius, 
+					2 * highlightRadius, 2 * highlightRadius);
+			
+			ball.setFillColor(Color.CYAN);
+			highlightedGraph.getOverlay().add(ball);
+			
+			TextRoi.setColor(Color.CYAN);
+			TextRoi textROI = new TextRoi(node.x, node.y, Integer.toString(nodeIndex), font);
+			textROI.setStrokeColor(Color.CYAN); 
+	    	textROI.setStrokeWidth(1); 
+	    	
+			overlay.add(textROI);
+			
+		}
+		
+		for(int edgeIndex : edgeList1) {
+			int[] edge = graph.fsRep.get(edgeIndex);
+			
+			Node node1 = graph.nodes.get(edge[0]);
+			Node node2 = graph.nodes.get(edge[1]);
+			
+			
+			Line line = new Line(node1.x, node1.y, node2.x, node2.y);
+		    line.setStrokeWidth(5);
+		    line.setStrokeColor(Color.CYAN);
+		    overlay.add(line);
+		}
+		
+		 
+			
+		return highlightedGraph;
 	}
+	
 
-	
-	
-	// methods beyond this line are deprecated or used for testing purposes.
-	//==========================================================================
 	/**
 	 * Overlays the skeleton of the root system onto the image. Also overlays 
 	 * @param nodes: list of nodes.
@@ -459,6 +459,7 @@ public class GraphOverlay {
 		this.overlayedGraph = skellyMap;
 		
 	}
+	
 	
 	public void overlayNodules(RootGraph graph, ImagePlus skellyMap){
 		

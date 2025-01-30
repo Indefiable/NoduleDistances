@@ -3,37 +3,41 @@ package noduledistances.imagej;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.HashMap;
 import java.util.HashSet;
 
+
+
 import ij.IJ;
-import ij.ImagePlus;
 import ij.gui.Line;
+import ij.gui.ShapeRoi;
 import ij.gui.TextRoi;
 
 import com.programmerare.edu.asu.emit.algorithm.graph.EdgeYanQi;
 import com.programmerare.edu.asu.emit.algorithm.graph.GraphWithConstructor;
 
 import edu.asu.emit.algorithm.graph.Path;
-import edu.asu.emit.algorithm.graph.Vertex;
 import edu.asu.emit.algorithm.graph.abstraction.BaseVertex;
+import edu.asu.emit.algorithm.graph.abstraction.BaseGraph;
 import edu.asu.emit.algorithm.graph.shortestpaths.YenTopKShortestPathsAlg;
+import edu.asu.emit.algorithm.graph.*;
+
 
 
 
 
 /**
- * The purpose of the class Graph is to hold all information related to the graph derived from 
+ * The purpose of the class RootGraph is to hold all information related to the graph derived from 
  * the initial image, including the data and methods to translate between the abstract graph and
  * the point and edges on the skeleton of the image. 
  * The class also holds all computational methods relating to the abstract graph.
@@ -80,10 +84,13 @@ public class RootGraph {
 		this.graphOverlay = graphOverlay;
 		this.skeleton = skeleton;
 		
-		// enumerate all nodes and creates the forward start rep.
+		// enumerate all nodes and creates the forward star representation.
+		// chunk object is a list of of points. Each set of two points is the starting
+		// and ending point for an edge of the skeleton.
 		for( ArrayList<int[]> chunk : skeleton) {
 			
 			for(int ii = 0; ii < chunk.size(); ii+=2) {
+				
 				int[] start = chunk.get(ii);
 			    int[] end = chunk.get(ii+1);
 			    if(nodes.size() == 116) {
@@ -91,13 +98,15 @@ public class RootGraph {
 			    }
 			    Node startPt = new Node(start[0], start[1], 0, -1);
 			    Node endPt = new Node(end[0], end[1], 0, -1);
-			    /**
-			    if(nodes.size() > 116) {
-			    	System.out.println("104.");
-			    	
-			    	System.out.println("104-116 distance: " + nodes.get(104).distance(nodes.get(116)));
-			    }*/
+			    
+			    // sometimes the skeletonization algorithm will create 
+			    // a line that is very very small, so I will say those 
+			    // nodes are "equal"
+
 			    if(startPt.equals(endPt)) {
+			    	continue;
+			    }
+			    if(endPt.equals(startPt)) {
 			    	continue;
 			    }
 			    
@@ -128,7 +137,9 @@ public class RootGraph {
 			    startPt.nodeIndex = node1;
 			    endPt.nodeIndex = node2;
 			    if(node1 == node2) {
-			    	System.out.println("Error. Adding a self-loop.");
+			    	System.out.println("Nodes passed first non-equivalence test, failed second. Skipping"
+			    			+ "the given edge");
+			    	continue;
 			    }
 			    fsRep.add(new int[] {node1, node2, length});
 			    fsRep.add(new int[] {node2, node1, length});
@@ -159,9 +170,43 @@ public class RootGraph {
 		
 		updatePointer();
 		
+		addMissingEdges();
+		
 		System.out.println("number of nodes: " + nodes.size());
 		System.out.println("number of edges: " + (fsRep.size() / 2));
 		}//enumerate nodes
+	
+	
+	
+	
+	/**
+	 * The skeletonization algorithm sometimes does not add edges/arcs
+	 * where it makes sense to. This happens in cases where the nodes are very
+	 * close together, so to compensate we will add arcs when nodes are within 
+	 * a small distance.
+	 */
+	private void addMissingEdges() {
+		
+		for (Node node : nodes) {
+			
+			for(Node node1 : nodes) {
+				
+				if(node == node1) {
+					continue;
+				}
+				if(node.distance(node1) <= 9) {
+				//	System.out.println("Adding arc between" + nodes.indexOf(node) + " and " + nodes.indexOf(node1));
+					//addEdge(new Node[] {node, node1});
+				}
+				
+			}
+		}
+		
+		
+		
+	}
+	
+	
 	
 	/**
 	 * Adds an edge to the graph.
@@ -183,7 +228,10 @@ public class RootGraph {
 		
 		int node1 = nodes.indexOf(edge[0]);
 		int node2 = nodes.indexOf(edge[1]);
-		
+		if(node1 == node2) {
+			System.out.println("Will not add self-looping edges.");
+			return;
+		}
 		Line line = new Line(edge[0].x, edge[0].y, edge[1].x, edge[1].y);
 		int length = (int) line.getLength();
 		
@@ -194,7 +242,6 @@ public class RootGraph {
 		
 		updatePointer();
 	}
-	
 	
 	public void removeEdge(Node[] nodeEdge) {
 		int node1 = nodes.indexOf(nodeEdge[0]);
@@ -290,6 +337,322 @@ public class RootGraph {
 	}
 	
 	
+	
+	public void mergeNonemptyComponents(ArrayList<int[]> components) {
+		removeDeadComponents(components);
+		for(int ii = 0; ii < components.size(); ii++) {
+			mergeComponents(components, ii);
+		}
+	}
+	
+	
+	/**
+	 * Attempts to merge any disconnected pieces of graph. 
+	 * @param components
+	 * @param index0
+	 */
+	private void mergeComponents(ArrayList<int[]> components, int index0) {
+		
+		int[] comp1 = components.get(index0);
+		int node1Index = -1;
+		int componentIndex = -1;
+		if(comp1.length == 0) {
+			System.out.println("Breakpoint.");
+		}
+		
+		for(int index1 : comp1) {
+			
+			Node node1 = this.nodes.get(index1);
+			if(node1 == null) {
+				System.out.println("Null node. ");
+			}
+			
+			for(int ii = 0; ii < components.size(); ii++) {
+				if(ii == index0) {
+					continue;
+				}
+				if(components.get(ii).length == 0) {
+					System.out.println("Breakpoint.");
+				}
+				for(int index : components.get(ii)) {
+					Node node = this.nodes.get(index);
+					if(node == null) {
+						System.out.println("Null node.");
+					}
+					double distance1 = node.distance(node1);
+					
+					if(distance1 < 15) {
+						node1Index = index1;
+						componentIndex = ii;
+						
+						if(node1Index == -1) {
+							System.out.println("Breakpoint.");
+						}
+						if(node1 == node) {
+							continue;
+						}
+						this.addEdge(new Node[] {node1,node});
+						merge(componentIndex,index0, components);
+						mergeComponents(components, index0);
+						return;
+					}
+				}
+			}
+		}
+		
+		
+		
+	}
+	
+	/**
+	 * We merge the given components.
+	 * @param index of component to merge
+	 * @param index0 of component to merge
+	 * @param components array of components
+	 */
+	private void merge(int index,int index0, ArrayList<int[]> components) {
+		
+		if(index > components.size()) {
+			System.out.println("Error, index > number of components.");
+			return;
+		}
+		else if(index0 > components.size()) {
+			System.out.println("Error, index > number of components.");
+			return;
+		}
+		
+		int[] comp = components.get(index);
+		
+		int[] master = components.get(index0);
+		
+		int[] newMaster = new int[comp.length + master.length];
+		
+		System.arraycopy(master, 0, newMaster, 0, master.length);
+
+		System.arraycopy(comp, 0, newMaster, master.length, comp.length);
+		
+		components.remove(index);
+		components.set(index0, newMaster);
+	}
+	
+	
+	
+	private void removeDeadComponents(ArrayList<int[]> components) {
+		
+		ArrayList<Integer> deadComps = new ArrayList<>();
+		
+		for(int ii = 0; ii < components.size(); ii++) {
+			
+			if(components.get(ii).length == 0) {
+				deadComps.add(ii);
+				continue;
+			}
+			
+			int[] comp = components.get(ii);
+			boolean containsNodules = false;
+			
+			for(int vertex : comp) {
+				if( nodes.get(vertex).type >0) {
+					containsNodules = true;
+					break;
+				}
+			}
+			
+			if(!containsNodules) {
+				deadComps.add(ii);
+			}
+		}
+		 deadComps.sort((a, b) -> b.compareTo(a));
+		
+		 for (int index : deadComps) {
+	            if (index >= 0 && index < components.size()) {
+	                components.remove(index);
+	            }
+	     }
+		 
+		 
+	}
+	
+	
+	
+	/**
+	 * Find the numNodes closest Nodes to the given pt.
+	 * 
+	 * @param numNodes
+	 * @param pt
+	 * @return
+	 */
+	public ArrayList<int[]> ballSubgraph(int numNodes, Point2D pt) {
+		
+		ArrayList<int[]> subgraph = new ArrayList<>();
+		
+		Node[] retNodes = new Node[numNodes];
+		int[] rettNodes = new int[numNodes];
+		double[] distances = new double [numNodes];
+		
+		
+		
+		for(Node node : nodes) {
+			
+			int minIndex = -1;
+			double minDistance = Double.MAX_VALUE;
+			
+			for(int ii = 0; ii < numNodes; ii++) {
+				distances[ii] = node.distance(pt);
+				
+				if(distances[ii] < minDistance) {
+					minDistance = distances[ii];
+					minIndex = ii;
+				}
+				
+			}
+			
+			int i =0;
+			for(Node retNode : retNodes) {
+				if(retNode == null) {
+					retNodes[i] = node;
+					rettNodes[i] = nodes.indexOf(node);
+					break;
+				}
+				i++;
+			}
+			
+			if( node.distance(pt) < minDistance) {
+				retNodes[minIndex] = node;
+				rettNodes[minIndex] = nodes.indexOf(node);
+			}
+			
+		}
+		
+		for(Node node : retNodes) {
+			if(node == null) {
+				System.out.println("Null node in closest Nodes method.");
+				System.out.println("Breakpoint");
+				
+			}
+		}
+		
+		
+		for(int[] edge : fsRep) {
+			
+			int n1 = edge[0];
+			int n2 = edge[1];
+			
+			boolean n11 = false;
+			boolean n22 = false;
+			
+			for(int node : rettNodes) {
+				
+				if(n1 == node) {
+					n11 = true;
+				}
+				else if(n2 == node) {
+					n22 = true;
+				}
+				
+			}
+			
+			if(n11 && n22) {
+				subgraph.add(edge);
+			}
+			
+		}
+		
+		
+		
+		return subgraph;
+	}
+	
+	
+	
+	public ArrayList<ShapeRoi> ballSubgraphLines(int numNodes, Point2D pt){
+		ArrayList<ShapeRoi> lines = new ArrayList<>();
+		int[] rettNodes = new int[numNodes];
+		
+
+		
+        
+
+		// Priority queue to store the k closest nodes
+        PriorityQueue<Node> closestNodesQueue = new PriorityQueue<>
+        (Comparator.comparingDouble(node -> ((Node) node).distance(pt)).reversed());
+        
+        // Iterate over each node
+        for (Node node : nodes) {
+            double distance = node.distance(pt);
+            
+            // If the queue is not full or the current node is closer than the farthest node in the queue
+            if (closestNodesQueue.size() < numNodes || distance < closestNodesQueue.peek().distance(pt)) {
+                closestNodesQueue.offer(node);
+            }
+            
+            // If the queue exceeds the limit, remove the farthest node
+            int size = closestNodesQueue.size();
+            if (size > numNodes) {
+                closestNodesQueue.poll();
+            }
+        }
+        
+        // Convert the priority queue to an array
+        Node[] retNodes = closestNodesQueue.toArray(new Node[0]);
+		
+        for(int ii = 0; ii < numNodes; ii++) {
+        	rettNodes[ii] = nodes.indexOf(retNodes[ii]);
+        }
+		
+		
+		for(Node node : retNodes) {
+			if(node == null) {
+				System.out.println("Null node in closest Nodes method.");
+				System.out.println("Breakpoint");
+			}
+		}
+		
+		// Was using Set to not add reverse arcs, but it wasn't working properly, so 
+		// I'm instead going to remove duplicates at the end of the process.
+		//Set<String> processedEdges = new HashSet<>();
+		
+		for(int[] edge : fsRep) {
+			
+			int n1 = edge[0];
+			int n2 = edge[1];
+			
+			//String edgeKey = n1 + "-" + n2;
+		    ///String oppositeEdgeKey = n2 + "-" + n1;
+		    //if (processedEdges.contains(edgeKey) || processedEdges.contains(oppositeEdgeKey)) {
+		        // Skip processing the duplicate edge
+		     //   continue;
+		   // }
+		    
+			boolean n11 = false;
+			boolean n22 = false;
+			
+			for(int node : rettNodes) {
+				
+				if(n1 == node) {
+					n11 = true;
+				}
+				else if(n2 == node) {
+					n22 = true;
+				}
+				
+			}
+			
+			if(n11 && n22) {
+				//processedEdges.add(edgeKey);
+				Line line = new Line(nodes.get(n1).x,nodes.get(n1).y, nodes.get(n2).x,nodes.get(n2).y);
+				ShapeRoi lineRoi = new ShapeRoi(line);
+				lines.add(lineRoi);
+			}
+			
+		}
+		
+		
+		return lines;
+	}
+	
+	
+	
 	/**
 	* Finds all instances within the graph that contain the input node as an out-node.
 	 * @param node
@@ -350,6 +713,24 @@ public class RootGraph {
     		}
     		
     		Node nod = new Node(nodule[ii+1],nodule[ii+2], nodule[ii], number, nodule[ii+3]);
+    		
+    		if(nodes.contains(nod)) {
+    			int index = nodes.indexOf(nod);
+    			if(nodes.get(index).type != 0) {
+    				System.out.println("Breakpoint.");
+    			}
+    			else {
+    				nodes.get(index).update(nodule[ii+1],nodule[ii+2], nodule[ii], number, nodule[ii+3]);
+        			nodes.get(index).nodeIndex = index;
+        			ii+=4;
+        			numNodules++;
+        			continue;
+    			}
+    			
+    		}
+    			
+    			
+    			
     		if(nod.type <1 || nod.type > 3) {
     			System.out.println("nod type is " + nod.type + " and unclear. breakpointing.");
     			System.out.println("breakpoint.");
@@ -476,12 +857,10 @@ public class RootGraph {
     			int endingNodule = nodes.indexOf(nodule1);
     			
     			if(startingNodule == endingNodule) {
+    				nodule.paths.add(null);
     				continue;
     			}
     			
-    			if(startingNodule == 215 && endingNodule == 225) {
-    				System.out.println("Breakpoint.");
-    			}
     			//System.out.println("=======================");
     			//System.out.println("paths from " + nodule.nodeNumber + " to " + nodule1.nodeNumber);
     			
@@ -489,17 +868,22 @@ public class RootGraph {
     					yanGraph.getVertex(startingNodule), yanGraph.getVertex(endingNodule), numIterations);
     			
     			
-    			
     			if(shortest_paths_list == null) {
     				System.out.println("No paths between the two nodules.");
     				System.out.println("breakpoint.");
     			}
     			
+    			//System.out.println("Len of paths: " + shortest_paths_list.size());
+    			
     			//System.out.println("len of shortestPaths: " + shortest_paths_list.size());
+    			/**
+    			 * 
+    			
+    			}*/
     			if(shortest_paths_list.size() == 0) {
     				System.out.println("no paths between." + nodule.nodeNumber + "/" 
     			+ startingNodule+ " and " + nodule1.nodeNumber + "/" + endingNodule );
-    			}
+    			}	
     			ArrayList<int[]> paths = shortestPathsToList(shortest_paths_list);
     			
     			if(paths.size() == 0) {
@@ -579,19 +963,19 @@ public class RootGraph {
     protected GraphWithConstructor convertToYanGraph() {
     	
     	List<EdgeYanQi> edges = new ArrayList<>();
-    	int cc = 0;
+    	
     	for (int[] edge : fsRep) {
     		if(edge[0] == edge[1]) {
-    			System.out.println("Error. ");
+    			System.out.println("Error, graph contains an edge [e,e] (self loop)");
+    			continue;
     		}
     		
     		EdgeYanQi yanEdge = new EdgeYanQi(edge[0], edge[1], edge[2]);
     		edges.add(yanEdge);
-    		cc++;
+    		
     	}
     	
     	GraphWithConstructor yanQiGraph = new GraphWithConstructor(nodes.size(), edges);
-    	
     	
     	
     	return yanQiGraph;
@@ -644,10 +1028,10 @@ public class RootGraph {
     public void Dijkstras(Node startNode, int iteration) {
     	
     	
-    	ArrayList<Integer> testEdgeList = new ArrayList<>();
-    	ArrayList<Integer> testNodeList = new ArrayList<>();
-    	ArrayList<Integer> testEdgeList1 = new ArrayList<>();
-    	ArrayList<Integer> testNodeList1 = new ArrayList<>();
+    	//ArrayList<Integer> testEdgeList = new ArrayList<>();
+    	//ArrayList<Integer> testNodeList = new ArrayList<>();
+    	//ArrayList<Integer> testEdgeList1 = new ArrayList<>();
+    	//ArrayList<Integer> testNodeList1 = new ArrayList<>();
     	
     	
     	
@@ -671,10 +1055,11 @@ public class RootGraph {
     	
     	
     	while(unsettled.size() > 0) {
+    		System.out.println(unsettled);
     		
     		int currentNode = shortestDistance(distance, unsettled);
     		
-    		testNodeList1.add(currentNode);
+    		//testNodeList1.add(currentNode);
     		
     		unsettled.remove(currentNode);
     		
@@ -697,25 +1082,25 @@ public class RootGraph {
     			if(distance[currentNode] + edge[2] < distance[edge[1]]) {
     				prevNode[edge[1]] = currentNode;
     				distance[edge[1]] = distance[currentNode] + edge[2];
-    				testEdgeList.add(ii);
+    				//testEdgeList.add(ii);
     			}
     			else {
-    				testEdgeList1.add(ii);
+    				//testEdgeList1.add(ii);
     			}
     			
     			unsettled.add(edge[1]);
     			
-    			testNodeList.add(edge[1]);
+    			//testNodeList.add(edge[1]);
     		}
     		
     	//	graphOverlay.highlightGraphSection(this, testNodeList, testEdgeList,testNodeList1,testEdgeList1).show();
     		
     		
     		settled.add(currentNode);
-    		testNodeList = new ArrayList<>();
-    		testEdgeList = new ArrayList<>();
-    		testNodeList1 = new ArrayList<>();
-    		testEdgeList1 = new ArrayList<>();
+    	//	testNodeList = new ArrayList<>();
+    	//	testEdgeList = new ArrayList<>();
+    	//	testNodeList1 = new ArrayList<>();
+    	//	testEdgeList1 = new ArrayList<>();
     		
     	}
     	//Data structure for nodes changed. These lines are deprecated.

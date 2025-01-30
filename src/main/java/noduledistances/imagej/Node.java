@@ -8,17 +8,23 @@ import ij.IJ;
 
 public class Node extends Point{
 	
-	/**
-	 * Node.type == 0 -> skeleton node
-	 * type == 1 -> red nodule
-	 * type == 2 -> green nodule
-	 * type == 3 -> mixed nodule
-	 */
+/**
+ * Node.type == 0 -> skeleton node
+ * type == 1 -> red nodule
+ * type == 2 -> green nodule
+ * type == 3 -> mixed nodule
+ */
 public static final int SKELETON = 0;
 public static final int RED = 1;
 public final static int GREEN = 2;
 public final static int MIXED = 3;
 
+/**
+ * Node.type == 0 -> skeleton node
+ * type == 1 -> red nodule
+ * type == 2 -> green nodule
+ * type == 3 -> mixed nodule
+ */
 public int type;
 public int area;
 
@@ -31,7 +37,10 @@ public int nodeIndex;
  * The notation is noduleNumber_noduleSubnumber, and the underscore is represented as a decimal.
  */
 public double nodeNumber;
+
+
 /**
+ * DEPRECATED
  * 2d array where each element A_ij is the distance to the j'th node on the 
  * i'th iteration of dijkstra's. Each row is one iteration of Dijkstra's, 
  * we remove a used edge from the original graph and perform another iteration of 
@@ -42,7 +51,8 @@ public int[][] distance;
 public int[] prevNode;
 
 /**
- * 2d array where each element Aij is an int[]. The first element is what node 
+ * 2d array where each element Aij is an int[] p. First index of paths is what node we're going to. The second index is 
+ * what iteration of shortest path. The first element of p is what node 
  * the path goes to, the second element is the pixel distance, and the remaining elements
  * are the nodes of the path used to get there.
  */
@@ -72,7 +82,31 @@ public Node(int x, int y, int type, double nodeNumber) {
 	
 }
 
+public void update(int x, int y, int type, double nodeNumber, int area) {
+	this.x = x;
+	this.y=y;
+	this.type=type;
+	this.nodeNumber=nodeNumber;
+	this.area=area;
+}
 
+public void update(int type, double nodeNumber, int area) {
+	this.type=type;
+	this.nodeNumber=nodeNumber;
+	this.area=area;
+}
+
+public void update(int type) {
+	this.type=type;
+} 
+
+
+/**
+ * We say two nodes are equal when any of the following are true:
+ * 1. they reference the same object in memory
+ * 2. their x/y values are the same
+ * 3. if they are the same type of node( skeleton/nodule) AND are within 8 pixels
+ */
 @Override
 public boolean equals(Object obj) {
 	if(this == obj) {
@@ -82,18 +116,53 @@ public boolean equals(Object obj) {
          return false;
      }
 	 
-	 Node node = (Node) obj;
+	Node node = (Node) obj;
 	 
 	if(node.x == this.x && node.y == this.y && node.type == this.type) {
 		return true;
 	}
+	boolean typeDiff = true;
+	if(this.type != 0 && this.type != 0) {
+		return false;
+	}
+	else if((this.type <1 && node.type != 0 )|| this.type !=0 && node.type <1) {
+		typeDiff = true;
+	}
 	
-	if(this.distance(node) <= 5) {
+	if(this.distance(node) <= 8 && typeDiff) {
 		return true;
 	}
 	
 	return false;
 	
+}
+
+
+/**
+ * Finds and returns the set of paths from this node to the given node.
+ * @param node
+ * @return
+ */
+public ArrayList<int[]> getPaths(int node){
+	ArrayList<int[]> paths = new ArrayList<>();
+	
+	for (ArrayList<int[]> ps : this.paths) {
+		if(ps == null) {
+			continue;
+		}
+		//System.out.println("out node:" + ps.get(0)[0]);
+		if(ps.get(0)[0] == node) {
+			paths = ps;
+			break;
+		}
+	}
+	
+	/**
+	if(paths.size() == 0) {
+		System.out.println("Could not find paths from " + this.nodeNumber +" to " + node);
+	}*/
+	
+	return paths;
 }
 
 
@@ -120,10 +189,10 @@ public String toString() {
 		color = "mixed";
 	}
 	else {
-		IJ.log("You shouldn't see this. Node has unknown type.");
+		//IJ.log("You shouldn't see this. Node has unknown type.");
 		color = "unknown";
 	}
-    return "{x=" + x + ", y=" + y + ", type=" + color + '}';
+    return nodeNumber + "{x=" + x + ", y=" + y + ", type=" + color + '}';
 }
 
 }
