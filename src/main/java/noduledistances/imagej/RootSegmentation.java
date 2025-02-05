@@ -16,7 +16,13 @@ import trainableSegmentation.FeatureStackArray;
 import trainableSegmentation.unsupervised.ColorClustering;
 
 
-
+/**
+ * Class for segmenting the roots from the rest of the image using Weka's Color Clustering 
+ * segmentation method.
+ * 
+ * @author Brandin Farris
+ *
+ */
 public class RootSegmentation {
 
 	private ColorClustering cluster;
@@ -145,9 +151,7 @@ public class RootSegmentation {
 	    manager.reset();
 	    manager.close();
 	}
-	
-	
-	
+		
 	
 	/**
 	 * Used for testing purposes, this method completely fills in 

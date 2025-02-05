@@ -40,7 +40,9 @@ public class Menu implements Command {
     private double upperBound;
     
     
-    
+    /**
+     * method for displaying the UI to let the user select their input files.
+     */
 	private void display() {
 		// Create the dialog
         GenericDialog gd = new GenericDialog("Nodule Distances Plugin");
@@ -126,11 +128,23 @@ public class Menu implements Command {
         
         
 	}
-	
+
+/**
+ * 	Method for starting the Menu display process.
+ */
 	public void run() {
 		display();
 	}
 	
+	
+	/**
+	 * Displays the UI to let the user select a new file. Records the chosen file to the 
+	 * this Menu object for later reference.
+	 * 
+	 * @param file : an integer representing what file the user is
+	 *  currently choosing (model file, image file,etc)
+	 * 
+	 */
 	private void selectFiles(int file) {
 		System.out.println("FILE :" + file);
 		JFileChooser fileChooser = new JFileChooser();

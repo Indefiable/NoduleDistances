@@ -6,22 +6,34 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * An implementation of the union find algorithm. Used to merge 
+ * disconnected components of the graph under the standing assumption that the root 
+ * system of the image is connected. 
+ * 
+ * @author Brandin Farris
+ *
+ */
 class UnionFind {
     // Initialize parent array and rank array for Union-Find
     int[] parent;
     int[] rank;
 
-    public UnionFind(int n) {
-        parent = new int[n];
-        rank = new int[n];
-        for (int i = 0; i < n; i++) {
+    /**
+     * constructor method for the union find algorithm.
+     * @param size : size of the union find object. 
+     */
+    private UnionFind(int size) {
+        parent = new int[size];
+        rank = new int[size];
+        for (int i = 0; i < size; i++) {
             parent[i] = i;  // Each vertex is its own parent initially
             rank[i] = 0;    // Initialize rank to 0
         }
     }
 
     // Find operation to find the root (parent) of a vertex
-    public int find(int x) {
+    private int find(int x) {
         if (parent[x] != x) {
             parent[x] = find(parent[x]);  // Path compression
         }
@@ -29,7 +41,7 @@ class UnionFind {
     }
 
     // Union operation to merge two sets
-    public void union(int x, int y) {
+    private void union(int x, int y) {
         int rootX = find(x);
         int rootY = find(y);
         if (rootX != rootY) {
@@ -45,28 +57,17 @@ class UnionFind {
     }
 
 
-public boolean isConnected(int[][] edges, int n) {
-    UnionFind uf = new UnionFind(n);
-   
-    for (int[] edge : edges) {
-        int u = edge[0];
-        int v = edge[1];
-        if (uf.find(u) == uf.find(v)) {
-            // If the roots of u and v are the same, there's a cycle
-            return false;
-        } else {
-            // Merge the sets containing u and v
-            uf.union(u, v);
-        }
-    }
-    // If there's only one disjoint set left, the graph is connected
-    return Arrays.stream(uf.parent).distinct().count() == 1;
-}
-
-
-
-public static ArrayList<int[]> connectedComponents(ArrayList<int[]> edges, int n) {
-    UnionFind uf = new UnionFind(n);
+/**
+ * Uses the union find algorithm to create an ArrayList of connected components.
+ * 
+ * 
+ * @param edges : graph to compute the connected components of.
+ * @param numNodes : number of nodes in the graph.
+ * @return : an array where each entry is the list of connected nodes of the disjoint graph. If the
+ * first layer of the nested array has only one component, it is a connected graph.
+ */
+public static ArrayList<int[]> connectedComponents(ArrayList<int[]> edges, int numNodes) {
+    UnionFind uf = new UnionFind(numNodes);
     
     // Map to store the root vertex and its connected vertices
     Map<Integer, List<Integer>> componentMap = new HashMap<>();
@@ -87,7 +88,7 @@ public static ArrayList<int[]> connectedComponents(ArrayList<int[]> edges, int n
     }
     
     // Group vertices based on their roots (connected components)
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < numNodes; i++) {
         int root = uf.find(i);
         componentMap.computeIfAbsent(root, k -> new ArrayList<>()).add(i);
     }
@@ -101,14 +102,6 @@ public static ArrayList<int[]> connectedComponents(ArrayList<int[]> edges, int n
     return connectedComponents;
 
 }
-
-
-
-
-
-
-
-
 
 
 

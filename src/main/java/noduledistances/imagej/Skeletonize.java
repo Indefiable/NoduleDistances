@@ -11,13 +11,21 @@ import ij.process.ImageProcessor;
 
 import traceskeleton.TraceSkeleton;
 
+
+
+/**
+ * Class using Ling Dong's skeletonization algorithm. Used for finding a graph representation
+ * of the root system. 
+ * 
+ * @author Brandin Farris
+ *
+ */
 public class Skeletonize {
 	ImagePlus binarymap;
 	ImagePlus skeletonMap;
 	
 	public Skeletonize() {
-		
-		System.out.println("I dunno, somethin.");
+		// Don't need to actually construct an object of this type.
 		
 	}
 	
@@ -139,7 +147,16 @@ public class Skeletonize {
         return scaledImage;
     }
 	
-    
+    /**
+     * Performs bilinear interpolation to estimate the pixel value at non-integer 
+     * coordinates (x, y) in an image.
+     *
+     * @param processor The {@code ImageProcessor} used to access pixel values.
+     * @param x The x-coordinate (can be a fractional value).
+     * @param y The y-coordinate (can be a fractional value).
+     * @return The interpolated pixel value as an integer.
+     * @throws ArrayIndexOutOfBoundsException if the coordinates are out of bounds.
+     */ 
     private static int bilinearInterpolation(ImageProcessor processor, double x, double y) {
         int x1 = (int) x;
         int y1 = (int) y;
@@ -161,9 +178,7 @@ public class Skeletonize {
         return (int) value;
     }
     
-    
-    
-    
+       
     /**
      * blurs the image. Used to make the edges of the image smoother to improve the output of the 
      * skeletonization algorithm.

@@ -44,7 +44,7 @@ import edu.asu.emit.algorithm.graph.*;
  * 
  * 
  * 
- * one pixel is (2601/ 4064256) mm^2
+ * 
  */
 public class RootGraph {
 	
@@ -77,8 +77,17 @@ public class RootGraph {
 	
 
 	/**
-	 * initializer. Constructs the graph object from the skeleton.
-	 * @param skeleton
+	 * constructor. Constructs the graph object from the skeleton. LingDong's 
+	 * algorithm wasn't designed to convert the skeleton into a graph, so sometimes
+	 * the graph becomes disconnected when the provided object it's skeletonizing is connected. 
+	 * We attempt to amend this by saying that any two nodes from the skeleton are the same
+	 * if they are within 8 pixels (refer to Node.equals). We also add edges at the end
+	 * if two nodes are within 9 pixels.
+	 * 
+	 * 
+	 * @param skeleton : skeleton object from LingDong's skeletonization algorithm.
+	 * @param graphOverlay : graphOverlay object which holds the root system image 
+	 * and the graph overlaying it.
 	 */
 	public RootGraph(ArrayList<ArrayList<int[]>> skeleton, GraphOverlay graphOverlay) {
 		this.graphOverlay = graphOverlay;
@@ -210,7 +219,7 @@ public class RootGraph {
 	
 	/**
 	 * Adds an edge to the graph.
-	 * @param edge
+	 * @param edge : edge to add to the graph.
 	 */
 	public void addEdge(Node[] edge) {
 		
@@ -243,6 +252,12 @@ public class RootGraph {
 		updatePointer();
 	}
 	
+	/**
+	 * method for removing the given edge. 
+	 * 
+	 * @param nodeEdge : edge to remove. nodeEdge should be an array of size 2, 
+	 * one for each endpoint of the edge
+	 */
 	public void removeEdge(Node[] nodeEdge) {
 		int node1 = nodes.indexOf(nodeEdge[0]);
 		int node2 = nodes.indexOf(nodeEdge[1]);
@@ -295,8 +310,9 @@ public class RootGraph {
 		updatePointer();
 	}
 	
+	
 	/**
-	 * creates/updates the pointer array. The pointer array tells you at which index
+	 * creates/updates the forward star pointer array. The pointer array tells you at which index
 	 * of the forward star array a given node starts appearing as the first element of an edge.
 	 */
 	private void updatePointer() {
@@ -337,7 +353,11 @@ public class RootGraph {
 	}
 	
 	
-	
+	/**
+	 * Used to merge disconnected parts of the graph to create one connected graph.
+	 * 
+	 * @param components : parts of the graph that are disconnected.
+	 */
 	public void mergeNonemptyComponents(ArrayList<int[]> components) {
 		removeDeadComponents(components);
 		for(int ii = 0; ii < components.size(); ii++) {
@@ -347,18 +367,18 @@ public class RootGraph {
 	
 	
 	/**
-	 * Attempts to merge any disconnected pieces of graph. 
-	 * @param components
-	 * @param index0
+	 * Find a second component to merge with index0 of the components array by 
+	 * attempting to find another component that is within 15 pixels.
+	 * 
+	 * @param components : list of all disjoint components of the graph. 
+	 * @param index0 : index to merge with another component.
 	 */
 	private void mergeComponents(ArrayList<int[]> components, int index0) {
 		
 		int[] comp1 = components.get(index0);
 		int node1Index = -1;
 		int componentIndex = -1;
-		if(comp1.length == 0) {
-			System.out.println("Breakpoint.");
-		}
+		
 		
 		for(int index1 : comp1) {
 			
@@ -371,13 +391,12 @@ public class RootGraph {
 				if(ii == index0) {
 					continue;
 				}
-				if(components.get(ii).length == 0) {
-					System.out.println("Breakpoint.");
-				}
+				
 				for(int index : components.get(ii)) {
 					Node node = this.nodes.get(index);
 					if(node == null) {
 						System.out.println("Null node.");
+						continue;
 					}
 					double distance1 = node.distance(node1);
 					
@@ -406,9 +425,10 @@ public class RootGraph {
 	
 	/**
 	 * We merge the given components.
-	 * @param index of component to merge
-	 * @param index0 of component to merge
-	 * @param components array of components
+	 * 
+	 * @param index index of component to merge
+	 * @param index0 second index of component to merge
+	 * @param components array of disconnected components
 	 */
 	private void merge(int index,int index0, ArrayList<int[]> components) {
 		
@@ -436,7 +456,12 @@ public class RootGraph {
 	}
 	
 	
-	
+	/**
+	 * Deletes disconnected pieces of the graph that contain no nodules. i.e. they are not needed
+	 * for the analysis, so they're removed instead of added to the parent graph.
+	 * 
+	 * @param components : set of disjoint components of the graph.
+	 */
 	private void removeDeadComponents(ArrayList<int[]> components) {
 		
 		ArrayList<Integer> deadComps = new ArrayList<>();
@@ -473,190 +498,13 @@ public class RootGraph {
 		 
 	}
 	
-	
+
 	
 	/**
-	 * Find the numNodes closest Nodes to the given pt.
-	 * 
-	 * @param numNodes
-	 * @param pt
-	 * @return
-	 */
-	public ArrayList<int[]> ballSubgraph(int numNodes, Point2D pt) {
-		
-		ArrayList<int[]> subgraph = new ArrayList<>();
-		
-		Node[] retNodes = new Node[numNodes];
-		int[] rettNodes = new int[numNodes];
-		double[] distances = new double [numNodes];
-		
-		
-		
-		for(Node node : nodes) {
-			
-			int minIndex = -1;
-			double minDistance = Double.MAX_VALUE;
-			
-			for(int ii = 0; ii < numNodes; ii++) {
-				distances[ii] = node.distance(pt);
-				
-				if(distances[ii] < minDistance) {
-					minDistance = distances[ii];
-					minIndex = ii;
-				}
-				
-			}
-			
-			int i =0;
-			for(Node retNode : retNodes) {
-				if(retNode == null) {
-					retNodes[i] = node;
-					rettNodes[i] = nodes.indexOf(node);
-					break;
-				}
-				i++;
-			}
-			
-			if( node.distance(pt) < minDistance) {
-				retNodes[minIndex] = node;
-				rettNodes[minIndex] = nodes.indexOf(node);
-			}
-			
-		}
-		
-		for(Node node : retNodes) {
-			if(node == null) {
-				System.out.println("Null node in closest Nodes method.");
-				System.out.println("Breakpoint");
-				
-			}
-		}
-		
-		
-		for(int[] edge : fsRep) {
-			
-			int n1 = edge[0];
-			int n2 = edge[1];
-			
-			boolean n11 = false;
-			boolean n22 = false;
-			
-			for(int node : rettNodes) {
-				
-				if(n1 == node) {
-					n11 = true;
-				}
-				else if(n2 == node) {
-					n22 = true;
-				}
-				
-			}
-			
-			if(n11 && n22) {
-				subgraph.add(edge);
-			}
-			
-		}
-		
-		
-		
-		return subgraph;
-	}
-	
-	
-	
-	public ArrayList<ShapeRoi> ballSubgraphLines(int numNodes, Point2D pt){
-		ArrayList<ShapeRoi> lines = new ArrayList<>();
-		int[] rettNodes = new int[numNodes];
-		
-
-		
-        
-
-		// Priority queue to store the k closest nodes
-        PriorityQueue<Node> closestNodesQueue = new PriorityQueue<>
-        (Comparator.comparingDouble(node -> ((Node) node).distance(pt)).reversed());
-        
-        // Iterate over each node
-        for (Node node : nodes) {
-            double distance = node.distance(pt);
-            
-            // If the queue is not full or the current node is closer than the farthest node in the queue
-            if (closestNodesQueue.size() < numNodes || distance < closestNodesQueue.peek().distance(pt)) {
-                closestNodesQueue.offer(node);
-            }
-            
-            // If the queue exceeds the limit, remove the farthest node
-            int size = closestNodesQueue.size();
-            if (size > numNodes) {
-                closestNodesQueue.poll();
-            }
-        }
-        
-        // Convert the priority queue to an array
-        Node[] retNodes = closestNodesQueue.toArray(new Node[0]);
-		
-        for(int ii = 0; ii < numNodes; ii++) {
-        	rettNodes[ii] = nodes.indexOf(retNodes[ii]);
-        }
-		
-		
-		for(Node node : retNodes) {
-			if(node == null) {
-				System.out.println("Null node in closest Nodes method.");
-				System.out.println("Breakpoint");
-			}
-		}
-		
-		// Was using Set to not add reverse arcs, but it wasn't working properly, so 
-		// I'm instead going to remove duplicates at the end of the process.
-		//Set<String> processedEdges = new HashSet<>();
-		
-		for(int[] edge : fsRep) {
-			
-			int n1 = edge[0];
-			int n2 = edge[1];
-			
-			//String edgeKey = n1 + "-" + n2;
-		    ///String oppositeEdgeKey = n2 + "-" + n1;
-		    //if (processedEdges.contains(edgeKey) || processedEdges.contains(oppositeEdgeKey)) {
-		        // Skip processing the duplicate edge
-		     //   continue;
-		   // }
-		    
-			boolean n11 = false;
-			boolean n22 = false;
-			
-			for(int node : rettNodes) {
-				
-				if(n1 == node) {
-					n11 = true;
-				}
-				else if(n2 == node) {
-					n22 = true;
-				}
-				
-			}
-			
-			if(n11 && n22) {
-				//processedEdges.add(edgeKey);
-				Line line = new Line(nodes.get(n1).x,nodes.get(n1).y, nodes.get(n2).x,nodes.get(n2).y);
-				ShapeRoi lineRoi = new ShapeRoi(line);
-				lines.add(lineRoi);
-			}
-			
-		}
-		
-		
-		return lines;
-	}
-	
-	
-	
-	/**
-	* Finds all instances within the graph that contain the input node as an out-node.
-	 * @param node
-	 * @return
+	* Finds searches for all in-arcs of the given node.
+	* 
+	 * @param node : node to find the in-arc for
+	 * @return : all points who has arcs entering the given node.
 	 */
 	public ArrayList<Point[]> getInstances(Point node){
 		ArrayList<Point[]> instances = new ArrayList<>();
@@ -683,6 +531,7 @@ public class RootGraph {
    /**
     * adds the set of nodules as Node objects to the graph by connecting each nodule node 
     * to the nearest node currently within the graph with an edge.
+    * 
     * @param nodLocations a list of x,y coordinates of the contour centroids of the polygon outlines
     * of the nodules.
     */
@@ -798,7 +647,13 @@ public class RootGraph {
 	*/
     }// addNodes()
     
-    
+    /**
+     * Checks whether the graph contains the edge [a,b].
+     * 
+     * @param a : source node of arc in question.
+     * @param b : sink node of arc in question.
+     * @return : true if such an arc exists. False otherwise.
+     */
     public boolean containsEdge(int a, int b) {
     	
     	for (int[] edge : fsRep) {
@@ -811,9 +666,10 @@ public class RootGraph {
     }
     
    /**
-    * Calculates the Node on the graph closest to the Node given as input. Primarily used for determining
-    * which Node to connect the Nodule Nodes being added to.
-    * @param Node p
+    * Calculates the Node on the graph closest to the Node given as input. Primarily
+    *  used for determining which Node to connect the Nodule Nodes being added to.
+    *  
+    * @param Node p : node to search around.
     * @return Node closest to Node p (euclidean distance).
     */
     private Node calculateClosestNode(Node p) {
@@ -839,10 +695,10 @@ public class RootGraph {
     
     
     /**
-     * Computes and stores the allpairs distance calculations between all Nodules. 
-     * The input dictates the number of times we compute the distance calculations. In each 
-     * iteration, we remove a different edge 
-     * @param numIterations
+     * Computes and stores the all-pairs distance calculations between all 
+     * Nodules numIteration times. In each iteration, we remove a different edge 
+     * 
+     * @param numIterations : the number of times we compute the distance calculations.
      */
     public void computeShortestDistances(int numIterations) {
     	
@@ -898,6 +754,12 @@ public class RootGraph {
     }
     
     
+    /**
+     * converts the list of computed shortest paths to an ArrayList<int[]> object.
+     * 
+     * @param shortest_paths_list : object to convert.
+     * @return : converted object.
+     */
     protected ArrayList<int[]> shortestPathsToList(List<Path> shortest_paths_list) {
     	
     	ArrayList<int[]> paths = new ArrayList<>();
@@ -929,6 +791,13 @@ public class RootGraph {
     }
     
     
+    /**
+     * Computes the length of the given path. i.e. the sum of the 
+     * lengths of the lines between each arc in the path.
+     * 
+     * @param path : path to compute the length of.
+     * @return : length of the given path.
+     */
     protected int computeLengthOfPath(List<BaseVertex> path) {
     	int length = 0;
     	
@@ -981,135 +850,12 @@ public class RootGraph {
     	return yanQiGraph;
     }
     
-    
-    
-    
-    
-    // all methods beyond this line are deprecates or methods for testing purposes.
-    //=============================================================================
-
-    /**
-     * @returns the index with the smallest value.
-     * @param distance list of known distances.
-     * @param unsettled list of node indices to check.
-     * 
-     */
-    private int shortestDistance(int[] distance, Set<Integer> unsettled) {
-    	
-    	int currentDistance = Integer.MAX_VALUE;
-    	int currentNode = -1;
-    	
-    	for(int node : unsettled) {
-    		
-    		if(distance[node] < currentDistance) {
-    			currentDistance = distance[node];
-    			currentNode = node;
-    		}
-    		
-    	}
-    	
-    	return currentNode;
-    }
-    
-
-    
-    /**
-     * 1.Set distance to startNode to zero.
-     * 
-	   2.Set all other distances to an infinite value.
-	   
-	   3.We add the startNode to the unsettled nodes set.
-	   
-	   4. While the unsettled nodes set is not empty we:
-			Choose node from unsettled node set with smallest current distance.
-			Calculate new distances to direct neighbors by keeping the lowest distance at each evaluation.
-			Add neighbors that are not yet settled to the unsettled nodes set.
-     */
-    public void Dijkstras(Node startNode, int iteration) {
-    	
-    	
-    	//ArrayList<Integer> testEdgeList = new ArrayList<>();
-    	//ArrayList<Integer> testNodeList = new ArrayList<>();
-    	//ArrayList<Integer> testEdgeList1 = new ArrayList<>();
-    	//ArrayList<Integer> testNodeList1 = new ArrayList<>();
-    	
-    	
-    	
-    	Set<Integer> settled = new HashSet<>();
-        Set<Integer> unsettled = new HashSet<>();
-    	
-    	
-    	int[] distance = new int[nodes.size()];
-    	int[] prevNode = new int[nodes.size()];
-    	
-    	
-    	for(int ii = 0; ii < distance.length ; ii++) {
-    		distance[ii] = Integer.MAX_VALUE-1;
-    		prevNode[ii] = -1;
-    	}
-    	
-    	int startNodeIndex = nodes.indexOf(startNode);
-    	
-    	distance[startNodeIndex] = 0;
-    	unsettled.add(startNodeIndex);
-    	
-    	
-    	while(unsettled.size() > 0) {
-    		System.out.println(unsettled);
-    		
-    		int currentNode = shortestDistance(distance, unsettled);
-    		
-    		//testNodeList1.add(currentNode);
-    		
-    		unsettled.remove(currentNode);
-    		
-    		
-    		int startIndex = pointer[currentNode];
-    		int endIndex = pointer[currentNode+1];
-    		
-    		for(int ii = startIndex; ii < endIndex; ii++) {
-    			
-    			if(ii >= fsRep.size()) {
-    				System.out.println("dijkstra breakpoint");
-    			}
-    			
-    			int[] edge = fsRep.get(ii);
-    			
-    			if(settled.contains(edge[1])) {
-    				continue;
-    			}
-    			
-    			if(distance[currentNode] + edge[2] < distance[edge[1]]) {
-    				prevNode[edge[1]] = currentNode;
-    				distance[edge[1]] = distance[currentNode] + edge[2];
-    				//testEdgeList.add(ii);
-    			}
-    			else {
-    				//testEdgeList1.add(ii);
-    			}
-    			
-    			unsettled.add(edge[1]);
-    			
-    			//testNodeList.add(edge[1]);
-    		}
-    		
-    	//	graphOverlay.highlightGraphSection(this, testNodeList, testEdgeList,testNodeList1,testEdgeList1).show();
-    		
-    		
-    		settled.add(currentNode);
-    	//	testNodeList = new ArrayList<>();
-    	//	testEdgeList = new ArrayList<>();
-    	//	testNodeList1 = new ArrayList<>();
-    	//	testEdgeList1 = new ArrayList<>();
-    		
-    	}
-    	//Data structure for nodes changed. These lines are deprecated.
-    	startNode.distance[iteration] = distance;
-    	startNode.prevNode = prevNode;
-    }
    
-    
-    public Node[] getNodules() {
+    /** 
+     * 
+     * @return : the set of nodes of the graph that are nodules.
+     */
+       public Node[] getNodules() {
     	
     	ArrayList<Node> nodules = new ArrayList<>();
     	
@@ -1127,6 +873,198 @@ public class RootGraph {
     	 return nodules.toArray(new Node[0]);
     }
     
+    
+   
+      
+	/**
+	 * Find the numNods closest nodes to the given point, then creates an arrayList
+	 * of lines that are all edges containing any of the closest nodes.<br>
+	 * i.e. it records all edges containing the numNodes closest nodes, returning them as 
+	 * Roi objects.
+	 * 
+	 * @param numNodes : number of nodes to find the edges of
+	 * @param pt : point to search around.
+	 * @return : an arraylist of ShapeRoi lines which are the edges containing the 
+	 * edges of the numNodes closest nodes.
+	 */
+	public ArrayList<ShapeRoi> ballSubgraphLines(int numNodes, Point2D pt){
+		ArrayList<ShapeRoi> lines = new ArrayList<>();
+		int[] rettNodes = new int[numNodes];
+		
+
+		// Priority queue to store the k closest nodes
+        PriorityQueue<Node> closestNodesQueue = new PriorityQueue<>
+        (Comparator.comparingDouble(node -> ((Node) node).distance(pt)).reversed());
+        
+        // Iterate over each node
+        for (Node node : nodes) {
+            double distance = node.distance(pt);
+            
+            // If the queue is not full or the current node is closer than the farthest node in the queue
+            if (closestNodesQueue.size() < numNodes || distance < closestNodesQueue.peek().distance(pt)) {
+                closestNodesQueue.offer(node);
+            }
+            
+            // If the queue exceeds the limit, remove the farthest node
+            int size = closestNodesQueue.size();
+            if (size > numNodes) {
+                closestNodesQueue.poll();
+            }
+        }
+        
+        // Convert the priority queue to an array
+        Node[] retNodes = closestNodesQueue.toArray(new Node[0]);
+		
+        for(int ii = 0; ii < numNodes; ii++) {
+        	rettNodes[ii] = nodes.indexOf(retNodes[ii]);
+        }
+		
+		
+		for(Node node : retNodes) {
+			if(node == null) {
+				System.out.println("Null node in closest Nodes method.");
+				System.out.println("Breakpoint");
+			}
+		}
+		
+		// Was using Set to not add reverse arcs, but it wasn't working properly, so 
+		// I'm instead going to remove duplicates at the end of the process.
+		//Set<String> processedEdges = new HashSet<>();
+		
+		for(int[] edge : fsRep) {
+			
+			int n1 = edge[0];
+			int n2 = edge[1];
+			
+			//String edgeKey = n1 + "-" + n2;
+		    ///String oppositeEdgeKey = n2 + "-" + n1;
+		    //if (processedEdges.contains(edgeKey) || processedEdges.contains(oppositeEdgeKey)) {
+		        // Skip processing the duplicate edge
+		     //   continue;
+		   // }
+		    
+			boolean n11 = false;
+			boolean n22 = false;
+			
+			for(int node : rettNodes) {
+				
+				if(n1 == node) {
+					n11 = true;
+				}
+				else if(n2 == node) {
+					n22 = true;
+				}
+				
+			}
+			
+			
+			if(n11 || n22) {
+				//processedEdges.add(edgeKey);
+				Line line = new Line(nodes.get(n1).x,nodes.get(n1).y, nodes.get(n2).x,nodes.get(n2).y);
+				ShapeRoi lineRoi = new ShapeRoi(line);
+				lines.add(lineRoi);
+			}
+			
+		}
+		
+		
+		return lines;
+	}
+   
+
+         
+    
+    	/**
+	 * Find the numNodes closest Nodes to the given pt, and finds all edges
+	 * that contain any of those nodes.
+	 * 
+	 * @param numNodes : number of nodes to find.
+	 * @param pt : point to search around.
+	 * @return : subgraph containing the numNodes closest nodes and all edges related 
+	 * to,them.
+	 */
+	public ArrayList<int[]> ballSubgraph(int numNodes, Point2D pt) {
+		
+		ArrayList<int[]> subgraph = new ArrayList<>();
+		
+		Node[] retNodes = new Node[numNodes];
+		int[] rettNodes = new int[numNodes];
+		double[] distances = new double [numNodes];
+		
+		
+		
+		for(Node node : nodes) {
+			
+			int minIndex = -1;
+			double minDistance = Double.MAX_VALUE;
+			
+			for(int ii = 0; ii < numNodes; ii++) {
+				distances[ii] = node.distance(pt);
+				
+				if(distances[ii] < minDistance) {
+					minDistance = distances[ii];
+					minIndex = ii;
+				}
+				
+			}
+			
+			int i =0;
+			for(Node retNode : retNodes) {
+				if(retNode == null) {
+					retNodes[i] = node;
+					rettNodes[i] = nodes.indexOf(node);
+					break;
+				}
+				i++;
+			}
+			
+			if( node.distance(pt) < minDistance) {
+				retNodes[minIndex] = node;
+				rettNodes[minIndex] = nodes.indexOf(node);
+			}
+			
+		}
+		
+		for(Node node : retNodes) {
+			if(node == null) {
+				System.out.println("Null node in closest Nodes method.");
+				System.out.println("Breakpoint");
+				
+			}
+		}
+		
+		
+		for(int[] edge : fsRep) {
+			
+			int n1 = edge[0];
+			int n2 = edge[1];
+			
+			boolean n11 = false;
+			boolean n22 = false;
+			
+			for(int node : rettNodes) {
+				
+				if(n1 == node) {
+					n11 = true;
+				}
+				else if(n2 == node) {
+					n22 = true;
+				}
+				
+			}
+			
+			if(n11 || n22) {
+				subgraph.add(edge);
+			}
+			
+		}
+		
+		
+		
+		return subgraph;
+	}
+	
+	
     /**
      * Returns the subgraph that is all edges containing a nodule node as at least one of the nodes.
      * @return ArrayList<int[]> FSRep
@@ -1153,18 +1091,21 @@ public class RootGraph {
       	
       }
     
-    private void inList(int startNode){
-    	ArrayList<Integer> edgeIndices = new ArrayList<>();
-    	
-    	for(int ii = 0; ii < fsRep.size(); ii++) {
-    		if(fsRep.get(ii)[1] == startNode) {
-    			System.out.println(ii);
-    		}
-    	}
-    }
-    
-    
-    private void drawNode(Node node) {
+       
+    // all methods beyond this line are deprecates or methods for testing purposes.
+    //=============================================================================
+
+
+        
+      
+     
+   /**
+    * adds text to the graphOverlay next to the node,
+    *  naming the given node by it's index in the array of nodes.
+    *  
+    * @param node : node to name on the graph overlay.
+    */
+      private void drawNode(Node node) {
     	TextRoi.setFont("SansSerif",75 , Font.BOLD);
 		Font font = new Font("SansSerif",Font.BOLD,50);
 		
@@ -1178,7 +1119,14 @@ public class RootGraph {
     }
     
     
-    private ArrayList<Integer> adjacentNodes(int node){
+    /**
+     * Returns the arrayList of all nodes connected to the given node via any edge 
+     * in the graph.
+     * 
+     * @param node : node to search around.
+     * @return : list of nodes that are connected to the given node by an edge.
+     */
+      private ArrayList<Integer> adjacentNodes(int node){
     	ArrayList<Integer> edgeList = new ArrayList<>();
     	edgeList.add(node);
     	
@@ -1191,52 +1139,6 @@ public class RootGraph {
     	return edgeList;
     }
     
-    /**
-     * This method takes as input an array of size nodes.size() and 
-     * returns a cropped array that removes all skeleton nodes.
-     * @param array
-     * @return
-     */
-    private int[] cropToNodules(int[] array) {
-    	int[] cropped = new int[numNodules];
-    	int counter = 0;
-    	
-    	for(int ii = 0; ii< array.length; ii++) {
-    		if(nodes.get(ii).type > 0) {
-    			cropped[counter++] = array[ii];
-    		}
-    	}
-    	
-    	return cropped;
-    }
-    
- 
-    /**
-	 * Read's in the nodule data from NoduleData
-	 * @param filePath
-	 * @return
-	 * @throws IOException
-	 */
-    private static String[][] readCSV(String filePath) throws IOException {
-        List<String[]> records = new ArrayList<>();
-
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                // Split the CSV line by comma
-                String[] values = line.split(",");
-                records.add(values);
-            }
-        }
-
-        // Convert List<String[]> to String[][]
-        String[][] data = new String[records.size()][];
-        for (int i = 0; i < records.size(); i++) {
-            data[i] = records.get(i);
-        }
-        
-        return data;
-    }
     
     
 }
