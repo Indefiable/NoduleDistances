@@ -404,6 +404,14 @@ public class Statistics {
 		
 	}
 	
+	/**
+	 * stores the pair-wise distances between all nodules at the (iter)th iteration of shortest paths.
+	 * i.e. if iter = 2, will return all of the pair-wise 2nd shortest paths as a 2d array.
+	 * @param graph : graph of the root system.
+	 * @param iter : curren iteration (iter'th shortest paths)
+	 * @param numIters : number of shortest paths we're computing.
+	 * @return : a 2d array of pair-wise distances
+	 */
 	private String[][] distances(RootGraph graph, int iter, int numIters){
 		String[][] distances = new String[graph.numNodules][graph.numNodules];
 		
@@ -437,20 +445,11 @@ public class Statistics {
 	  * Computes the number of nodules within a given radius of a given color. Note that 
 	  * our ball here is not a literal ball, as we use the distances along the root systems
 	  * to compute whether a node falls within the ball, i.e. distance along root system < radius. 
-	  *
-	  * @param color : color of nodules we're counting
-	  * @param radius : radius cutoff
-	  * @param node : node we're searching around (center)
-	  * @param graph : graph object
-	  * @return : the number of nodules of the given color with distance < radius.
-	  */
-	
-	
-	/**
-	 * 
+	 *
+	 * @param radii : array of radii we'll search around.
 	 * @param color : color to restrict statistics to.
 	 * @param radius : radius used for computing number of nodules within a radius
-	 * @param node : node we're computing the statistics of	
+	 * @param node : node we're searching around (center)
 	 * @param graph : graph object
 	 * @param options : list telling us what statistics to compute
 	 * @return
@@ -620,7 +619,14 @@ public class Statistics {
 	}
 	
 	
-	
+/**
+ * Finds the number of nodules in the ball of given radius, centered at given node.	
+ * @param color : color of the given nodule node.
+ * @param radius : radius of the ball.
+ * @param node : center of the ball.
+ * @param graph : graph object.
+ * @return : number of nodules in radius distance away from node.
+ */
 	protected int numNodulesinBall(int color, int radius, Node node, RootGraph graph) {
 		int numNods = 0;
 		

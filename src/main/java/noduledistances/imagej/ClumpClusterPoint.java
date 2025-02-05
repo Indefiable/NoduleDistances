@@ -6,6 +6,15 @@ import java.awt.geom.Point2D;
 
 import org.apache.commons.math3.ml.clustering.Clusterable;
 
+
+/**
+ * An implementation of Apache Common's Clusterable interface to use 
+ * Apache's clustering methods in RoiOverlay.breakupClump()
+ * 
+ * 
+ * @author Brandin Farris
+ *
+ */
 public class ClumpClusterPoint implements Clusterable {
 	Point2D.Double p;
 	double x;

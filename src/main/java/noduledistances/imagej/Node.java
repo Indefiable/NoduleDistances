@@ -20,10 +20,10 @@ public final static int GREEN = 2;
 public final static int MIXED = 3;
 
 /**
- * Node.type == 0 -> skeleton node
- * type == 1 -> red nodule
- * type == 2 -> green nodule
- * type == 3 -> mixed nodule
+ * type == 0 -> skeleton node<br>
+ * type == 1 -> red nodule<br>
+ * type == 2 -> green nodule <br>
+ * type == 3 -> mixed nodule <br>
  */
 public int type;
 public int area;
@@ -58,6 +58,15 @@ public int[] prevNode;
  */
 ArrayList<ArrayList<int[]>> paths;
 
+
+/**
+ * constructor method
+ * @param x : x coordinate of the node.
+ * @param y : y coordinate of the node.
+ * @param type : type of the node. 
+ * @param nodeNumber : node number of the node if it is a nodule.
+ * @param area : nodule area of the node if it is a nodule.
+ */
 public Node(int x, int y, int type, double nodeNumber, int area) {
 	super(x,y);
 	this.type = type;
@@ -69,7 +78,13 @@ public Node(int x, int y, int type, double nodeNumber, int area) {
 	paths = new ArrayList<>();
 	
 }
-
+/**
+ * constructor method
+ * @param x : x coordinate of the node.
+ * @param y : y coordinate of the node.
+ * @param type : type of the node.
+ * @param nodeNumber : node number of the node if it is a noduel.
+ */
 public Node(int x, int y, int type, double nodeNumber) {
 	super(x,y);
 	this.type = type;
@@ -82,6 +97,14 @@ public Node(int x, int y, int type, double nodeNumber) {
 	
 }
 
+/**
+ * method for updating the node.
+ * @param x : new x coordinate.
+ * @param y : new y coordinate.
+ * @param type : new type of the node.
+ * @param nodeNumber : new node number for the node.
+ * @param area : new nodule area for the node.
+ */
 public void update(int x, int y, int type, double nodeNumber, int area) {
 	this.x = x;
 	this.y=y;
@@ -90,22 +113,33 @@ public void update(int x, int y, int type, double nodeNumber, int area) {
 	this.area=area;
 }
 
+/**
+ * method for updating the node
+ * @param type : new type for the node.
+ * @param nodeNumber : new node number for the node.
+ * @param area : new nodule area for the node.
+ */
 public void update(int type, double nodeNumber, int area) {
 	this.type=type;
 	this.nodeNumber=nodeNumber;
 	this.area=area;
 }
 
+
+/** 
+ * method for updating the nodule.
+ * @param type : new type for the node.
+ */
 public void update(int type) {
 	this.type=type;
 } 
 
 
 /**
- * We say two nodes are equal when any of the following are true:
- * 1. they reference the same object in memory
- * 2. their x/y values are the same
- * 3. if they are the same type of node( skeleton/nodule) AND are within 8 pixels
+ * We say two nodes are equal when any of the following are true:<br>
+ * 1. they reference the same object in memory<br>
+ * 2. their x/y values are the same<br>
+ * 3. if they are the same type of node( skeleton/nodule) AND are within 8 pixels<br>
  */
 @Override
 public boolean equals(Object obj) {
@@ -140,8 +174,8 @@ public boolean equals(Object obj) {
 
 /**
  * Finds and returns the set of paths from this node to the given node.
- * @param node
- * @return
+ * @param node : node to search from.
+ * @return : the set of paths from this node to the given node. 
  */
 public ArrayList<int[]> getPaths(int node){
 	ArrayList<int[]> paths = new ArrayList<>();
@@ -166,7 +200,11 @@ public ArrayList<int[]> getPaths(int node){
 }
 
 
-
+/**
+ * computes the euclidean distance between this node and the given node.
+ * @param node : node to compute the distance betwee.
+ * @return : the euclidean distance between this node and the given node.
+ */
 public double distance(Node node) {
 	return Point.distance(this.x, this.y, node.x, node.y);
 }
