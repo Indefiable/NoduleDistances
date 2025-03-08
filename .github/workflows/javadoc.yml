@@ -24,5 +24,5 @@ jobs:
           target-folder: docs  
           java-distribution: temurin 
           project: maven  
-          custom-command: mvn javadoc:javadoc  
+          custom-command: mvn javadoc:javadoc -Ddependency-check.skip=true  
           without-deploy: false 
