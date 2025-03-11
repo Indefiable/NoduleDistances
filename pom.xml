@@ -24,6 +24,11 @@
 			<id>scijava.public</id>
 			<url>https://maven.scijava.org/content/groups/public</url>
 		</repository>
+		<repository>
+        <id>github-repo</id>
+      <url>https://raw.githubusercontent.com/Indefiable/NoduleDistances/main/assets
+/ReferencedLibraries/</url>
+    </repository>
 	</repositories>
 	
 	
