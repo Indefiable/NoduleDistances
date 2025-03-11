@@ -26,8 +26,7 @@
 		</repository>
 		<repository>
         <id>github-repo</id>
-      <url>https://raw.githubusercontent.com/Indefiable/NoduleDistances/main/assets
-/ReferencedLibraries/</url>
+      <url>https://github.com/Indefiable/NoduleDistances/tree/main/assets/ReferencedLibraries?raw=true</url>
     </repository>
 	</repositories>
 	
