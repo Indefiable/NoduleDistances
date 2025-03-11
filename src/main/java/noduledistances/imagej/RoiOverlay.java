@@ -67,7 +67,7 @@ public class RoiOverlay {
 		
 		for(int ii = 0; ii < overlay.size(); ii++) {
 			rois[ii] = (ij.gui.ShapeRoi) overlay.get(ii);
-			//System.out.println(rois[ii].getName());
+			
 		}
 		
 		this.rois = rois;
@@ -101,11 +101,8 @@ public class RoiOverlay {
 		
 		Point2D.Double pt = new Point2D.Double(centroid[0], centroid[1]);
 		
-		//ArrayList<int[]> subgraph = graph.ballSubgraph(5, pt);
+	
 		ArrayList<ShapeRoi> lines = graph.ballSubgraphLines(7, pt);
-		
-		//System.out.println("size of lines: " + lines.size());
-		//System.out.println("Size of subgraph: " + subgraph.size());
 		
 		ArrayList<ShapeRoi> intersections = new ArrayList<>();
 		
@@ -127,32 +124,6 @@ public class RoiOverlay {
 			attachmentPoint[0] = center.x;
 			attachmentPoint[1] = center.y;
 		}
-		/** for looking at the ROI and the points found.
-		ArrayList<ShapeRoi> testing = new ArrayList<>();
-		
-		testing.add(roi);
-		
-		for(int ii = 0; ii < intersections.size(); ii++) {
-			testing.add(intersections.get(ii));
-		}
-		
-		for(int ii = 0; ii < bdPoints.length; ii++) {
-	        
-	       OvalRoi ball = new OvalRoi( bdPoints[ii].x - 2,  bdPoints[ii].y - 2, 
-				2 * 2, 2 * 2);
-	       
-			testing.add(new ShapeRoi(ball));
-		}
-		
-		
-		OvalRoi ball = new OvalRoi( center.x - 3,  center.y - 3, 
-				2 * 3, 2 * 3);
-	       
-		testing.add(new ShapeRoi(ball));
-		
-		
-		showRois(testing.toArray(new ShapeRoi[0]), bdPoints);
-		*/
 		
 		
 		return attachmentPoint;
@@ -230,13 +201,11 @@ public class RoiOverlay {
 	            
 
 	            if (onBoundary(prevX, prevY, currX, currY, st.x, st.y)) {
-	                //System.out.println("Added " + st + " to boundary points.");
 	                bdPoints.add(st);
 	                break;
 	            }
 	            
 	            if (onBoundary(prevX, prevY, currX, currY, end.x, end.y)) {
-	               // System.out.println("Added " + end + " to boundary points.");
 	                bdPoints.add(end);
 	                break;
 	            }
@@ -275,33 +244,31 @@ public class RoiOverlay {
      *             {@code false} otherwise.
      */
 	public static boolean onBoundary(double p1x, double p1y, double p2x, double p2y, double x, double y) {
-	    // Calculate the vector from p1 to x
+	   
 	    double dx = x - p1x;
 	    double dy = y - p1y;
 	    
-	    // Calculate the vector from p1 to p2
 	    double vx = p2x - p1x;
 	    double vy = p2y - p1y;
 	    
-	    // Calculate the dot product (vx * dx + vy * dy)
+	   
 	    double dotProduct = vx * dx + vy * dy;
 	    
-	    // Calculate the squared magnitude of (p2 - p1)
 	    double magnitudeSquared = vx * vx + vy * vy;
 	    
-	    // Calculate r
+	  
 	    double r = dotProduct / magnitudeSquared;
 	    
 	    double dist;
 	    
 	    if (r < 0) {
-	        // Closest point is p1
+	       
 	        dist = distance(p1x, p1y, x, y);
 	    } else if (r > 1) {
-	        // Closest point is p2
+	       
 	        dist = distance(p2x, p2y, x, y);
 	    } else {
-	        // Closest point is on the line segment
+	       
 	        double px = p1x + r * vx;
 	        double py = p1y + r * vy;
 	        dist = distance(px, py, x, y);
@@ -543,26 +510,13 @@ public class RoiOverlay {
 		PolygonRoi converter;
 		int[] intx;
 		int[] inty;
-		// power diagram object
+		
 		PowerDiagram diagram = new PowerDiagram();
 		
 		// custom list object holding the points used to compute power diagrams
 		OpenList sites = new OpenList();
 
-		/**
-		// convert ShapeRoi into PolygonSimple\/\/
-		Point[] points = roi.getContainedPoints();
-		double[] x = new double[points.length];
-		double[] y = new double[points.length];
-		
-		
-		for( int ii = 0; ii < points.length; ii++) {
-			x[ii] = (double) points[ii].x;
-			y[ii] = (double) points[ii].y;
-		}
-		PolygonSimple roiPolygon = new PolygonSimple(x,y,x.length);
-		// convert ShapeRoi into PolygonSimple/\/\
-		**/
+	
 
 		PolygonSimple roiBoundingBox = new PolygonSimple();
 		Rectangle box = roi.getBounds();
@@ -628,7 +582,7 @@ public class RoiOverlay {
 			System.out.println("Number of null sites for this ROI: " + numNullSites);
 		}
 		intersectClumps(rois);
-		//showRois(rois, width, height, centers);
+		
 		
 		rois.remove(0);
 		return rois;

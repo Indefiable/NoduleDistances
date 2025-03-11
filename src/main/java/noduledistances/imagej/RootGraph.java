@@ -320,8 +320,7 @@ public class RootGraph {
 			if(current > newNum) {
 				System.out.println(fsRep.get(ii-1));
 				System.out.println(fsRep.get(ii));
-				System.out.println(fsRep.get(ii+1));
-				System.out.println("breakpoint");
+				System.out.println(fsRep.get(ii+1));	
 			}
 			
 			if(newNum > current) {
@@ -893,7 +892,6 @@ public class RootGraph {
 		for(Node node : retNodes) {
 			if(node == null) {
 				System.out.println("Null node in closest Nodes method.");
-				System.out.println("Breakpoint");
 			}
 		}
 		
@@ -934,7 +932,7 @@ public class RootGraph {
 
          
     
-    	/**
+    /**
 	 * Find the numNodes closest Nodes to the given pt, and finds all edges
 	 * that contain any of those nodes.
 	 * 

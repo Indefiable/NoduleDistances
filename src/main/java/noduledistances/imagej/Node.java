@@ -181,17 +181,14 @@ public ArrayList<int[]> getPaths(int node){
 		if(ps == null) {
 			continue;
 		}
-		//System.out.println("out node:" + ps.get(0)[0]);
+		
 		if(ps.get(0)[0] == node) {
 			paths = ps;
 			break;
 		}
 	}
 	
-	/**
-	if(paths.size() == 0) {
-		System.out.println("Could not find paths from " + this.nodeNumber +" to " + node);
-	}*/
+	
 	
 	return paths;
 }
@@ -224,7 +221,7 @@ public String toString() {
 		color = "mixed";
 	}
 	else {
-		//IJ.log("You shouldn't see this. Node has unknown type.");
+	
 		color = "unknown";
 	}
     return nodeNumber + "{x=" + x + ", y=" + y + ", type=" + color + '}';

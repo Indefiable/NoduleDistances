@@ -60,9 +60,6 @@ public class GraphOverlay {
 		skellyMap.setOverlay(overlay);
 		
 		
-		
-		
-		
 		for(Node node : graph.nodes) {
 			
 			if(node.type < 1) {

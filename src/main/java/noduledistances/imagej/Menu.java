@@ -66,8 +66,8 @@ public class Menu implements Command {
         });
         
         gd.addNumericField("number of paths to commpute between nodules:", 5, 0);
-        gd.addStringField("Red Attribute:", "", 20);
-        gd.addStringField("Green Attribute:", "", 20);
+        gd.addStringField("Red Attribute:", "", 10);
+        gd.addStringField("Green Attribute:", "", 10);
         
         gd.showDialog();
         

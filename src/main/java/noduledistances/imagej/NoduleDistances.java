@@ -110,7 +110,6 @@ public class NoduleDistances implements Command {
 	 */
 	public ImagePlus shortestPath(int startNodeIndex, int endNodeIndex, RootGraph graph, GraphOverlay graphOverlay) {
 		
-		
 		int width = graphOverlay.overlayedGraph.getWidth();
 		int height = graphOverlay.overlayedGraph.getHeight();
 		
