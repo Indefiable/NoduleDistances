@@ -1,0 +1,154 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<groupId>com.programmerare.shortest-paths</groupId>
+	<artifactId>fork-of-edu.asu.emit.algorithm.graph</artifactId>	
+	<version>1.0.0</version>
+	<packaging>jar</packaging>
+			
+	<name>fork of yan-qi k-shortest-paths-java-version</name>
+	<description>
+		An implementation of the k shortest paths algorithm in Java.
+		This is a forked version which has NOT modified the implementation of the algorithm.
+		The purpose of the fork was to enable more flexible Graph creation, i.e. programmatic  
+		construction of the Graph as an alternative to the construction from text file input.
+		The location of the original work: https://github.com/yan-qi/k-shortest-paths-java-version      	
+	</description>
+	<url>https://github.com/TomasJohansson/k-shortest-paths-java-version</url>	
+
+	<licenses>
+		<license>
+		<name>Apache License 2.0</name>
+		<distribution>repo</distribution>
+		<url>https://github.com/yan-qi/k-shortest-paths-java-version/blob/master/License.txt</url>
+		<comments>Note that the URL above is located at the repository for the original work. This fork is released under the same license.</comments>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<name>Tomas Johansson</name> <!-- The developer of the forked project https://github.com/TomasJohansson/k-shortest-paths-java-version -->
+			<organizationUrl>https://github.com/TomasJohansson</organizationUrl>
+		</developer>	  
+		<developer>
+			<name>Yan Qi</name> <!-- The developer of the algorithm being used https://github.com/yan-qi/k-shortest-paths-java-version -->
+			<organizationUrl>https://github.com/yan-qi</organizationUrl>
+		</developer>
+	</developers>
+  
+	<scm>
+		<connection>scm:git:git://github.com/TomasJohansson/k-shortest-paths-java-version.git</connection>
+		<developerConnection>scm:git:ssh://github.com/TomasJohansson/k-shortest-paths-java-version.git</developerConnection>
+		<url>https://github.com/TomasJohansson/k-shortest-paths-java-version/tree/master</url>
+	</scm>  
+
+	<dependencies>
+		<dependency>
+			<groupId>org.testng</groupId>
+			<artifactId>testng</artifactId>
+			<version>6.8.21</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+	
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		  	
+		<maven.compiler.source>1.7</maven.compiler.source>
+		<maven.compiler.target>1.7</maven.compiler.target>
+	</properties>
+	
+	<build>
+		<resources>
+			<resource>
+				<directory>${project.basedir}</directory>			
+				<includes>
+					<include>License.txt</include>
+					<include>NOTICE.txt</include>
+				</includes>
+			</resource>	
+		</resources>
+	
+		<plugins>
+			<!--
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.2</version>
+				<configuration>
+					<source>1.6</source>
+					<target>1.6</target>
+				</configuration>
+			</plugin>
+			-->
+		
+		
+			<!-- 
+			http://central.sonatype.org/pages/requirements.html
+			https://maven.apache.org/plugin-developers/cookbook/attach-source-javadoc-artifacts.html
+			
+			https://maven.apache.org/plugins/maven-source-plugin/download.cgi
+			https://maven.apache.org/plugins/maven-javadoc-plugin/download.cgi
+			http://maven.apache.org/plugins/maven-gpg-plugin/download.cgi
+			-->	
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.0.1</version>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>3.0.0</version>
+				<configuration>
+					<failOnError>false</failOnError>
+					<!-- https://maven.apache.org/plugins/maven-javadoc-plugin/javadoc-mojo.html -->
+				</configuration>				
+				<executions>
+					<execution>
+						<id>attach-javadocs</id>
+						<goals>
+							<goal>jar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-gpg-plugin</artifactId>
+				<version>1.6</version>
+				<executions>
+					<execution>
+						<id>sign-artifacts</id>
+						<phase>verify</phase>
+						<goals>
+							<goal>sign</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>			
+		    
+	  	</plugins>
+	</build>
+	
+	<distributionManagement>
+		<snapshotRepository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+		</repository>
+	</distributionManagement>	
+</project>
