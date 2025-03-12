@@ -24,6 +24,10 @@
 			<id>scijava.public</id>
 			<url>https://maven.scijava.org/content/groups/public</url>
 		</repository>
+		<repository>
+	    <id>jitpack.io</id>
+	    <url>https://jitpack.io</url>
+	</repository>
 	</repositories>
 	
 	
@@ -40,16 +44,18 @@
         <artifactId>KShortestPathsFork</artifactId>
         <version>1.0</version>
     </dependency>
-	<dependency>
-        <groupId>com.example</groupId>
-        <artifactId>PowerVoronoiDiagram</artifactId>
-        <version>1.0</version>
-    </dependency>
+	
+
 	
 	
 	
 	
 <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
+		<dependency>
+			<groupId>com.github.ArlindNocaj</groupId>
+			<artifactId>power-voronoi-diagram</artifactId>
+			<version>-SNAPSHOT</version>
+		</dependency>
 		<dependency>
 		<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
