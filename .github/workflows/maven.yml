@@ -35,6 +35,8 @@ jobs:
       run: curl -o traceskeleton.jar "https://raw.githubusercontent.com/Indefiable/NoduleDistances/main/assets/ReferencedLibraries/TraceSkeleton.jar"
     - name: install traceskeleton to local repo
       run: mvn install:install-file -Dfile="./traceskeleton.jar" -DgroupId=com.example -DartifactId=traceskeleton -Dversion=1.0 -Dpackaging=jar
+    - name: install PowerVoronoiDiagram to local repo
+      run: mvn install:install-file -Dfile="./PowerVoronoiDiagram.jar" -DgroupId=com.example -DartifactId=PowerVoronoiDiagram -Dversion=1.0 -Dpackaging=jar
     - name: Build with Maven
       run: mvn -B package --file pom.xml
     - name: Upload JAR as Artifact
