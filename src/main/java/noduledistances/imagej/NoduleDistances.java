@@ -103,10 +103,10 @@ public class NoduleDistances implements Command {
 	 * Generates an image showing the shortest 5 paths between the two given nodes by \
 	 * coloring the paths taken 5 distinct colors
 	 * 
-	 * @param startNode : start node of the paths we're highlighting.
-	 * @param endNode : end node of the paths we're highlighting.
+	 * @param startNodeIndex : start node of the paths we're highlighting.
+	 * @param endNodeIndex : end node of the paths we're highlighting.
 	 * @param graph : graph object of the root system.
-	 * @param overlayedGraph : Image of the root system with the graph object overlayed.
+	 * @param graphOverlay : Image of the root system with the graph object overlayed.
 	 */
 	public ImagePlus shortestPath(int startNodeIndex, int endNodeIndex, RootGraph graph, GraphOverlay graphOverlay) {
 		

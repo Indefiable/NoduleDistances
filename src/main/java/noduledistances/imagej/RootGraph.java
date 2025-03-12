@@ -726,7 +726,7 @@ public class RootGraph {
     
     
     /**
-     * converts the list of computed shortest paths to an ArrayList<int[]> object.
+     * converts the list of computed shortest paths to an ArrayList of Arrays of ints.
      * 
      * @param shortest_paths_list : object to convert.
      * @return : converted object.
@@ -1025,7 +1025,8 @@ public class RootGraph {
 	
     /**
      * Returns the subgraph that is all edges containing a nodule node as at least one of the nodes.
-     * @return ArrayList<int[]> FSRep
+     * 
+     * @return The forward star representation as an ArrayList of Arrays of ints.
      */
       public ArrayList<int[]> noduleFSRep(){
       	ArrayList<int[]> nodFSRep = new ArrayList<>();

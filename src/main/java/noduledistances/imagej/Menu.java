@@ -190,8 +190,15 @@ public class Menu implements Command {
 	
 	
 	 /**
-     * Returns 1 for folder, 2 for accepted 
-image type, 3 for .model file, or 4 for any other filetype. 
+     * Returns 
+     * 1 : folder<br>
+     * 2 : accepted image type<br>
+     * 3 : .model file<br>
+     * 4 : any other filetype<br>
+		
+		@param file: file to determine the type of.
+		
+		@return an integer representing what type of file it is.
      */
     public static int getFileType(File file) {
     	String extension = file.getName().substring(file.getName().lastIndexOf(".") + 1);

@@ -371,7 +371,7 @@ public class RoiOverlay {
 	 * the halton sequence produces a very uniform distribution of points.
 	 * 
 	 * @param roi : Rois that we are creating the points for.
-	 * @return List<> of points to cluster.
+	 * @return List object of points to cluster.
 	 */
 	public List<ClumpClusterPoint> getHaltonSequence(ShapeRoi roi) {
 		
@@ -402,7 +402,7 @@ public class RoiOverlay {
 	 * 
 	 * @param points point cloud representation of an ROI polygon
 	 * @param k number of nodules to break the clump into.
-	 * @return List<> of k centroids after performing k-means.
+	 * @return List object of k centroids after performing k-means.
 	 */
 	public static List<CentroidCluster<ClumpClusterPoint>> kMeansClustering(List<ClumpClusterPoint> points, int k) {
         
@@ -420,7 +420,7 @@ public class RoiOverlay {
 	 * 
 	 * @param numberOfPoints : number of halton vectors to generate.
 	 * @param boundingBox : bounds of the halton vectors.
-	 * @return List<> of halton vectors. Uses ClumpClusterPoint to implement Clusterable interface.
+	 * @return List object of halton vectors. Uses ClumpClusterPoint to implement Clusterable interface.
 	 */
 	public List<ClumpClusterPoint> getHaltonVectors(int numberOfPoints, Rectangle boundingBox) {
 		

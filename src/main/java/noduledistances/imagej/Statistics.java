@@ -354,10 +354,9 @@ public class Statistics {
 	 /**
 	  * Computes the number of nodules within a given radius of a given color. Note that 
 	  * our ball here is not a literal ball, as we use the distances along the root systems
-	  * to compute whether a node falls within the ball, i.e. distance along root system < radius. 
+	  * to compute whether a node falls within the ball, i.e. distance along root system &lt; radius. 
 	 *
 	 * @param radii : array of radii we'll search around.
-	 * @param color : color to restrict statistics to.
 	 * @param radius : radius used for computing number of nodules within a radius
 	 * @param node : node we're searching around (center)
 	 * @param graph : graph object
