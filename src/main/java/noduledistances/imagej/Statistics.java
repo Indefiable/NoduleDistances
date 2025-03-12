@@ -357,7 +357,6 @@ public class Statistics {
 	  * to compute whether a node falls within the ball, i.e. distance along root system &lt; radius. 
 	 *
 	 * @param radii : array of radii we'll search around.
-	 * @param radius : radius used for computing number of nodules within a radius
 	 * @param node : node we're searching around (center)
 	 * @param graph : graph object
 	 * @param options : list telling us what statistics to compute
