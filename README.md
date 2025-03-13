@@ -1,3 +1,6 @@
+[![Build Status](https://github.com/Indefiable/NoduleDistances/actions/workflows/maven.yml/badge.svg)](https://github.com/Indefiable/NoduleDistances/actions/workflows/maven.yml)
+
+
 Nodule-Distances
 ================
 
