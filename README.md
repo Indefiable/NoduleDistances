@@ -24,7 +24,8 @@ need to align from image to image.
 Installation
 ============
 First install [fiji](https://imagej.net/software/fiji/). Then download the .jar file in the releases on this github page,
-and drop the .jar file into the plugins folder wherever you installed fiji. 
+and drop the .jar file into the plugins folder wherever you installed fiji. Then the plugin is under 
+plugins->Nodule Analysis->Nodule Distances.
 
 
 Before you can run this plugin, you must generate a .model file for your dataset using Weka's color clustering plugin, and 

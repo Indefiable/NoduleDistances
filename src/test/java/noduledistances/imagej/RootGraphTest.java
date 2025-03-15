@@ -4,21 +4,39 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.powermock.reflect.Whitebox;
 
+import static org.junit.Assert.*;
 
-@Generated(value = "org.junit-tools-1.1.0")
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+
+//@Generated(value = "org.junit-tools-1.1.0")
 public class RootGraphTest {
-
+	
+	/**
+	 *  assertEquals(expected, actual);  // Checks if expected == actual
+    	assertTrue(actual > 40);         // Checks if condition is true
+    	assertFalse(actual < 40);        // Checks if condition is false
+    	assertNotNull(actual);           // Checks if actual is not null
+    	assertNull(nullValue);           // Checks if value is null
+    	assertSame(expectedObj, actualObj); // Checks if both references point to the same object
+    	assertNotSame(obj1, obj2);       // Checks if both references are different
+	 *
+	 */
+	
 	@Before
 	public void setUp() throws Exception {
-
+	
+		
 	}
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-
+		
 	}
 
 	@After
@@ -31,32 +49,67 @@ public class RootGraphTest {
 
 	}
 
-	private RootGraph createTestSubject() {
-		return new RootGraph(null, new GraphOverlay());
+	private RootGraph createTestSubject() { 
+		ArrayList<ArrayList<int[]>> skeleton = new ArrayList<>();
+		ArrayList<int[]> chunk = new ArrayList<>();
+		chunk.add(new int[]{0,0});
+		chunk.add(new int[] {10,0});
+		chunk.add(new int[] {19,0});
+		chunk.add(new int[] {29,0});
+		skeleton.add(chunk);
+	return	new RootGraph(skeleton, new GraphOverlay());
+	/**
+		 * Can test the following methods with this graph:
+		 * addEdge()
+		 * addMissingEdges()
+		 * calculateClosestNode()
+		 * containsEdge()
+		 * testRemoveEdge()
+		 * 
+		 * NOT
+		 * testUpdatePointer()
+		 * 
+		 */
 	}
 
-	@MethodRef(name = "addEdge", signature = "([QNode;)V")
+	//@MethodRef(name = "addEdge", signature = "([QNode;)V")
 	@Test
 	public void testAddEdge() throws Exception {
 		RootGraph testSubject;
-		Node[] edge = new Node[] { null };
-
+		
 		// default test
 		testSubject = createTestSubject();
+		Node n1 = testSubject.nodes.get(1);
+		Node n2 = testSubject.nodes.get(2);
+		Node[] edge = new Node[] {n1, n2};	
 		testSubject.addEdge(edge);
+		int[] fsRepEdge = new int[] {1,2,9};
+		boolean contains = false;
+		
+		for(int[] edg : testSubject.fsRep) {
+			if(Arrays.equals(edg, fsRepEdge)) {
+					contains = true;
+			}
+		}
+		
+		assertTrue(contains);
+		
 	}
 
-	@MethodRef(name = "addMissingEdges", signature = "()V")
+	
+	//@MethodRef(name = "addMissingEdges", signature = "()V")
 	@Test
 	public void testAddMissingEdges() throws Exception {
-		RootGraph testSubject;
-
-		// default test
-		testSubject = createTestSubject();
-		Whitebox.invokeMethod(testSubject, "addMissingEdges");
+		RootGraph testSubject = createTestSubject();
+		Method method = RootGraph.class.getDeclaredMethod("addMissingEdges");
+	    method.setAccessible(true); // Bypass access restriction
+	    method.invoke(testSubject);
+		assertTrue(testSubject.containsEdge(1, 2));
+		
 	}
+	
 
-	@MethodRef(name = "calculateClosestNode", signature = "(QNode;)QNode;")
+	//@MethodRef(name = "calculateClosestNode", signature = "(QNode;)QNode;")
 	@Test
 	public void testCalculateClosestNode() throws Exception {
 		RootGraph testSubject;
@@ -68,20 +121,15 @@ public class RootGraphTest {
 		result = Whitebox.invokeMethod(testSubject, "calculateClosestNode", new Object[] { Node.class });
 	}
 
-	@MethodRef(name = "containsEdge", signature = "(II)Z")
+	//@MethodRef(name = "containsEdge", signature = "(II)Z")
 	@Test
 	public void testContainsEdge() throws Exception {
-		RootGraph testSubject;
-		int a = 0;
-		int b = 0;
-		boolean result;
-
-		// default test
-		testSubject = createTestSubject();
-		result = testSubject.containsEdge(a, b);
+		RootGraph testSubject = createTestSubject();	
+		assertTrue(testSubject.containsEdge(0, 1));
+		assertTrue(!testSubject.containsEdge(1, 2));
 	}
 
-	@MethodRef(name = "updatePointer", signature = "()V")
+	//@MethodRef(name = "updatePointer", signature = "()V")
 	@Test
 	public void testUpdatePointer() throws Exception {
 		RootGraph testSubject;
@@ -91,7 +139,7 @@ public class RootGraphTest {
 		Whitebox.invokeMethod(testSubject, "updatePointer");
 	}
 
-	@MethodRef(name = "removeEdge", signature = "([QNode;)V")
+	//@MethodRef(name = "removeEdge", signature = "([QNode;)V")
 	@Test
 	public void testRemoveEdge() throws Exception {
 		RootGraph testSubject;

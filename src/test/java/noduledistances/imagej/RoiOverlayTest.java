@@ -8,12 +8,15 @@ import java.util.List;
 
 import org.junit.*;
 import org.junit.jupiter.api.Test;
+import org.powermock.reflect.Whitebox;
 
 import groovy.transform.Generated;
 import ij.ImagePlus;
 import ij.gui.ShapeRoi;
 
-@Generated(value = "org.junit-tools-1.1.0")
+
+
+//@Generated(value = "org.junit-tools-1.1.0")
 public class RoiOverlayTest {
 
 	@Before
@@ -40,7 +43,7 @@ public class RoiOverlayTest {
 		return new RoiOverlay(new ImagePlus());
 	}
 
-	@MethodRef(name = "attachmentPoint", signature = "(QShapeRoi;QRootGraph;)[D")
+	//@MethodRef(name = "attachmentPoint", signature = "(QShapeRoi;QRootGraph;)[D")
 	@Test
 	public void testAttachmentPoint() throws Exception {
 		RoiOverlay testSubject;
@@ -53,7 +56,7 @@ public class RoiOverlayTest {
 		result = testSubject.attachmentPoint(roi, graph);
 	}
 
-	@MethodRef(name = "getBoundaryPoints", signature = "(QShapeRoi;QArrayList<QShapeRoi;>;)[QPoint;")
+	//@MethodRef(name = "getBoundaryPoints", signature = "(QShapeRoi;QArrayList<QShapeRoi;>;)[QPoint;")
 	@Test
 	public void testGetBoundaryPoints() throws Exception {
 		RoiOverlay testSubject;
@@ -66,7 +69,7 @@ public class RoiOverlayTest {
 		result = testSubject.getBoundaryPoints(roi, intersections);
 	}
 
-	@MethodRef(name = "onBoundary", signature = "(DDDDDD)Z")
+	//@MethodRef(name = "onBoundary", signature = "(DDDDDD)Z")
 	@Test
 	public void testOnBoundary() throws Exception {
 		double p1x = 0.0;
@@ -81,7 +84,7 @@ public class RoiOverlayTest {
 		result = RoiOverlay.onBoundary(p1x, p1y, p2x, p2y, x, y);
 	}
 
-	@MethodRef(name = "getHaltonSequence", signature = "(QShapeRoi;)QList<QClumpClusterPoint;>;")
+	//@MethodRef(name = "getHaltonSequence", signature = "(QShapeRoi;)QList<QClumpClusterPoint;>;")
 	@Test
 	public void testGetHaltonSequence() throws Exception {
 		RoiOverlay testSubject;
@@ -93,13 +96,13 @@ public class RoiOverlayTest {
 		result = testSubject.getHaltonSequence(roi);
 	}
 
-	@MethodRef(name="intersectClumps", signature="(QArrayList<QShapeRoi;>;)V")
+	//@MethodRef(name="intersectClumps", signature="(QArrayList<QShapeRoi;>;)V")
 	@Test
 	public void testIntersectClumps() throws Exception {
 	RoiOverlay testSubject;ArrayList<ShapeRoi> rois = null;
 	
 	
 	// default test
-	testSubject=createTestSubject();Whitebox.invokeMethod(testSubject,"intersectClumps", new Object[]{ArrayList<ShapeRoi>.class});
+	testSubject=createTestSubject();Whitebox.invokeMethod(testSubject,"intersectClumps", new Object[]{ArrayList.class});
 	}
 }

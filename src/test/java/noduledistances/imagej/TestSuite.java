@@ -1,7 +1,9 @@
 package noduledistances.imagej;
 
 import org.junit.runner.RunWith;
-import org.python.antlr.ast.Suite;
+import org.junit.runners.Suite;
+import org.junit.runners.Suite.SuiteClasses;
+
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses(

@@ -95,10 +95,7 @@ public class RootGraph {
 			for(int ii = 0; ii < chunk.size(); ii+=2) {
 				
 				int[] start = chunk.get(ii);
-			    int[] end = chunk.get(ii+1);
-			    if(nodes.size() == 116) {
-			    	System.out.println("Breakpoint.");
-			    }
+			    int[] end = chunk.get(ii+1); 
 			    Node startPt = new Node(start[0], start[1], 0, -1);
 			    Node endPt = new Node(end[0], end[1], 0, -1);
 			    
@@ -165,40 +162,12 @@ public class RootGraph {
 		
 		updatePointer();
 		
-		addMissingEdges();
-		
 		System.out.println("number of nodes: " + nodes.size());
 		System.out.println("number of edges: " + (fsRep.size() / 2));
 		}//enumerate nodes
 	
 	
 	
-	
-	/**
-	 * The skeletonization algorithm sometimes does not add edges/arcs
-	 * where it makes sense to. This happens in cases where the nodes are very
-	 * close together, so to compensate we will add arcs when nodes are within 
-	 * a small distance.
-	 */
-	private void addMissingEdges() {
-		
-		for (Node node : nodes) {
-			
-			for(Node node1 : nodes) {
-				
-				if(node == node1) {
-					continue;
-				}
-				if(node.distance(node1) <= 9) {
-				
-				}
-				
-			}
-		}
-		
-		
-		
-	}
 	
 	
 	
@@ -236,6 +205,7 @@ public class RootGraph {
 		
 		updatePointer();
 	}
+	
 	
 	/**
 	 * method for removing the given edge. 
@@ -317,11 +287,6 @@ public class RootGraph {
 			
 			newNum = fsRep.get(ii)[0];
 			
-			if(current > newNum) {
-				System.out.println(fsRep.get(ii-1));
-				System.out.println(fsRep.get(ii));
-				System.out.println(fsRep.get(ii+1));	
-			}
 			
 			if(newNum > current) {
 				
@@ -406,6 +371,7 @@ public class RootGraph {
 		
 		
 	}
+	
 	
 	/**
 	 * We merge the given components.
@@ -625,6 +591,7 @@ public class RootGraph {
 	System.out.println("number of edges: " + (fsRep.size() / 2));
 	
     }// addNodes()
+   
     
     /**
      * Checks whether the graph contains the edge [a,b].
@@ -643,6 +610,7 @@ public class RootGraph {
     	}
     	return false;
     }
+    
     
    /**
     * Calculates the Node on the graph closest to the Node given as input. Primarily

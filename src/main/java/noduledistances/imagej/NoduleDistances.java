@@ -52,7 +52,7 @@ import java.awt.image.RescaleOp;
  * @author Brandin Farris
  *
  */
-@Plugin(type = Command.class, menuPath = "Plugins>NoduleData")
+@Plugin(type = Command.class, menuPath = "Plugins>Nodule Analysis>Nodule Distances")
 public class NoduleDistances implements Command {
 	
 	
