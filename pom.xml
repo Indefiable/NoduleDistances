@@ -36,7 +36,7 @@
   <!-- THE FOLLOWING DEPENDENCIES ARE LOCAL DEPENDENCIES FOR THIS PROJECT-->
   	<dependency>
         <groupId>com.example</groupId>
-        <artifactId>traceskeleton</artifactId>
+        <artifactId>TraceSkeleton</artifactId>
         <version>1.0</version>
     </dependency>
 	<dependency>
@@ -56,16 +56,13 @@
 			<artifactId>power-voronoi-diagram</artifactId>
 			<version>-SNAPSHOT</version>
 		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-math3 -->
 		<dependency>
-		<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-			<version>2.18.0</version>
+    		<groupId>org.apache.commons</groupId>
+    		<artifactId>commons-math3</artifactId>
+    		<version>3.6.1</version>
 		</dependency>
-		<dependency>
-			<groupId>nz.ac.waikato.cms.weka</groupId>
-			<artifactId>classificationViaClustering</artifactId>
-			<version>1.0.7</version>
-		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.scijava/scijava-common -->	
 		<!--  Fiji dependencies  -->
 		<dependency>
 			<groupId>sc.fiji</groupId>
@@ -74,6 +71,12 @@
 		</dependency>
 
 		<!--  ImageJ dependencies  -->
+		<!-- https://mvnrepository.com/artifact/net.imagej/imagej-ops -->
+		<dependency>
+    		<groupId>net.imagej</groupId>
+    		<artifactId>imagej-ops</artifactId>
+    		<version>2.2.0</version>
+		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej</artifactId>
@@ -85,16 +88,8 @@
 			<artifactId>ij</artifactId>
 			<version>1.54p</version>
 		</dependency>
-		<dependency>
-			<groupId>io.github.kostaskougios</groupId>
-			<artifactId>cloning</artifactId>
-			<version>1.12.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jfree</groupId>
-			<artifactId>jfreechart</artifactId>
-			<version>1.5.5</version>
-		</dependency>
+		
+		
 		<dependency>
 			<groupId>com.opencsv</groupId>
 			<artifactId>opencsv</artifactId>
@@ -103,18 +98,7 @@
 		
 	<!--  Test scope dependencies  -->
 	<!-- https://mvnrepository.com/artifact/net.praqma/junit-tools -->
-	<dependency>
-    		<groupId>org.powermock</groupId>
-    		<artifactId>powermock-api-mockito2</artifactId>
-    		<version>2.0.9</version>
-    		<scope>test</scope>
-		</dependency>
-		<dependency>
-    		<groupId>org.powermock</groupId>
-    		<artifactId>powermock-module-junit4</artifactId>
-    		<version>2.0.9</version>
-    		<scope>test</scope>
-		</dependency>	
+		
 		<!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
 		<dependency>
     		<groupId>org.junit.jupiter</groupId>
@@ -123,24 +107,9 @@
     		<scope>test</scope>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/org.assertj/assertj-core -->
-		<dependency>
-    		<groupId>org.assertj</groupId>
-    		<artifactId>assertj-core</artifactId>
-    		<version>4.0.0-M1</version>
-    		<scope>test</scope>
-		</dependency>
-		<dependency>
-        	<groupId>org.mockito</groupId>
-        	<artifactId>mockito-core</artifactId>
-        	<version>5.16.0</version>
-        	<scope>test</scope>
-    	</dependency>	
-    	 <dependency>
-        	<groupId>org.mockito</groupId>
-        	<artifactId>mockito-junit-jupiter</artifactId>
-        	<version>5.16.0</version>
-        	<scope>test</scope>
-    	</dependency>
+		
+		<!-- https://mvnrepository.com/artifact/org.assertj/assertj-core -->
+		
   </dependencies>
 
   <build>
@@ -166,10 +135,9 @@
 		</configuration>
         </plugin>
         <plugin>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>2.22.1</version>
-           <configuration>
-                <skipTests>true</skipTests>
+          	<artifactId>maven-surefire-plugin</artifactId>
+          	<version>3.0.0-M7</version>
+           	<configuration>
                 <argLine>
                 	--add-opens java.base/java.lang=ALL-UNNAMED
                     --add-opens java.base/java.time=ALL-UNNAMED

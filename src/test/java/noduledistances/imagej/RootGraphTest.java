@@ -1,14 +1,15 @@
 package noduledistances.imagej;
 
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
+
 import org.junit.jupiter.api.Test;
-import org.powermock.reflect.Whitebox;
 
-import static org.junit.Assert.*;
 
+import ij.gui.Line;
+import ij.gui.ShapeRoi;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.awt.Point;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,27 +28,11 @@ public class RootGraphTest {
     	assertNotSame(obj1, obj2);       // Checks if both references are different
 	 *
 	 */
-	
-	@Before
-	public void setUp() throws Exception {
-	
-		
-	}
 
-	@BeforeClass
-	public static void setUpBeforeClass() throws Exception {
-		
-	}
 
-	@After
-	public void tearDown() throws Exception {
 
-	}
 
-	@AfterClass
-	public static void tearDownAfterClass() throws Exception {
 
-	}
 
 	private RootGraph createTestSubject() { 
 		ArrayList<ArrayList<int[]>> skeleton = new ArrayList<>();
@@ -72,6 +57,39 @@ public class RootGraphTest {
 		 */
 	}
 
+	
+	@Test
+	public void testBallSubgraphLines() throws Exception{
+		RootGraph testSubject = createTestSubject();
+		
+		Point pt = new Point(15,0);
+		
+		ArrayList<ShapeRoi> out = testSubject.ballSubgraphLines(4, pt);
+		
+		assertTrue(out.size() == 2);
+		ShapeRoi line1 = new ShapeRoi(new Line(0,0,10,0));
+		Boolean contains = false;
+		
+		for(ShapeRoi shape : out) {
+			if(Arrays.equals(shape.getContainedPoints(),line1.getContainedPoints())) {
+				contains = true;
+			}
+		}
+		assertTrue(contains);
+		contains = false;
+		ShapeRoi line2 = new ShapeRoi(new Line(19,0,29,0));
+		
+		for(ShapeRoi shape : out) {
+			
+			if(Arrays.equals(shape.getContainedPoints(),line2.getContainedPoints())) {
+				contains = true;
+			}
+		}
+		
+		assertTrue(contains);
+		
+	}
+	
 	//@MethodRef(name = "addEdge", signature = "([QNode;)V")
 	@Test
 	public void testAddEdge() throws Exception {
@@ -96,29 +114,20 @@ public class RootGraphTest {
 		
 	}
 
-	
-	//@MethodRef(name = "addMissingEdges", signature = "()V")
-	@Test
-	public void testAddMissingEdges() throws Exception {
-		RootGraph testSubject = createTestSubject();
-		Method method = RootGraph.class.getDeclaredMethod("addMissingEdges");
-	    method.setAccessible(true); // Bypass access restriction
-	    method.invoke(testSubject);
-		assertTrue(testSubject.containsEdge(1, 2));
-		
-	}
-	
 
 	//@MethodRef(name = "calculateClosestNode", signature = "(QNode;)QNode;")
 	@Test
 	public void testCalculateClosestNode() throws Exception {
-		RootGraph testSubject;
-		Node p = null;
-		Node result;
-
-		// default test
-		testSubject = createTestSubject();
-		result = Whitebox.invokeMethod(testSubject, "calculateClosestNode", new Object[] { Node.class });
+		RootGraph testSubject = createTestSubject();
+		Node p = testSubject.nodes.get(1);
+		Node result = testSubject.nodes.get(2);
+		
+		Method method = RootGraph.class.getDeclaredMethod("calculateClosestNode", Node.class);
+	    method.setAccessible(true); // Bypass access restriction
+	    Node out = (Node) method.invoke(testSubject, p);
+	    
+	    assertTrue(out.equals(result));
+	    
 	}
 
 	//@MethodRef(name = "containsEdge", signature = "(II)Z")
@@ -132,21 +141,35 @@ public class RootGraphTest {
 	//@MethodRef(name = "updatePointer", signature = "()V")
 	@Test
 	public void testUpdatePointer() throws Exception {
-		RootGraph testSubject;
-
-		// default test
-		testSubject = createTestSubject();
-		Whitebox.invokeMethod(testSubject, "updatePointer");
+		RootGraph testSubject = createTestSubject();
+		ArrayList<int[]> newfsRep = new ArrayList<>();
+		newfsRep.add(new int[] {0,1,10});
+		newfsRep.add(new int[] {0,3,5});
+		newfsRep.add(new int[] {1,0,10});
+		newfsRep.add(new int[] {2,3,10});
+		newfsRep.add(new int[] {3,2,10});
+		
+		testSubject.fsRep.add(1, new int[] {0,3,5});
+		
+		Method method = RootGraph.class.getDeclaredMethod("updatePointer");
+	    method.setAccessible(true); // Bypass access restriction
+	    method.invoke(testSubject);
+	    
+	    assertTrue(Arrays.equals(testSubject.pointer, new int[] {0,2,3,4,5}));
+	    
 	}
 
 	//@MethodRef(name = "removeEdge", signature = "([QNode;)V")
 	@Test
 	public void testRemoveEdge() throws Exception {
-		RootGraph testSubject;
-		Node[] nodeEdge = new Node[] { null };
-
-		// default test
-		testSubject = createTestSubject();
+		RootGraph testSubject = createTestSubject();
+		Node[] nodeEdge = new Node[] {testSubject.nodes.get(0), 
+				testSubject.nodes.get(1)};
+	
+		testSubject.removeEdge(nodeEdge);
+		assertTrue(!testSubject.containsEdge(0, 1));
+		nodeEdge = new Node[] {testSubject.nodes.get(1), 
+				testSubject.nodes.get(2)};
 		testSubject.removeEdge(nodeEdge);
 	}
 }

@@ -153,7 +153,8 @@ public class RootSegmentation {
 		
 	
 	/**
-	 * It replaces the given roi array with an roi array without the given indices.
+	 * It replaces the given roi array with an roi array without the given indices and
+	 * redraws the binary map by using the remaining rois.
 	 * 
 	 * @param indices indices to remove
 	 * @param rois roi array to update

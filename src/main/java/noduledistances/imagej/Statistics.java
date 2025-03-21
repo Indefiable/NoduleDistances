@@ -273,10 +273,7 @@ public class Statistics {
 		
 		
 	}
-	
-	
-
-	
+		
 	
 	/**
 	 * Saves the pair-wise distance matrices as csv files. 

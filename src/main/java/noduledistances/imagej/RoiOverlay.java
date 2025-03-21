@@ -101,14 +101,16 @@ public class RoiOverlay {
 		
 		Point2D.Double pt = new Point2D.Double(centroid[0], centroid[1]);
 		
+		int numNodes = Math.min(7, graph.nodes.size());
 	
-		ArrayList<ShapeRoi> lines = graph.ballSubgraphLines(7, pt);
+		ArrayList<ShapeRoi> lines = graph.ballSubgraphLines(numNodes, pt);
 		
 		ArrayList<ShapeRoi> intersections = new ArrayList<>();
 		
 		for(ShapeRoi line : lines) {
 			line.and(roi);
-			if(line.getContainedPoints().length == 0) {
+			Point[] points = line.getContainedPoints();
+			if(points.length == 0) {
 				continue;
 			}
 			intersections.add(line);
@@ -228,7 +230,7 @@ public class RoiOverlay {
 	 /**
 	 * ChatGPT was used in making this method.<br>
 	 * 
-     * Determines whether a given point (x, y) is within a small threshold distance 
+     * Determines whether a given point (x, y) is within 2 pixels 
      * from a line segment defined by the points (p1x, p1y) and (p2x, p2y).
      *
      * The method calculates the perpendicular distance from the point to the line 

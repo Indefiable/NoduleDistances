@@ -32,7 +32,7 @@
   <!-- THE FOLLOWING DEPENDENCIES ARE LOCAL DEPENDENCIES FOR THIS PROJECT-->
   	<dependency>
         <groupId>com.example</groupId>
-        <artifactId>traceskeleton</artifactId>
+        <artifactId>TraceSkeleton</artifactId>
         <version>1.0</version>
     </dependency>
 	<dependency>

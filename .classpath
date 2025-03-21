@@ -37,15 +37,5 @@
 			<attribute name="optional" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="lib" path="C:/Users/Brand/.m2/repository/org/scijava/scijava-common/2.91.0/scijava-common-2.91.0.jar" sourcepath="C:/Users/Brand/.m2/repository/org/scijava/scijava-common/2.91.0/scijava-common-2.91.0-sources.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="jar:file:/C:/Users/Brand/.m2/repository/org/scijava/scijava-common/2.91.0/scijava-common-2.91.0-javadoc.jar!/"/>
-			<attribute name="maven.pomderived" value="true"/>
-			<attribute name="maven.groupId" value="org.scijava"/>
-			<attribute name="maven.artifactId" value="scijava-common"/>
-			<attribute name="maven.version" value="2.91.0"/>
-			<attribute name="maven.scope" value="compile"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

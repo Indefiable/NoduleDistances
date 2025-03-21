@@ -7,8 +7,10 @@ import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.PriorityQueue;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 
@@ -862,6 +864,7 @@ public class RootGraph {
 				System.out.println("Null node in closest Nodes method.");
 			}
 		}
+		Set<String> processedEdges = new HashSet<>();
 		
 		for(int[] edge : fsRep) {
 			
@@ -882,10 +885,13 @@ public class RootGraph {
 				}
 				
 			}
+			int minNode = Math.min(n1, n2);
+			int maxNode = Math.max(n1, n2);
+			String edgeKey = minNode + "-" + maxNode; // Unique identifier for undirected edges	
 			
-			
-			if(n11 || n22) {
-				//processedEdges.add(edgeKey);
+			if((n11 || n22) && !processedEdges.contains(edgeKey)) {
+				processedEdges.add(edgeKey);
+				
 				Line line = new Line(nodes.get(n1).x,nodes.get(n1).y, nodes.get(n2).x,nodes.get(n2).y);
 				ShapeRoi lineRoi = new ShapeRoi(line);
 				lines.add(lineRoi);
