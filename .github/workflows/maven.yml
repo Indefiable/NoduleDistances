@@ -10,6 +10,10 @@ name: Build
 
 on:
   push:
+    paths:
+      - src/**
+      - pom.xml
+      - .github/workflows/maven.yml
     branches: [ "main", "Farris-dev", "Zach-dev"]
   pull_request:
     branches: [ "main" ]
