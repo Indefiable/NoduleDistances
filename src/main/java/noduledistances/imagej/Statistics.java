@@ -478,8 +478,7 @@ public class Statistics {
 		double meanDistanceToRed = 0;
 		int redMeanDistanceCounter = 0;
 		double meanDistanceToGreen = 0;
-		int greenMeanDistanceCounter = 0;
-		
+		int greenMeanDistanceCounter = 0;	
 		ArrayList<ArrayList<int[]>> paths = node.paths;
 		
 		for(int ii = 0; ii < paths.size(); ii++) {
@@ -490,10 +489,12 @@ public class Statistics {
 			else if(SPToNodeii.size() == 0) {
 				continue;
 			}
+			//int[] path = SPToNodeii.get(0);
 			// iterating through every computed path to node ii. First path is shortest path.
 			for(int jj = 0; jj < SPToNodeii.size(); jj++) {
-			    int[] path = SPToNodeii.get(jj);
-			    
+			   int[] path = SPToNodeii.get(jj);
+			   if(jj == 0) {
+				   
 			   if(options.contains(NUMNODSINBALL)) {
 				    // if distance is smaller and node is correct color.
 				   for(int kk = 0; kk < radii.length; kk++) {
@@ -518,6 +519,7 @@ public class Statistics {
 					   }
 				   }
 				  
+			   }
 			   }
 			   if(options.contains(CLOSESTDISTANCE)) {
 				// if distance is smaller and node is correct color.
@@ -628,8 +630,7 @@ public class Statistics {
  * @return : number of nodules in radius distance away from node.
  */
 	protected int numNodulesinBall(int color, int radius, Node node, RootGraph graph) {
-		int numNods = 0;
-		
+		int numNods = 0;	
 		ArrayList<ArrayList<int[]>> paths = node.paths;
 		
 		for(int ii = 0; ii < paths.size(); ii++) {

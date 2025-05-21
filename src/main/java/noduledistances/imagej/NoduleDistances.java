@@ -768,7 +768,7 @@ public class NoduleDistances implements Command {
 			System.out.println("==================");
 			System.out.println(rootImp.getShortTitle());
 			System.out.println("==================");
-			execute(rootImp, tifImp, saveFile.getAbsolutePath(), modelFile, menu.numIters);
+			execute(crop(rootImp), tifImp, saveFile.getAbsolutePath(), modelFile, menu.numIters);
 			
     	}
     	else {//rootsFile is a folder containing root files.
