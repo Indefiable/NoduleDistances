@@ -9,6 +9,10 @@ import ij.IJ;
 public class Node extends Point{
 	
 /**
+	 * 
+	 */
+
+/**
  * Node.type == 0 -> skeleton node
  * type == 1 -> red nodule
  * type == 2 -> green nodule

@@ -103,7 +103,7 @@ public class NoduleDistances implements Command {
 		imp.setRoi(x, y, newWidth, newHeight); // cropping image to center of image and halving the size.
 		imp = imp.crop();
 		imp.setTitle(imp.getTitle().substring(4));
-		
+		 
 		return imp;
     }
 	
@@ -768,7 +768,7 @@ public class NoduleDistances implements Command {
 			System.out.println("==================");
 			System.out.println(rootImp.getShortTitle());
 			System.out.println("==================");
-			execute(crop(rootImp), tifImp, saveFile.getAbsolutePath(), modelFile, menu.numIters);
+			execute(rootImp, tifImp, saveFile.getAbsolutePath(), modelFile, menu.numIters);
 			
     	}
     	else {//rootsFile is a folder containing root files.
