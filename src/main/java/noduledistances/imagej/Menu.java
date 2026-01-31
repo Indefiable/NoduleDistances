@@ -142,40 +142,82 @@ public class Menu implements Command {
 	 * 
 	 */
 	private void selectFiles(int file) {
+		FileNameExtensionFilter imageFilter;
+		int result;
 		System.out.println("FILE :" + file);
 		JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Image to load or file to iterate through.");
-        fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-
-
-        FileNameExtensionFilter imageFilter = new FileNameExtensionFilter("Image Files and Folders", "jpg", "jpeg", "png", "gif", "model","tif","tiff");
-        fileChooser.setFileFilter(imageFilter);
         
-        int result = fileChooser.showOpenDialog(null);
-        
-        if(result != JFileChooser.APPROVE_OPTION) {
-        	System.out.println("Error, invalid option.");
-        	return;
-        }
         
         
     	switch(file) {
     	
     	case 1:
+    		fileChooser.setDialogTitle("Select your roots image or a folder of them.");
+    		fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+
+
+    		imageFilter = new FileNameExtensionFilter("Image Files and Folders", "jpg", "jpeg", "png", "gif", "model","tif","tiff");
+    		fileChooser.setFileFilter(imageFilter);
+        
+    		result = fileChooser.showOpenDialog(null);
+        
+    		if(result != JFileChooser.APPROVE_OPTION) {
+    			System.out.println("Error, invalid option.");
+    			return;
+    		}
     		this.rootFile = fileChooser.getSelectedFile();
     		System.out.println("Chosen: " + this.rootFile.getAbsolutePath());
     		break;
     	case 2:
+    		fileChooser.setDialogTitle("Select your tif image or a folder of them.");
+    		fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+
+
+    		imageFilter = new FileNameExtensionFilter("Image Files and Folders", "jpg", "jpeg", "png", "gif", "model","tif","tiff");
+    		fileChooser.setFileFilter(imageFilter);
+        
+    		result = fileChooser.showOpenDialog(null);
+        
+    		if(result != JFileChooser.APPROVE_OPTION) {
+    			System.out.println("Error, invalid option.");
+    			return;
+    		}
     		this.tifFile = fileChooser.getSelectedFile();
     		System.out.println("Chosen: " + this.tifFile.getAbsolutePath());
     		break;
     		
     	case 3:
+    		fileChooser.setDialogTitle("Select your model file.");
+    		fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+
+
+    		imageFilter = new FileNameExtensionFilter("Image Files and Folders", "model");
+    		fileChooser.setFileFilter(imageFilter);
+        
+    		result = fileChooser.showOpenDialog(null);
+        
+    		if(result != JFileChooser.APPROVE_OPTION) {
+    			System.out.println("Error, invalid option.");
+    			return;
+    		}
     		this.modelFile = fileChooser.getSelectedFile();
     		System.out.println("Chosen: " + this.modelFile.getAbsolutePath());
     		break;
     		
-    	case 4: 
+    	case 4:
+    		fileChooser.setDialogTitle("Select your save folder.");
+    		fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+
+    		imageFilter = new FileNameExtensionFilter("Image Files and Folders", "jpg");
+    		fileChooser.setFileFilter(imageFilter);
+        
+    		result = fileChooser.showOpenDialog(null);
+        
+    		if(result != JFileChooser.APPROVE_OPTION) {
+    			System.out.println("Error, invalid option.");
+    			return;
+    		}
     		this.saveFile = fileChooser.getSelectedFile();
     		System.out.println("Chosen: " + this.saveFile.getAbsolutePath());
     		break;
