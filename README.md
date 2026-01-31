@@ -1,6 +1,6 @@
 [![Build Status](https://github.com/Indefiable/NoduleDistances/actions/workflows/maven.yml/badge.svg)](https://github.com/Indefiable/NoduleDistances/actions/workflows/maven.yml)
 
-![Docs Status](https://github.com/Indefiable/NoduleDistances/actions/workflows/javadoc.yml/badge.svg)(https://indefiable.github.io/NoduleDistances/)
+[![Docs Status](https://github.com/Indefiable/NoduleDistances/actions/workflows/javadoc.yml/badge.svg)](https://indefiable.github.io/NoduleDistances/)
 
 
 Nodule-Distances
