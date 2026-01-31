@@ -23,15 +23,16 @@ need to align from image to image.
 
 Installation
 ============
-First install [fiji](https://imagej.net/software/fiji/). Then download the .jar file in the releases on this github page,
-and drop the .jar file into the plugins folder wherever you installed fiji. Then the plugin is under 
-plugins->Nodule Analysis->Nodule Distances.
+First install [fiji](https://imagej.net/software/fiji/). Then put all of the jar files in the jar_files folder into the plugins
+folder of fiji. The plugin is under plugins->Nodule Analysis->Nodule Distances.
 
 
 Before you can run this plugin, you must generate a .model file for your dataset using Weka's color clustering plugin, and 
 you must run my previous plugin, [Nodule Segmentation](https://github.com/Indefiable/Nodule-Segmentation) to get it's output. 
 Note that the Nodule Segmentation github page also has a tutorial explaining how to create a .model file. You'll be following
-the same procedure for this plugin, but instead attempting to segment the root system instead of the nodules.
+the same procedure for this plugin, but instead attempting to segment the root system instead of the nodules. I have two model files
+in the model_files folder which can be used on the examples in the Examples folder to try this for yourself. the model files I have
+may or may not work on a different data set. 
 
 
 Instructions
@@ -43,9 +44,10 @@ Instructions
 
 3. Run the plugin at plugins -> Nodule Data.
 
-4. You may be prompted to box the area of the image that the root system is in.
+4. Fill in any required information for the program to run. This includes the Tif file, root file, model file, etc.
 
-5. Browse your files and select the image with the nodules and the model file generated earlier.
+5. You can assign different characteristics to your red and green nodules if you wish; this was necessary for our research. Otherwise you can 
+    simply put "red" and "green" for the red and green attributes.
 
 6. Let the program run. 
 

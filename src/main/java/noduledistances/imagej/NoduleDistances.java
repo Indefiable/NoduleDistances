@@ -530,7 +530,7 @@ public class NoduleDistances implements Command {
 			System.out.println("==================");
 			System.out.println(rootImp.getShortTitle());
 			System.out.println("==================");
-			execute(crop(rootImp), tifImp, saveFile.getAbsolutePath(), modelFile, menu.numIters, menu.redAttribute, menu.greenAttribute);
+			execute(rootImp, tifImp, saveFile.getAbsolutePath(), modelFile, menu.numIters, menu.redAttribute, menu.greenAttribute);
 
 			
     	}
@@ -551,15 +551,13 @@ public class NoduleDistances implements Command {
 			
 			
 			
-			//String saveString = "C:\\Users\\Brand\\Documents\\Research\\DistanceAnalysis\\DistanceTesting";
-			//String saveFile = "D:\\1EDUCATION\\aRESEARCH\\tempGitHub\\Nodule-Distances\\testing";
 			try {
 				ImagePlus rootImp = new ImagePlus(rootFile.getPath());
 				ImagePlus tifImp = new ImagePlus(currentTif.getPath());
 				System.out.println("==================");
 				System.out.println(rootImp.getShortTitle());
 				System.out.println("==================");
-				execute(crop(rootImp), tifImp, saveFile.getAbsolutePath(), modelFile, menu.numIters,
+				execute(rootImp, tifImp, saveFile.getAbsolutePath(), modelFile, menu.numIters,
 						menu.redAttribute,menu.greenAttribute);
 			}catch(Exception e) {
 				e.printStackTrace();

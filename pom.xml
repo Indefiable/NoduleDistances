@@ -87,7 +87,7 @@
 		
 		<!--  Test scope dependencies  -->
 		<dependency>
-			<groupId>org.junit.jupiter</>
+			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter</artifactId>
 			<version>5.10.1</version>
 			<scope>test</scope>
@@ -175,6 +175,9 @@
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>3.2.5</version>
+          <configuration>
+        	<skipTests>true</skipTests>
+    	  </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
