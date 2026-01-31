@@ -6,24 +6,15 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Build
+
+name: Java CI with Maven
 
 on:
   push:
-    paths:
-      - src/**
-      - pom.xml
-      - .github/workflows/maven.yml
     branches: [ "main", "Farris-dev", "Zach-dev"]
   pull_request:
     branches: [ "main" ]
-# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
 
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
 
 jobs:
   build:
@@ -38,6 +29,7 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
+
     - name: download KShortestPaths
       run: curl -o KShortestPathsFork.jar "https://raw.githubusercontent.com/Indefiable/NoduleDistances/main/assets/ReferencedLibraries/KShortestPathsFork.jar"
     - name: install KShortestPaths to local repo
@@ -54,9 +46,4 @@ jobs:
       run: mvn install:install-file -Dfile="./PowerVoronoiDiagram.jar" -DgroupId=com.example -DartifactId=PowerVoronoiDiagram -Dversion=1.0 -Dpackaging=jar
     
     - name: Build with Maven
-      run: mvn -B package --file pom.xml -Dmaven.test.skip=true
-    - name: Upload JAR as Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: noduledistances-jar
-        path: target/*.jar
+      run: mvn -B package --file pom.xml

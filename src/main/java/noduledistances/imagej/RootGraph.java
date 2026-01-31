@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
@@ -27,6 +28,7 @@ import com.programmerare.edu.asu.emit.algorithm.graph.GraphWithConstructor;
 import edu.asu.emit.algorithm.graph.Path;
 import edu.asu.emit.algorithm.graph.abstraction.BaseVertex;
 import edu.asu.emit.algorithm.graph.shortestpaths.YenTopKShortestPathsAlg;
+
 
 
 
@@ -97,7 +99,9 @@ public class RootGraph {
 			for(int ii = 0; ii < chunk.size(); ii+=2) {
 				
 				int[] start = chunk.get(ii);
+				
 			    int[] end = chunk.get(ii+1); 
+
 			    Node startPt = new Node(start[0], start[1], 0, -1);
 			    Node endPt = new Node(end[0], end[1], 0, -1);
 			    
@@ -115,12 +119,12 @@ public class RootGraph {
 			    if(!nodes.contains(startPt)) {
 			    	nodes.add(startPt);
 			    }
-			  
+
 			    
 			    if(!nodes.contains(endPt)) {
 			    	nodes.add(endPt);
 			    }
-			   
+
 			    
 			    Line line = new Line(startPt.x, startPt.y, endPt.x, endPt.y);
 			    int length = (int) line.getLength();
@@ -163,14 +167,14 @@ public class RootGraph {
 		}
 		
 		updatePointer();
-		
+
 		System.out.println("number of nodes: " + nodes.size());
 		System.out.println("number of edges: " + (fsRep.size() / 2));
 		}//enumerate nodes
 	
 	
 	
-	
+
 	
 	
 	/**
@@ -208,7 +212,7 @@ public class RootGraph {
 		updatePointer();
 	}
 	
-	
+
 	/**
 	 * method for removing the given edge. 
 	 * 
@@ -289,6 +293,7 @@ public class RootGraph {
 			
 			newNum = fsRep.get(ii)[0];
 			
+
 			
 			if(newNum > current) {
 				
@@ -349,6 +354,7 @@ public class RootGraph {
 						System.out.println("Null node.");
 						continue;
 					} 	
+
 					double distance1 = node.distance(node1);
 					
 					if(distance1 < 15) {
@@ -373,8 +379,8 @@ public class RootGraph {
 		
 		
 	}
-	
-	
+
+
 	/**
 	 * We merge the given components.
 	 * 
@@ -591,9 +597,10 @@ public class RootGraph {
     
 	System.out.println("number of nodes: " + nodes.size());
 	System.out.println("number of edges: " + (fsRep.size() / 2));
-	
+
     }// addNodes()
    
+
     
     /**
      * Checks whether the graph contains the edge [a,b].
@@ -613,7 +620,8 @@ public class RootGraph {
     	return false;
     }
     
-    
+
+
    /**
     * Calculates the Node on the graph closest to the Node given as input. Primarily
     *  used for determining which Node to connect the Nodule Nodes being added to.
@@ -666,6 +674,7 @@ public class RootGraph {
     				continue;
     			}
     			
+
     			
     			List<Path> shortest_paths_list = yenAlg.getShortestPaths(
     					yanGraph.getVertex(startingNodule), yanGraph.getVertex(endingNodule), numIterations);
@@ -676,7 +685,7 @@ public class RootGraph {
     				System.out.println("breakpoint.");
     			}
     			
-    		
+
     			if(shortest_paths_list.size() == 0) {
     				System.out.println("no paths between." + nodule.nodeNumber + "/" 
     			+ startingNodule+ " and " + nodule1.nodeNumber + "/" + endingNodule );
@@ -724,7 +733,7 @@ public class RootGraph {
 			 paths.add(intPath);
 		}
 		
-	
+
 		
 		return paths;
     }
@@ -865,12 +874,13 @@ public class RootGraph {
 			}
 		}
 		Set<String> processedEdges = new HashSet<>();
+
 		
 		for(int[] edge : fsRep) {
 			
 			int n1 = edge[0];
 			int n2 = edge[1];
-			
+		
 		    
 			boolean n11 = false;
 			boolean n22 = false;
@@ -885,6 +895,7 @@ public class RootGraph {
 				}
 				
 			}
+
 			int minNode = Math.min(n1, n2);
 			int maxNode = Math.max(n1, n2);
 			String edgeKey = minNode + "-" + maxNode; // Unique identifier for undirected edges	
@@ -1023,6 +1034,5 @@ public class RootGraph {
       	return nodFSRep;
       	
       }
-    
     
 }

@@ -3,7 +3,6 @@ package noduledistances.imagej;
 import java.awt.Color;
 import java.awt.Font;
 
-
 import ij.ImagePlus;
 import ij.gui.Line;
 import ij.gui.OvalRoi;
@@ -30,7 +29,7 @@ public class GraphOverlay {
 	
 	
 	public GraphOverlay() {
-		
+
 	}
 
 	
@@ -58,6 +57,7 @@ public class GraphOverlay {
     	  
 		Overlay overlay = new Overlay();
 		skellyMap.setOverlay(overlay);
+
 		
 		
 		for(Node node : graph.nodes) {
@@ -67,7 +67,7 @@ public class GraphOverlay {
 			ball.setFillColor(Color.BLUE);
 			skellyMap.getOverlay().add(ball);
 			
-		
+
 			}
 			
 			else {
@@ -114,8 +114,9 @@ public class GraphOverlay {
 			}
 			
 		}
-		
+
 		for (int[] edge : graph.fsRep) {	
+
 			Node node1 = graph.nodes.get(edge[0]);
 			Node node2 = graph.nodes.get(edge[1]);
 			
@@ -131,6 +132,5 @@ public class GraphOverlay {
 		this.overlayedGraph = skellyMap;
 		
 	}
-	
 	
 }

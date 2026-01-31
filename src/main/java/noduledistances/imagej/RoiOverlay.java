@@ -10,7 +10,6 @@ import ij.gui.Roi;
 import ij.gui.ShapeRoi;
 
 
-
 import java.awt.Point;
 import java.awt.Rectangle;
 
@@ -31,6 +30,7 @@ import kn.uni.voronoitreemap.datastructure.OpenList;
 import kn.uni.voronoitreemap.diagram.PowerDiagram;
 import kn.uni.voronoitreemap.j2d.PolygonSimple;
 import kn.uni.voronoitreemap.j2d.Site;
+
 
 
 /**
@@ -67,7 +67,7 @@ public class RoiOverlay {
 		
 		for(int ii = 0; ii < overlay.size(); ii++) {
 			rois[ii] = (ij.gui.ShapeRoi) overlay.get(ii);
-			
+
 		}
 		
 		this.rois = rois;
@@ -111,6 +111,7 @@ public class RoiOverlay {
 			line.and(roi);
 			Point[] points = line.getContainedPoints();
 			if(points.length == 0) {
+
 				continue;
 			}
 			intersections.add(line);
@@ -126,6 +127,7 @@ public class RoiOverlay {
 			attachmentPoint[0] = center.x;
 			attachmentPoint[1] = center.y;
 		}
+
 		
 		
 		return attachmentPoint;
@@ -203,11 +205,13 @@ public class RoiOverlay {
 	            
 
 	            if (onBoundary(prevX, prevY, currX, currY, st.x, st.y)) {
+
 	                bdPoints.add(st);
 	                break;
 	            }
 	            
 	            if (onBoundary(prevX, prevY, currX, currY, end.x, end.y)) {
+
 	                bdPoints.add(end);
 	                break;
 	            }
@@ -231,6 +235,7 @@ public class RoiOverlay {
 	 * ChatGPT was used in making this method.<br>
 	 * 
      * Determines whether a given point (x, y) is within 2 pixels 
+
      * from a line segment defined by the points (p1x, p1y) and (p2x, p2y).
      *
      * The method calculates the perpendicular distance from the point to the line 
@@ -246,7 +251,7 @@ public class RoiOverlay {
      *             {@code false} otherwise.
      */
 	public static boolean onBoundary(double p1x, double p1y, double p2x, double p2y, double x, double y) {
-	   
+
 	    double dx = x - p1x;
 	    double dy = y - p1y;
 	    
@@ -258,7 +263,7 @@ public class RoiOverlay {
 	    
 	    double magnitudeSquared = vx * vx + vy * vy;
 	    
-	  
+
 	    double r = dotProduct / magnitudeSquared;
 	    
 	    double dist;
@@ -374,6 +379,7 @@ public class RoiOverlay {
 	 * 
 	 * @param roi : Rois that we are creating the points for.
 	 * @return List object of points to cluster.
+
 	 */
 	public List<ClumpClusterPoint> getHaltonSequence(ShapeRoi roi) {
 		
@@ -405,6 +411,7 @@ public class RoiOverlay {
 	 * @param points point cloud representation of an ROI polygon
 	 * @param k number of nodules to break the clump into.
 	 * @return List object of k centroids after performing k-means.
+
 	 */
 	public static List<CentroidCluster<ClumpClusterPoint>> kMeansClustering(List<ClumpClusterPoint> points, int k) {
         
@@ -422,6 +429,7 @@ public class RoiOverlay {
 	 * 
 	 * @param numberOfPoints : number of halton vectors to generate.
 	 * @param boundingBox : bounds of the halton vectors.
+	 
 	 * @return List object of halton vectors. Uses ClumpClusterPoint to implement Clusterable interface.
 	 */
 	public List<ClumpClusterPoint> getHaltonVectors(int numberOfPoints, Rectangle boundingBox) {
@@ -512,13 +520,13 @@ public class RoiOverlay {
 		PolygonRoi converter;
 		int[] intx;
 		int[] inty;
-		
+
 		PowerDiagram diagram = new PowerDiagram();
 		
 		// custom list object holding the points used to compute power diagrams
 		OpenList sites = new OpenList();
 
-	
+
 
 		PolygonSimple roiBoundingBox = new PolygonSimple();
 		Rectangle box = roi.getBounds();
@@ -584,7 +592,7 @@ public class RoiOverlay {
 			System.out.println("Number of null sites for this ROI: " + numNullSites);
 		}
 		intersectClumps(rois);
-		
+
 		
 		rois.remove(0);
 		return rois;
@@ -635,8 +643,7 @@ public class RoiOverlay {
 	
 		return y;
 	}
-	
-	
+
 	/**
 	 * removes trailing zeros that result from the Power Diagram output.
 	 * @param array
@@ -654,5 +661,5 @@ public class RoiOverlay {
 		
 	}
 	
-
 }//class
+

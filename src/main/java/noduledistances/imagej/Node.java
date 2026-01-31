@@ -3,6 +3,7 @@ package noduledistances.imagej;
 import java.awt.Point;
 import java.util.ArrayList;
 
+
 public class Node extends Point{
 	
 /**
@@ -181,14 +182,14 @@ public ArrayList<int[]> getPaths(int node){
 		if(ps == null) {
 			continue;
 		}
-		
+
 		if(ps.get(0)[0] == node) {
 			paths = ps;
 			break;
 		}
 	}
 	
-	
+
 	
 	return paths;
 }
@@ -221,7 +222,7 @@ public String toString() {
 		color = "mixed";
 	}
 	else {
-	
+
 		color = "unknown";
 	}
     return nodeNumber + "{x=" + x + ", y=" + y + ", type=" + color + '}';

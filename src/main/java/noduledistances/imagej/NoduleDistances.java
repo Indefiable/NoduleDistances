@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+
 import ij.process.ImageConverter;
 
 import org.scijava.command.Command;
@@ -52,7 +53,9 @@ import java.awt.image.RescaleOp;
  * @author Brandin Farris
  *
  */
+
 @Plugin(type = Command.class, menuPath = "Plugins>Nodule Analysis>Nodule Distances")
+
 public class NoduleDistances implements Command {
 	
 	
@@ -72,7 +75,6 @@ public class NoduleDistances implements Command {
 
     @Parameter
     private OpService opService;
- 
     
    /**
     * Halves the width and height and crops the image
@@ -93,7 +95,6 @@ public class NoduleDistances implements Command {
 		imp.setRoi(x, y, newWidth, newHeight); // cropping image to center of image and halving the size.
 		imp = imp.crop();
 		imp.setTitle(imp.getTitle().substring(4));
-		
 		return imp;
     }
 	
@@ -109,7 +110,7 @@ public class NoduleDistances implements Command {
 	 * @param graphOverlay : Image of the root system with the graph object overlayed.
 	 */
 	public ImagePlus shortestPath(int startNodeIndex, int endNodeIndex, RootGraph graph, GraphOverlay graphOverlay) {
-		
+	
 		int width = graphOverlay.overlayedGraph.getWidth();
 		int height = graphOverlay.overlayedGraph.getHeight();
 		
@@ -223,6 +224,7 @@ public class NoduleDistances implements Command {
 	}
 	
 	
+
 	/**
 	 * increases brightness and contrast in the image to improve segmentation of root system.
 	 * 
@@ -256,7 +258,7 @@ public class NoduleDistances implements Command {
 		BufferedImage output = op.filter(image.getBufferedImage(), null);
 
 		image = new ImagePlus(image.getTitle(), output);
-	
+
 		return image;
 	}
 	
@@ -280,7 +282,7 @@ public class NoduleDistances implements Command {
 		Toolbar toolbar = new Toolbar();
         
         Toolbar.getInstance().setTool(Toolbar.RECTANGLE);
-      
+
         // Wait for the user to finish drawing the ROI
         new WaitForUserDialog("Please outline the root system.").show();
         
@@ -292,14 +294,14 @@ public class NoduleDistances implements Command {
 			IJ.log("No outline made. Cancelling.");
 			return null;
 		}
-        
+
    
         ShapeRoi shapeRoi = new ShapeRoi(roi);
         
        
         ShapeRoi outsideRoi = new ShapeRoi(new Roi(0, 0, image.getWidth(), image.getHeight()));
         
-     
+
         outsideRoi = outsideRoi.not(shapeRoi);
         
         // Set the outside area to black
@@ -346,6 +348,7 @@ public class NoduleDistances implements Command {
      * @param model : path file to selected .model file 
      */
     //ImagePlus image, String model
+
     private void execute(ImagePlus roots, ImagePlus tifImp, String saveFile, File modelFile, int numIters, 
     		String redAttribute, String greenAttribute) {
     	
@@ -353,19 +356,11 @@ public class NoduleDistances implements Command {
 			roots = new ImagePlus(roots.getTitle(), roots.getProcessor().convertToRGB());
 		}
     	
-		tifImp.setTitle(tifImp.getTitle().substring(0,5));
-		roots.setTitle(roots.getTitle().substring(0,5));
 		
-		if(!tifImp.getTitle().equalsIgnoreCase(roots.getTitle())) {
-			System.out.println("Names are not the same");
-			System.out.println(tifImp.getTitle());
-			System.out.println(roots.getTitle());
-		}
-		
-	//	IJ.save(roots, saveFile + "PS033_preprocessed44.jpg");
-		
+
     	if(roots.getHeight() != tifImp.getHeight()) {
     		
+
     		System.out.println("roots: " + roots.getWidth() + " x " + roots.getHeight());
 
         	System.out.println("tifImp: " + tifImp.getWidth() + " x " + tifImp.getHeight());
@@ -402,9 +397,9 @@ public class NoduleDistances implements Command {
 		
 		System.out.println("Preprocessing...");
 		NoduleDistances.image = preprocessing(roots);
-	
-		
+
 		ColorClustering cluster = new ColorClustering(NoduleDistances.image);	
+
 		cluster.loadClusterer(modelFile.getAbsolutePath());
 
 		cluster.setChannels(channels);
@@ -417,7 +412,6 @@ public class NoduleDistances implements Command {
 		ArrayList<ArrayList<int[]>> skeleton = Skeletonize.skeletonize(root.binarymap);
 		
 		GraphOverlay graphOverlay = new GraphOverlay();
-		
 		
 		System.out.println("Making graph...");
 		RootGraph graph = new RootGraph(skeleton, graphOverlay);
@@ -437,6 +431,7 @@ public class NoduleDistances implements Command {
 		graph.addNodules(centroids);
 		
 		//Locates and merges sections of the graph that are disconnected. This is due to 
+
 		//Ling Dong's skeletonization algorithm not always producing a connected skeleton
 		// or there being shaded parts on the root system that confuses color-based segmentation.
 		System.out.println("Merging components...");
@@ -456,7 +451,7 @@ public class NoduleDistances implements Command {
 		
 		System.out.println("Computing shortest distances...");
 		graph.computeShortestDistances(numIters);
-		
+
 	
 		try {
 			System.out.println("Initializing statistics generator.");
@@ -465,7 +460,7 @@ public class NoduleDistances implements Command {
 			stats.generateData(graph, new int[] {100,150,250,500,1000}, saveFile);
 			stats.savePairwiseDistanceMatrices(graph, saveFile, numIters);
 		} catch (CsvValidationException e) {
-			
+	
 			e.printStackTrace();
 		}
 	
@@ -490,9 +485,10 @@ public class NoduleDistances implements Command {
 			
 			ImagePlus out = shortestPath(pair[0],pair[1],graph, graphOverlay);
 			if(out == null) {
-			
+
 				continue;
 			}
+
 			
 			IJ.saveAs(out, "jpg", saveFile + title +"_" 
 			+ Integer.toString(pair[0])+ "_" + Integer.toString(pair[1]));
@@ -506,7 +502,6 @@ public class NoduleDistances implements Command {
     public void run() {
     	Menu menu = new Menu();
     	menu.run();
-    	
     	
     	if(menu.rootFile == null) {
     		return;
@@ -536,6 +531,7 @@ public class NoduleDistances implements Command {
 			System.out.println(rootImp.getShortTitle());
 			System.out.println("==================");
 			execute(crop(rootImp), tifImp, saveFile.getAbsolutePath(), modelFile, menu.numIters, menu.redAttribute, menu.greenAttribute);
+
 			
     	}
     	else {//rootsFile is a folder containing root files.

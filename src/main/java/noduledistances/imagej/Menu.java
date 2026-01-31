@@ -1,12 +1,11 @@
 package noduledistances.imagej;
 
 import org.scijava.command.Command;
-
-
 import ij.gui.GenericDialog;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -15,7 +14,7 @@ import java.io.File;
 
 
 public class Menu implements Command {
-	
+
 	
 	
 	protected static final int FOLDER = 1;
@@ -32,13 +31,13 @@ public class Menu implements Command {
     
     // number of paths to compute between each pair of nodules
     protected int numIters = 1;
-    
+
     
     /**
      * method for displaying the UI to let the user select their input files.
      */
 	private void display() {
-		
+
         GenericDialog gd = new GenericDialog("Nodule Distances Plugin");
 
         gd.addButton("Select Roots Image or Folder", new ActionListener() {
@@ -68,13 +67,12 @@ public class Menu implements Command {
         gd.addNumericField("number of paths to commpute between nodules:", 5, 0);
         gd.addStringField("Red Attribute:", "", 10);
         gd.addStringField("Green Attribute:", "", 10);
-        
+
         gd.showDialog();
         
         
         
         if (gd.wasOKed()) {
-           
         	int numIters = (int)gd.getNextNumber();
         	if(numIters > 0) {
         		this.numIters = numIters;
@@ -148,9 +146,8 @@ public class Menu implements Command {
 		JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Image to load or file to iterate through.");
         fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-     
-        
-       
+
+
         FileNameExtensionFilter imageFilter = new FileNameExtensionFilter("Image Files and Folders", "jpg", "jpeg", "png", "gif", "model","tif","tiff");
         fileChooser.setFileFilter(imageFilter);
         

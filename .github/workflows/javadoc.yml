@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      
+        
       - name: download KShortestPaths
         run: curl -o KShortestPathsFork.jar "https://raw.githubusercontent.com/Indefiable/NoduleDistances/main/assets/ReferencedLibraries/KShortestPathsFork.jar"
       - name: install KShortestPaths to local repo
@@ -29,10 +29,10 @@ jobs:
       
       - name: download PowerVoronoi
         run: curl -o PowerVoronoiDiagram.jar "https://raw.githubusercontent.com/Indefiable/NoduleDistances/main/assets/ReferencedLibraries/PowerVoronoiDiagram.jar"
+      
       - name: install PowerVoronoiDiagram to local repo
         run: mvn install:install-file -Dfile="./PowerVoronoiDiagram.jar" -DgroupId=com.example -DartifactId=PowerVoronoiDiagram -Dversion=1.0 -Dpackaging=jar
-        
-
+      
       - name: Deploy - Publish Javadoc
         uses: MathieuSoysal/Javadoc-publisher.yml@v3.0.2
         with:
