@@ -31,17 +31,17 @@ jobs:
         cache: maven
 
     - name: download KShortestPaths
-      run: curl -o KShortestPathsFork.jar "https://raw.githubusercontent.com/Indefiable/NoduleDistances/main/assets/ReferencedLibraries/KShortestPathsFork.jar"
+      run: curl -o KShortestPathsFork.jar "https://raw.githubusercontent.com/Indefiable/NoduleDistances/main/jar_files/KShortestPathsFork.jar"
     - name: install KShortestPaths to local repo
       run: mvn install:install-file -Dfile="./KShortestPathsFork.jar" -DgroupId=com.example -DartifactId=KShortestPathsFork -Dversion=1.0 -Dpackaging=jar
     
     - name: download traceskeleton
-      run: curl -o traceskeleton.jar "https://raw.githubusercontent.com/Indefiable/NoduleDistances/main/assets/ReferencedLibraries/TraceSkeleton.jar"
+      run: curl -o traceskeleton.jar "https://raw.githubusercontent.com/Indefiable/NoduleDistances/main/jar_files/TraceSkeleton.jar"
     - name: install traceskeleton to local repo
       run: mvn install:install-file -Dfile="./traceskeleton.jar" -DgroupId=com.example -DartifactId=traceskeleton -Dversion=1.0 -Dpackaging=jar
     
     - name: download PowerVoronoi
-      run: curl -o PowerVoronoiDiagram.jar "https://raw.githubusercontent.com/Indefiable/NoduleDistances/main/assets/ReferencedLibraries/PowerVoronoiDiagram.jar"
+      run: curl -o PowerVoronoiDiagram.jar "https://raw.githubusercontent.com/Indefiable/NoduleDistances/main/jar_files/PowerVoronoiDiagram.jar"
     - name: install PowerVoronoiDiagram to local repo
       run: mvn install:install-file -Dfile="./PowerVoronoiDiagram.jar" -DgroupId=com.example -DartifactId=PowerVoronoiDiagram -Dversion=1.0 -Dpackaging=jar
     
