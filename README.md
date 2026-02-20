@@ -7,14 +7,19 @@ Nodule-Distances
 ================
 
 An ImageJ Command plugin to calculate the pair-wise distances of nodules in 2-d nodule images. 
-An extension of my other project, Nodule Segmentation.
+An extension of my other project, Nodule Segmentation. This plugin requires three inputs described below.
 
-For documentation of the source code, visit the documentation [website](https://indefiable.github.io/NoduleDistances/).
+A tif file that has ImageOverlay data attached to an image is required. The overlay should contain the locations
+and outlines of the nodules (or other objects of interest) on the root system. 
+Another image of the same root system that is amenable to segmentation is also required (see the examples folder).
+Lastly, a model file to use for segmentation. Instructions on making a model file can be found [here](https://Farris2002.github.io/NoduleSegmentation/).
+
+For documentation of the source code, visit the documentation [website](https://Farris2002.github.io/NoduleDistances/).
 
 Limitations
 ===========
 This plugin requires that you have the .tif file that is an output to my previous plugin,
- [Nodule Segmentation](https://github.com/Indefiable/Nodule-Segmentation). 
+ [Nodule Segmentation](https://github.com/Farris2002/Nodule-Segmentation). 
 
 Additionally, it requires that you can segment the root system using the same image you segmented your nodules from
 or that you have two images with different lighting that allows you to segment each one, but such that the images
@@ -46,7 +51,7 @@ Instructions
 
 3. Run the plugin at plugins -> Nodule Data.
 
-4. Fill in any required information for the program to run. This includes the Tif file, root file, model file, etc.
+4. Fill in any required information for the program to run. This includes a tif file, root file, model file, etc.
 
 5. You can assign different characteristics to your red and green nodules if you wish; this was necessary for our research. Otherwise you can 
     simply put "red" and "green" for the red and green attributes.

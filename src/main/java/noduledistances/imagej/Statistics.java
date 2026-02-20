@@ -2,6 +2,7 @@ package noduledistances.imagej;
 
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -246,8 +247,8 @@ public class Statistics {
 			matCounter++;
 		}
 		
-		
-		String save = saveFile + "\\" + this.imageName + "_data.csv";
+		Path outPath = Path.of(saveFile, this.imageName + "_data.csv");
+		String save = outPath.toString();
 	
 		try(FileWriter writer = new FileWriter(save)){
 	     		StringJoiner comma = new StringJoiner(",");

@@ -44,7 +44,8 @@ import java.awt.image.BufferedImage;
 import java.awt.image.RescaleOp;
 
 
-
+import java.nio.file.Paths;
+import java.nio.file.Path;
 
 
 /**
@@ -94,7 +95,7 @@ public class NoduleDistances implements Command {
 		
 		imp.setRoi(x, y, newWidth, newHeight); // cropping image to center of image and halving the size.
 		imp = imp.crop();
-		imp.setTitle(imp.getTitle().substring(4));
+		imp.setTitle(imp.getShortTitle().substring(4));
 		return imp;
     }
 	
@@ -250,14 +251,14 @@ public class NoduleDistances implements Command {
         }
        
 		
-		ImagePlus image = new ImagePlus(imp.getTitle(), hsb.getProcessor());
+		ImagePlus image = new ImagePlus(imp.getShortTitle(), hsb.getProcessor());
 		
 		//first entry is percent contrast change (2f = 200%), second value is brightness increase
 		RescaleOp op = new RescaleOp(2f, 25, null);
 		
 		BufferedImage output = op.filter(image.getBufferedImage(), null);
 
-		image = new ImagePlus(image.getTitle(), output);
+		image = new ImagePlus(image.getShortTitle(), output);
 
 		return image;
 	}
@@ -312,7 +313,7 @@ public class NoduleDistances implements Command {
         image.getWindow().close();
         
        
-        impp.setTitle(image.getTitle());
+        impp.setTitle(image.getShortTitle());
         return impp;
 		
 		
@@ -353,7 +354,7 @@ public class NoduleDistances implements Command {
     		String redAttribute, String greenAttribute) {
     	
     	if(roots.getType() != ImagePlus.COLOR_RGB) {
-			roots = new ImagePlus(roots.getTitle(), roots.getProcessor().convertToRGB());
+			roots = new ImagePlus(roots.getShortTitle(), roots.getProcessor().convertToRGB());
 		}
     	
 		
@@ -382,7 +383,7 @@ public class NoduleDistances implements Command {
     	channels.add(Channel.Lightness);
 		
 		if(roots.getType() != ImagePlus.COLOR_RGB) {
-			roots = new ImagePlus(roots.getTitle(), roots.getProcessor().convertToRGB());
+			roots = new ImagePlus(roots.getShortTitle(), roots.getProcessor().convertToRGB());
 		}
 		
 		//retrieve roi information from tif image
@@ -445,8 +446,8 @@ public class NoduleDistances implements Command {
 		System.out.println("Overlaying graph...");
 		graphOverlay.overlayGraph(graph, root.binarymap.getProcessor().convertToColorProcessor());
 		
-
-		IJ.save(graphOverlay.overlayedGraph, saveFile + "\\" + roots.getTitle() + "_graph.jpg");
+		Path outPath = Path.of(saveFile, roots.getShortTitle() + "_graph.jpg");
+		IJ.save(graphOverlay.overlayedGraph, outPath.toString());
 		
 		
 		System.out.println("Computing shortest distances...");
@@ -455,7 +456,7 @@ public class NoduleDistances implements Command {
 	
 		try {
 			System.out.println("Initializing statistics generator.");
-			Statistics stats = new Statistics(roots.getTitle(), redAttribute, greenAttribute);
+			Statistics stats = new Statistics(roots.getShortTitle(), redAttribute, greenAttribute);
 			System.out.println("Generating Statistics.");
 			stats.generateData(graph, new int[] {100,150,250,500,1000}, saveFile);
 			stats.savePairwiseDistanceMatrices(graph, saveFile, numIters);
@@ -489,9 +490,10 @@ public class NoduleDistances implements Command {
 				continue;
 			}
 
-			
-			IJ.saveAs(out, "jpg", saveFile + title +"_" 
-			+ Integer.toString(pair[0])+ "_" + Integer.toString(pair[1]));
+			Path outPath = Path.of(saveFile, title + "_" + 
+			Integer.toString(pair[0])+ "_" + Integer.toString(pair[1]));
+			IJ.saveAs(out, "jpg", outPath.toString()); 
+			;
 			
 		}
     }
